@@ -1,0 +1,59 @@
+[90m= [39m[34;4mIlluminate\Database\Eloquent\Collection[39;24m {#6114
+    [34mall[39m: [
+      [34;4mApp\Models\VehicleType[39;24m {#6116
+        [34mid[39m: [35m1[39m,
+        [34mname[39m: "[32mBicicleta[39m",
+        [34mcreated_at[39m: "[32m2025-04-12 21:41:23[39m",
+        [34mupdated_at[39m: "[32m2025-04-12 21:41:23[39m",
+      },
+      [34;4mApp\Models\VehicleType[39;24m {#6117
+        [34mid[39m: [35m2[39m,
+        [34mname[39m: "[32mMotor[39m",
+        [34mcreated_at[39m: "[32m2025-04-12 21:41:23[39m",
+        [34mupdated_at[39m: "[32m2025-04-12 21:41:23[39m",
+      },
+      [34;4mApp\Models\VehicleType[39;24m {#6118
+        [34mid[39m: [35m3[39m,
+        [34mname[39m: "[32mPasola[39m",
+        [34mcreated_at[39m: "[32m2025-04-12 21:41:23[39m",
+        [34mupdated_at[39m: "[32m2025-04-12 21:41:23[39m",
+      },
+      [34;4mApp\Models\VehicleType[39;24m {#6119
+        [34mid[39m: [35m4[39m,
+        [34mname[39m: "[32mCarro[39m",
+        [34mcreated_at[39m: "[32m2025-04-12 21:41:23[39m",
+        [34mupdated_at[39m: "[32m2025-04-12 21:41:23[39m",
+      },
+      [34;4mApp\Models\VehicleType[39;24m {#6120
+        [34mid[39m: [35m5[39m,
+        [34mname[39m: "[32mJeepeta[39m",
+        [34mcreated_at[39m: "[32m2025-04-12 21:41:23[39m",
+        [34mupdated_at[39m: "[32m2025-04-12 21:41:23[39m",
+      },
+      [34;4mApp\Models\VehicleType[39;24m {#6121
+        [34mid[39m: [35m6[39m,
+        [34mname[39m: "[32mCamioneta[39m",
+        [34mcreated_at[39m: "[32m2025-04-12 21:41:23[39m",
+        [34mupdated_at[39m: "[32m2025-04-12 21:41:23[39m",
+      },
+      [34;4mApp\Models\VehicleType[39;24m {#6122
+        [34mid[39m: [35m7[39m,
+        [34mname[39m: "[32mMinibús[39m",
+        [34mcreated_at[39m: "[32m2025-04-12 21:41:23[39m",
+        [34mupdated_at[39m: "[32m2025-04-12 21:41:23[39m",
+      },
+      [34;4mApp\Models\VehicleType[39;24m {#6123
+        [34mid[39m: [35m8[39m,
+        [34mname[39m: "[32mGuagua[39m",
+        [34mcreated_at[39m: "[32m2025-04-12 21:41:23[39m",
+        [34mupdated_at[39m: "[32m2025-04-12 21:41:23[39m",
+      },
+      [34;4mApp\Models\VehicleType[39;24m {#6124
+        [34mid[39m: [35m9[39m,
+        [34mname[39m: "[32mCamión[39m",
+        [34mcreated_at[39m: "[32m2025-04-12 21:41:23[39m",
+        [34mupdated_at[39m: "[32m2025-04-12 21:41:23[39m",
+      },
+    ],
+  }
+
