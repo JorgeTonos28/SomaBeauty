@@ -5,7 +5,7 @@ set -e
 apt-get update -qq
 apt-get install -y \
   git curl unzip gnupg \
-  php-cli php-mbstring php-xml php-sqlite3 \
+  php-cli php-mbstring php-xml php-sqlite3 php-pdo-sqlite \
   php-pdo php-dom php-json php-tokenizer php-curl php-zip php-bcmath
 
 # 2. Composer
