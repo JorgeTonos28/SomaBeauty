@@ -1,0 +1,6 @@
+agent_network:
+  internet_access: "allowlist"
+  allowlist:
+    - "packagist.org"
+    - "registry.npmjs.org"
+    - "ignition.laravel.com"
