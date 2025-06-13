@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Service;
+use App\Models\VehicleType;
+use App\Models\ServicePrice;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -24,17 +26,33 @@ class ServiceController extends Controller
 
     public function create()
     {
-        return view('services.create');
+        $vehicleTypes = VehicleType::all();
+        return view('services.create', compact('vehicleTypes'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:services,name',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'active' => 'sometimes|boolean',
+            'prices' => 'required|array',
+            'prices.*' => 'required|numeric|min:0'
         ]);
 
-        Service::create($request->only('name', 'description'));
+        $service = Service::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'active' => $request->boolean('active')
+        ]);
+
+        foreach ($request->prices as $vehicleTypeId => $price) {
+            ServicePrice::create([
+                'service_id' => $service->id,
+                'vehicle_type_id' => $vehicleTypeId,
+                'price' => $price
+            ]);
+        }
 
         return redirect()->route('services.index')
             ->with('success', 'Servicio creado exitosamente.');
@@ -42,17 +60,33 @@ class ServiceController extends Controller
 
     public function edit(Service $service)
     {
-        return view('services.edit', compact('service'));
+        $vehicleTypes = VehicleType::all();
+        $prices = $service->prices->pluck('price', 'vehicle_type_id');
+        return view('services.edit', compact('service', 'vehicleTypes', 'prices'));
     }
 
     public function update(Request $request, Service $service)
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:services,name,' . $service->id,
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'active' => 'sometimes|boolean',
+            'prices' => 'required|array',
+            'prices.*' => 'required|numeric|min:0'
         ]);
 
-        $service->update($request->only('name', 'description'));
+        $service->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'active' => $request->boolean('active')
+        ]);
+
+        foreach ($request->prices as $vehicleTypeId => $price) {
+            ServicePrice::updateOrCreate(
+                ['service_id' => $service->id, 'vehicle_type_id' => $vehicleTypeId],
+                ['price' => $price]
+            );
+        }
 
         return redirect()->route('services.index')
             ->with('success', 'Servicio actualizado correctamente.');

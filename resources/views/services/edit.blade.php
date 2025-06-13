@@ -16,8 +16,22 @@
             </div>
 
             <div>
-                <label for="description" class="block font-medium text-sm text-gray-700">Descripci¨®n</label>
+                <label for="description" class="block font-medium text-sm text-gray-700">Descripción</label>
                 <textarea name="description" class="form-input w-full">{{ $service->description }}</textarea>
+            </div>
+            <div>
+                <label class="block font-medium text-sm text-gray-700 mb-1">Precios por tipo de vehículo</label>
+                @foreach ($vehicleTypes as $type)
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-32">{{ $type->name }}</span>
+                        <input type="number" name="prices[{{ $type->id }}]" step="0.01" value="{{ $prices[$type->id] ?? '' }}" required class="form-input w-full">
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="flex items-center">
+                <label class="mr-2 text-sm">Activo</label>
+                <input type="checkbox" name="active" value="1" @checked($service->active)>
             </div>
 
             <div class="flex items-center gap-4">

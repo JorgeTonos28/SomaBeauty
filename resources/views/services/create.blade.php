@@ -14,9 +14,24 @@
                 <input type="text" name="name" required class="form-input w-full">
             </div>
 
+           <div>
+               <label for="description" class="block font-medium text-sm text-gray-700">Descripción</label>
+               <textarea name="description" class="form-input w-full"></textarea>
+           </div>
+
             <div>
-                <label for="description" class="block font-medium text-sm text-gray-700">Descripción</label>
-                <textarea name="description" class="form-input w-full"></textarea>
+                <label class="block font-medium text-sm text-gray-700 mb-1">Precios por tipo de vehículo</label>
+                @foreach ($vehicleTypes as $type)
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-32">{{ $type->name }}</span>
+                        <input type="number" name="prices[{{ $type->id }}]" step="0.01" required class="form-input w-full">
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="flex items-center">
+                <label class="mr-2 text-sm">Activo</label>
+                <input type="checkbox" name="active" value="1" checked>
             </div>
 
 
