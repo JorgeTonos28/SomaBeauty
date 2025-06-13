@@ -9,7 +9,8 @@ class ProductController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'role:admin,cajero']);
+        $this->middleware(['auth', 'role:admin,cajero'])->only('index');
+        $this->middleware(['auth', 'role:admin'])->except('index');
     }
 
     public function index()
