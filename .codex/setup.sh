@@ -20,11 +20,16 @@ composer install --optimize-autoloader
 npm install
 npm run build
 
-# 5. Prepara entorno de testing con SQLite en memoria
+# Crear archivo .env.testing si no existe
 cp .env .env.testing || true
+
+# Asegurar configuración mínima del entorno de testing
 echo "APP_ENV=testing" >> .env.testing
 echo "DB_CONNECTION=sqlite" >> .env.testing
 echo "DB_DATABASE=:memory:" >> .env.testing
+
+# 🟢 Generar APP_KEY para entorno de pruebas
+php artisan key:generate --env=testing
 
 # 6. Ejecutar tests
 vendor/bin/phpunit --testdox || true
