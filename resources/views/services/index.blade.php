@@ -28,6 +28,7 @@
                     <tr>
                         <th class="px-4 py-2 border">Nombre</th>
                         <th class="px-4 py-2 border">Descripción</th>
+                        <th class="px-4 py-2 border">Estado</th>
                         <th class="px-4 py-2 border">Acciones</th>
                     </tr>
                 </thead>
@@ -36,6 +37,7 @@
                         <tr class="border-t">
                             <td class="px-4 py-2">{{ $service->name }}</td>
                             <td class="px-4 py-2">{{ $service->description }}</td>
+                            <td class="px-4 py-2">{{ $service->active ? 'Activo' : 'Inactivo' }}</td>
                             <td class="px-4 py-2 flex gap-2">
                                 @if (auth()->user()->role === 'admin')
                                     <a href="{{ route('services.edit', $service) }}"
