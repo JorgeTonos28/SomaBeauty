@@ -14,10 +14,14 @@
                 </div>
             @endif
 
-            <div class="flex justify-end mb-4">
+            <div class="flex justify-between mb-4">
                 <a href="{{ route('washers.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Nuevo Lavador
                 </a>
+                <form action="{{ route('washers.payAll') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Pagar Todos</button>
+                </form>
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -25,24 +29,14 @@
                     <thead class="bg-gray-200">
                         <tr>
                             <th class="px-4 py-2">Nombre</th>
-                            <th class="px-4 py-2">Teléfono</th>
-                            <th class="px-4 py-2">Acciones</th>
+                            <th class="px-4 py-2">Pendiente</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($washers as $washer)
-                        <tr class="border-b">
+                        <tr class="border-b cursor-pointer" ondblclick="window.location='{{ route('washers.show', $washer) }}'">
                             <td class="px-4 py-2">{{ $washer->name }}</td>
-                            <td class="px-4 py-2">{{ $washer->phone }}</td>
-                            <td class="px-4 py-2">
-                                <div class="flex space-x-2">
-                                    <a href="{{ route('washers.edit', $washer) }}" class="text-yellow-600 hover:underline">Editar</a>
-                                    <form action="{{ route('washers.destroy', $washer) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar este lavador?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:underline">Eliminar</button>
-                                    </form>
-                                </div>
-                            </td>
+                            <td class="px-4 py-2">RD$ {{ number_format($washer->pending_amount, 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>

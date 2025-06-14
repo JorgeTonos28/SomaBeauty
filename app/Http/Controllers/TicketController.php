@@ -118,6 +118,8 @@ class TicketController extends Controller
                 TicketDetail::create($detail);
             }
 
+            Washer::whereId($request->washer_id)->increment('pending_amount', 100);
+
             DB::commit();
 
             return redirect()->route('tickets.index')

@@ -374,7 +374,7 @@ INSERT INTO `vehicle_types` (`id`, `name`, `created_at`, `updated_at`) VALUES
 CREATE TABLE `washers` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `name` varchar(255) NOT NULL,
-  `phone` varchar(255) DEFAULT NULL,
+  `pending_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -383,11 +383,11 @@ CREATE TABLE `washers` (
 -- Dumping data for table `washers`
 --
 
-INSERT INTO `washers` (`id`, `name`, `phone`, `created_at`, `updated_at`) VALUES
-(1, 'Carlos Martínez', '8091234567', '2025-04-13 01:41:23', '2025-04-13 01:41:23'),
-(2, 'Luis Gómez', '8092345678', '2025-04-13 01:41:23', '2025-04-13 01:41:23'),
-(3, 'Pedro Rodríguez', '8093456789', '2025-04-13 01:41:23', '2025-04-13 01:41:23'),
-(4, 'Jonathan Ramírez', '8094567890', '2025-04-13 01:41:23', '2025-04-13 01:41:23');
+INSERT INTO `washers` (`id`, `name`, `pending_amount`, `created_at`, `updated_at`) VALUES
+(1, 'Carlos Martínez', 0.00, '2025-04-13 01:41:23', '2025-04-13 01:41:23'),
+(2, 'Luis Gómez', 0.00, '2025-04-13 01:41:23', '2025-04-13 01:41:23'),
+(3, 'Pedro Rodríguez', 0.00, '2025-04-13 01:41:23', '2025-04-13 01:41:23'),
+(4, 'Jonathan Ramírez', 0.00, '2025-04-13 01:41:23', '2025-04-13 01:41:23');
 
 -- --------------------------------------------------------
 

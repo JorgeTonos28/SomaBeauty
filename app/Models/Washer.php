@@ -9,7 +9,7 @@ class Washer extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'phone'];
+    protected $fillable = ['name', 'pending_amount'];
 
     public function tickets()
     {
