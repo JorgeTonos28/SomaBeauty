@@ -21,11 +21,10 @@ class ProductSeeder extends Seeder
         ];
 
         foreach ($products as $item) {
-            Product::create([
-                'name' => $item['name'],
-                'price' => $item['price'],
-                'stock' => 100
-            ]);
+            Product::updateOrCreate(
+                ['name' => $item['name']],
+                ['price' => $item['price'], 'stock' => 100]
+            );
         }
     }
 }

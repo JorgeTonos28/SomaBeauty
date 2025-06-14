@@ -38,11 +38,10 @@ class ServicePriceSeeder extends Seeder
             foreach ($vehicles as $vehicle) {
                 $price = ($basePrices[$vehicle->id] ?? 0) + ($serviceIncrement[$service->id] ?? 0);
 
-                ServicePrice::create([
-                    'service_id' => $service->id,
-                    'vehicle_type_id' => $vehicle->id,
-                    'price' => $price,
-                ]);
+                ServicePrice::updateOrCreate(
+                    ['service_id' => $service->id, 'vehicle_type_id' => $vehicle->id],
+                    ['price' => $price]
+                );
             }
         }
     }
