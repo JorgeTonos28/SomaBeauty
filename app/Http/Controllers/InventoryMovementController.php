@@ -25,11 +25,17 @@ class InventoryMovementController extends Controller
             $query->whereDate('created_at', '<=', $request->end);
         }
 
+        if ($request->filled('product')) {
+            $query->whereHas('product', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->product . '%');
+            });
+        }
+
         $movements = $query->latest()->paginate(20);
 
         return view('inventory.index', [
             'movements' => $movements,
-            'filters' => $request->only(['start', 'end']),
+            'filters' => $request->only(['start', 'end', 'product']),
         ]);
     }
 

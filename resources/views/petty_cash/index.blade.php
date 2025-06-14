@@ -11,17 +11,14 @@
         @endif
 
         <div class="mb-4 flex flex-wrap items-end gap-4">
-            <form method="GET" class="flex items-end gap-2">
+            <form method="GET" class="flex items-end gap-2" x-data>
                 <div>
                     <label class="block text-sm">Desde</label>
-                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input">
+                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input" x-on:change="submit()">
                 </div>
                 <div>
                     <label class="block text-sm">Hasta</label>
-                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input">
-                </div>
-                <div class="pb-1">
-                    <button type="submit" class="px-3 py-2 bg-gray-200 rounded">Filtrar</button>
+                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" x-on:change="submit()">
                 </div>
             </form>
             <a href="{{ route('petty-cash.create') }}" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">Nuevo Gasto</a>

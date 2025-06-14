@@ -13,17 +13,18 @@
         @endif
 
         <div class="mb-4 flex flex-wrap items-end gap-4">
-            <form method="GET" class="flex items-end gap-2">
+            <form method="GET" class="flex items-end gap-2" x-data>
                 <div>
                     <label class="block text-sm">Desde</label>
-                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input">
+                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input" x-on:change="submit()">
                 </div>
                 <div>
                     <label class="block text-sm">Hasta</label>
-                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input">
+                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" x-on:change="submit()">
                 </div>
-                <div class="pb-1">
-                    <button type="submit" class="px-3 py-2 bg-gray-200 rounded">Filtrar</button>
+                <div>
+                    <label class="block text-sm">Producto</label>
+                    <input type="text" name="product" value="{{ $filters['product'] ?? '' }}" class="form-input" x-on:input.debounce.500ms="submit()">
                 </div>
             </form>
             <a href="{{ route('inventory.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
