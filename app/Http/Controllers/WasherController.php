@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Washer;
+use App\Models\WasherPayment;
 use Illuminate\Http\Request;
 
 class WasherController extends Controller
@@ -27,10 +28,9 @@ class WasherController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20'
         ]);
 
-        Washer::create($request->only('name', 'phone'));
+        Washer::create(['name' => $request->name, 'pending_amount' => 0]);
 
         return redirect()->route('washers.index')
             ->with('success', 'Lavador creado correctamente.');
@@ -45,10 +45,9 @@ class WasherController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20'
         ]);
 
-        $washer->update($request->only('name', 'phone'));
+        $washer->update($request->only('name'));
 
         return redirect()->route('washers.index')
             ->with('success', 'Lavador actualizado correctamente.');
@@ -60,5 +59,55 @@ class WasherController extends Controller
 
         return redirect()->route('washers.index')
             ->with('success', 'Lavador eliminado correctamente.');
+    }
+
+    public function show(Washer $washer)
+    {
+        $lastPayment = $washer->payments()->latest('payment_date')->first();
+        $fromDate = $lastPayment ? $lastPayment->payment_date : null;
+
+        $ticketsQuery = $washer->tickets()->with('vehicleType')->orderByDesc('created_at');
+        if ($fromDate) {
+            $ticketsQuery->whereDate('created_at', '>', $fromDate);
+        }
+        $tickets = $ticketsQuery->get();
+
+        return view('washers.show', compact('washer', 'tickets', 'fromDate'));
+    }
+
+    public function pay(Washer $washer)
+    {
+        if ($washer->pending_amount <= 0) {
+            return back()->with('success', 'No hay monto pendiente.');
+        }
+
+        WasherPayment::create([
+            'washer_id' => $washer->id,
+            'payment_date' => now()->toDateString(),
+            'total_washes' => intval($washer->pending_amount / 100),
+            'amount_paid' => $washer->pending_amount,
+        ]);
+
+        $washer->update(['pending_amount' => 0]);
+
+        return back()->with('success', 'Pago registrado correctamente.');
+    }
+
+    public function payAll()
+    {
+        $washers = Washer::where('pending_amount', '>', 0)->get();
+
+        foreach ($washers as $washer) {
+            WasherPayment::create([
+                'washer_id' => $washer->id,
+                'payment_date' => now()->toDateString(),
+                'total_washes' => intval($washer->pending_amount / 100),
+                'amount_paid' => $washer->pending_amount,
+            ]);
+
+            $washer->update(['pending_amount' => 0]);
+        }
+
+        return redirect()->route('washers.index')->with('success', 'Pagos registrados.');
     }
 }

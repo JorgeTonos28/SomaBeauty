@@ -25,11 +25,6 @@
                     <input type="text" name="name" id="name" required class="form-input w-full rounded border-gray-300 shadow-sm mt-1">
                 </div>
 
-                <div class="mb-4">
-                    <label for="phone" class="block font-medium text-sm text-gray-700">Teléfono</label>
-                    <input type="text" name="phone" id="phone" class="form-input w-full rounded border-gray-300 shadow-sm mt-1">
-                </div>
-
                 <div class="flex justify-end">
                     <a href="{{ route('washers.index') }}" class="mr-3 px-4 py-2 bg-gray-300 text-gray-700 rounded">Cancelar</a>
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>

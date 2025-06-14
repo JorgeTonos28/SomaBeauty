@@ -10,13 +10,14 @@ class WasherSeeder extends Seeder
     public function run()
     {
         $washers = [
-            ['name' => 'Carlos Martínez', 'phone' => '8091234567'],
-            ['name' => 'Luis Gómez', 'phone' => '8092345678'],
-            ['name' => 'Pedro Rodríguez', 'phone' => '8093456789'],
-            ['name' => 'Jonathan Ramírez', 'phone' => '8094567890'],
+            ['name' => 'Carlos Martínez'],
+            ['name' => 'Luis Gómez'],
+            ['name' => 'Pedro Rodríguez'],
+            ['name' => 'Jonathan Ramírez'],
         ];
 
         foreach ($washers as $washer) {
+            $washer['pending_amount'] = 0;
             Washer::create($washer);
         }
     }
