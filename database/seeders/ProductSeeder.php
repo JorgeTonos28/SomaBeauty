@@ -24,7 +24,6 @@ class ProductSeeder extends Seeder
             Product::create([
                 'name' => $item['name'],
                 'price' => $item['price'],
-                'description' => null,
                 'stock' => 100
             ]);
         }

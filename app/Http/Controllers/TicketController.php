@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\Ticket;
 use App\Models\TicketDetail;
+use App\Models\InventoryMovement;
 use App\Models\VehicleType;
 use App\Models\Washer;
 use Illuminate\Http\Request;
@@ -100,6 +101,12 @@ class TicketController extends Controller
                     $total += $subtotal;
 
                     $product->decrement('stock', $qty);
+                    InventoryMovement::create([
+                        'product_id' => $productId,
+                        'user_id' => auth()->id(),
+                        'movement_type' => 'salida',
+                        'quantity' => $qty,
+                    ]);
                 }
             }
 

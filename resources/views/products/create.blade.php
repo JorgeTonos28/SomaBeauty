@@ -14,10 +14,6 @@
                 <input type="text" name="name" required class="form-input w-full">
             </div>
 
-            <div>
-                <label for="description" class="block font-medium text-sm text-gray-700">DescripciÃ³n</label>
-                <textarea name="description" class="form-input w-full"></textarea>
-            </div>
 
             <div>
                 <label for="price" class="block font-medium text-sm text-gray-700">Precio (RD$)</label>
