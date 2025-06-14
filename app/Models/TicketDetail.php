@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Drink;
 
 class TicketDetail extends Model
 {
@@ -10,7 +11,7 @@ class TicketDetail extends Model
 
     protected $fillable = [
         'ticket_id', 'type', 'service_id',
-        'product_id', 'quantity', 'unit_price', 'subtotal'
+        'product_id', 'drink_id', 'quantity', 'unit_price', 'subtotal'
     ];
 
     public function ticket()
@@ -26,5 +27,10 @@ class TicketDetail extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function drink()
+    {
+        return $this->belongsTo(Drink::class);
     }
 }

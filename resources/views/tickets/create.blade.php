@@ -10,37 +10,54 @@
         <form x-ref="form" action="{{ route('tickets.store') }}" method="POST" @submit.prevent="submitForm" class="space-y-6 pb-32">
             @csrf
 
-            <!-- Tipo de Vehículo -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Tipo de Vehículo</label>
-                <select name="vehicle_type_id" required class="form-select w-full mt-1">
-                    <option value="">-- Seleccionar --</option>
-                    @foreach ($vehicleTypes as $type)
-                        <option value="{{ $type->id }}">{{ $type->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Lavador -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Lavador</label>
-                <select name="washer_id" required class="form-select w-full mt-1">
-                    <option value="">-- Seleccionar --</option>
-                    @foreach ($washers as $washer)
-                        <option value="{{ $washer->id }}">{{ $washer->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
             <!-- Servicios -->
             <div>
-                <label class="block text-sm font-medium text-gray-700">Servicios Realizados</label>
-                @foreach ($services as $service)
-                    <div class="flex items-center space-x-2 mt-1">
-                        <input type="checkbox" name="service_ids[]" value="{{ $service->id }}">
-                        <label>{{ $service->name }}</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Servicios</label>
+                <div id="wash-fields" style="display:none" class="space-y-4">
+                    <!-- Tipo de Vehículo -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tipo de Vehículo</label>
+                        <select name="vehicle_type_id" class="form-select w-full mt-1">
+                            <option value="">-- Seleccionar --</option>
+                            @foreach ($vehicleTypes as $type)
+                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                @endforeach
+
+                    <!-- Lavador -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Lavador</label>
+                        <select name="washer_id" class="form-select w-full mt-1">
+                            <option value="">-- Seleccionar --</option>
+                            @foreach ($washers as $washer)
+                                <option value="{{ $washer->id }}">{{ $washer->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Lista Servicios -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Servicios Realizados</label>
+                        @foreach ($services as $service)
+                            <div class="flex items-center space-x-2 mt-1">
+                                <input type="checkbox" name="service_ids[]" value="{{ $service->id }}">
+                                <label>{{ $service->name }}</label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div id="drink-fields" style="display:none" class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tragos Vendidos</label>
+                    <div id="drink-list"></div>
+                    <button type="button" onclick="addDrinkRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar trago</button>
+                </div>
+
+                <div class="mt-2 space-x-4">
+                    <button type="button" id="wash-toggle" onclick="toggleWash()" class="text-sm text-blue-600 hover:underline">Agregar Lavado</button>
+                    <button type="button" id="drink-toggle" onclick="toggleDrink()" class="text-sm text-blue-600 hover:underline">Agregar Trago</button>
+                </div>
             </div>
 
             <!-- Productos -->
@@ -98,6 +115,7 @@
     <script>
         const servicePrices = @json($servicePrices);
         const productPrices = @json($productPrices);
+        const drinkPrices = @json($drinkPrices);
 
         function updateTotal() {
             const vehicleTypeId = document.querySelector('select[name="vehicle_type_id"]').value;
@@ -113,6 +131,13 @@
                 const productId = row.querySelector('select').value;
                 const qty = parseFloat(row.querySelector('input[name="quantities[]"]').value) || 0;
                 const price = productPrices[productId] ? parseFloat(productPrices[productId]) : 0;
+                total += price * qty;
+            });
+
+            document.querySelectorAll('#drink-list > div').forEach(row => {
+                const drinkId = row.querySelector('select').value;
+                const qty = parseFloat(row.querySelector('input[name="drink_quantities[]"]').value) || 0;
+                const price = drinkPrices[drinkId] ? parseFloat(drinkPrices[drinkId]) : 0;
                 total += price * qty;
             });
 
@@ -143,6 +168,55 @@
                 <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
             `;
             container.appendChild(row);
+        }
+
+        function addDrinkRow() {
+            const container = document.getElementById('drink-list');
+            const row = document.createElement('div');
+            row.classList.add('flex', 'gap-4', 'mb-2', 'items-center');
+            row.innerHTML = `
+                <select name="drink_ids[]" class="form-select w-full" onchange="updateTotal()">
+                    <option value="">-- Seleccionar trago --</option>
+                    @foreach ($drinks as $drink)
+                        <option value="{{ $drink->id }}">{{ $drink->name }} (RD$ {{ number_format($drink->price, 2) }})</option>
+                    @endforeach
+                </select>
+                <input type="number" name="drink_quantities[]" placeholder="Cantidad" min="1" class="form-input w-24" oninput="updateTotal()">
+                <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
+            `;
+            container.appendChild(row);
+        }
+
+        function toggleWash() {
+            const wash = document.getElementById('wash-fields');
+            const btn = document.getElementById('wash-toggle');
+            if (wash.style.display === 'none') {
+                wash.style.display = '';
+                btn.textContent = 'Quitar lavado';
+            } else {
+                wash.style.display = 'none';
+                btn.textContent = 'Agregar Lavado';
+                wash.querySelectorAll('select, input[type=checkbox]').forEach(el => {
+                    if (el.tagName === 'SELECT') el.value = '';
+                    if (el.type === 'checkbox') el.checked = false;
+                });
+                updateTotal();
+            }
+        }
+
+        function toggleDrink() {
+            const drink = document.getElementById('drink-fields');
+            const btn = document.getElementById('drink-toggle');
+            if (drink.style.display === 'none') {
+                drink.style.display = '';
+                btn.textContent = 'Quitar trago';
+            } else {
+                drink.style.display = 'none';
+                btn.textContent = 'Agregar Trago';
+                drink.querySelectorAll('select').forEach(el => el.value = '');
+                drink.querySelectorAll('input[type=number]').forEach(el => el.value = '');
+                updateTotal();
+            }
         }
 
         document.querySelectorAll('input[name="service_ids[]"], select[name="vehicle_type_id"]').forEach(el => {

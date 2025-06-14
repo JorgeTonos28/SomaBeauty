@@ -9,6 +9,7 @@ use App\Models\TicketDetail;
 use App\Models\InventoryMovement;
 use App\Models\VehicleType;
 use App\Models\Washer;
+use App\Models\Drink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -85,6 +86,9 @@ class TicketController extends Controller
         $products = Product::where('stock', '>', 0)->get();
         $productPrices = $products->pluck('price', 'id');
 
+        $drinks = Drink::all();
+        $drinkPrices = $drinks->pluck('price', 'id');
+
         return view('tickets.create', [
             'services' => $services,
             'vehicleTypes' => VehicleType::all(),
@@ -92,20 +96,26 @@ class TicketController extends Controller
             'washers' => Washer::all(),
             'servicePrices' => $servicePrices,
             'productPrices' => $productPrices,
+            'drinks' => $drinks,
+            'drinkPrices' => $drinkPrices,
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'vehicle_type_id' => 'required|exists:vehicle_types,id',
-            'washer_id' => 'required|exists:washers,id',
-            'service_ids' => 'required|array',
+            'vehicle_type_id' => 'nullable|exists:vehicle_types,id',
+            'washer_id' => 'nullable|exists:washers,id',
+            'service_ids' => 'nullable|array',
             'service_ids.*' => 'exists:services,id',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
             'quantities' => 'nullable|array',
             'quantities.*' => 'integer|min:1',
+            'drink_ids' => 'nullable|array',
+            'drink_ids.*' => 'exists:drinks,id',
+            'drink_quantities' => 'nullable|array',
+            'drink_quantities.*' => 'integer|min:1',
             'payment_method' => 'required|in:efectivo,tarjeta,transferencia,mixto',
             'paid_amount' => 'required|numeric|min:0'
         ]);
@@ -113,14 +123,14 @@ class TicketController extends Controller
         DB::beginTransaction();
 
         try {
-            $vehicleType = VehicleType::findOrFail($request->vehicle_type_id);
+            $vehicleType = $request->vehicle_type_id ? VehicleType::findOrFail($request->vehicle_type_id) : null;
             $total = 0;
             $details = [];
 
             // Servicios
-            foreach ($request->service_ids as $serviceId) {
+            foreach ($request->service_ids ?? [] as $serviceId) {
                 $service = Service::where('active', true)->find($serviceId);
-                if (!$service) {
+                if (!$service || !$vehicleType) {
                     continue;
                 }
                 $priceRow = $service->prices()->where('vehicle_type_id', $vehicleType->id)->first();
@@ -166,6 +176,32 @@ class TicketController extends Controller
                 }
             }
 
+            // Tragos
+            if ($request->drink_ids) {
+                foreach ($request->drink_ids as $index => $drinkId) {
+                    $drink = Drink::find($drinkId);
+                    $qty = $request->drink_quantities[$index];
+                    $subtotal = $drink->price * $qty;
+
+                    $details[] = [
+                        'type' => 'drink',
+                        'service_id' => null,
+                        'product_id' => null,
+                        'drink_id' => $drinkId,
+                        'quantity' => $qty,
+                        'unit_price' => $drink->price,
+                        'subtotal' => $subtotal,
+                    ];
+
+                    $total += $subtotal;
+                }
+            }
+
+            if (count($details) === 0) {
+                DB::rollBack();
+                return back()->withErrors(['service_ids' => 'Debe agregar al menos un servicio, producto o trago'])->withInput();
+            }
+
             if ($request->paid_amount < $total) {
                 DB::rollBack();
                 return back()->withErrors(['paid_amount' => 'El monto pagado es menor al total a pagar'])->withInput();
@@ -186,7 +222,9 @@ class TicketController extends Controller
                 TicketDetail::create($detail);
             }
 
-            Washer::whereId($request->washer_id)->increment('pending_amount', 100);
+            if ($request->washer_id) {
+                Washer::whereId($request->washer_id)->increment('pending_amount', 100);
+            }
 
             DB::commit();
 

@@ -15,8 +15,8 @@
             @foreach ($tickets as $ticket)
                 <tr class="border-t cursor-pointer" x-on:click="selected = {{ $ticket->id }}" :class="selected === {{ $ticket->id }} ? 'bg-blue-100' : ''">
                     <td class="px-4 py-2">{{ $ticket->id }}</td>
-                    <td class="px-4 py-2">{{ $ticket->vehicleType->name }}</td>
-                    <td class="px-4 py-2">{{ $ticket->washer->name }}</td>
+                    <td class="px-4 py-2">{{ optional($ticket->vehicleType)->name ?? '-' }}</td>
+                    <td class="px-4 py-2">{{ optional($ticket->washer)->name ?? '-' }}</td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->total_amount, 2) }}</td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->paid_amount, 2) }}</td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->change, 2) }}</td>
