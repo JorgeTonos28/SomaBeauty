@@ -15,7 +15,7 @@ class VehicleTypeSeeder extends Seeder
         ];
 
         foreach ($types as $type) {
-            VehicleType::create(['name' => $type]);
+            VehicleType::firstOrCreate(['name' => $type]);
         }
     }
 }

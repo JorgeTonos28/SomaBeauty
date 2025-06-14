@@ -10,37 +10,62 @@
         <form x-ref="form" action="{{ route('tickets.store') }}" method="POST" @submit.prevent="submitForm" class="space-y-6 pb-32">
             @csrf
 
-            <!-- Tipo de Vehículo -->
             <div>
-                <label class="block text-sm font-medium text-gray-700">Tipo de Vehículo</label>
-                <select name="vehicle_type_id" required class="form-select w-full mt-1">
-                    <option value="">-- Seleccionar --</option>
-                    @foreach ($vehicleTypes as $type)
-                        <option value="{{ $type->id }}">{{ $type->name }}</option>
-                    @endforeach
-                </select>
+                <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
+                <input type="text" name="customer_name" required class="form-input w-full mt-1">
             </div>
-
-            <!-- Lavador -->
             <div>
-                <label class="block text-sm font-medium text-gray-700">Lavador</label>
-                <select name="washer_id" required class="form-select w-full mt-1">
-                    <option value="">-- Seleccionar --</option>
-                    @foreach ($washers as $washer)
-                        <option value="{{ $washer->id }}">{{ $washer->name }}</option>
-                    @endforeach
-                </select>
+                <label class="block text-sm font-medium text-gray-700">Cédula</label>
+                <input type="text" name="customer_cedula" class="form-input w-full mt-1">
             </div>
 
             <!-- Servicios -->
             <div>
-                <label class="block text-sm font-medium text-gray-700">Servicios Realizados</label>
-                @foreach ($services as $service)
-                    <div class="flex items-center space-x-2 mt-1">
-                        <input type="checkbox" name="service_ids[]" value="{{ $service->id }}">
-                        <label>{{ $service->name }}</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Servicios</label>
+                <div id="wash-fields" style="display:none" class="space-y-4">
+                    <!-- Tipo de Vehículo -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tipo de Vehículo</label>
+                        <select name="vehicle_type_id" class="form-select w-full mt-1">
+                            <option value="">-- Seleccionar --</option>
+                            @foreach ($vehicleTypes as $type)
+                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                @endforeach
+
+                    <!-- Lavador -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Lavador</label>
+                        <select name="washer_id" class="form-select w-full mt-1">
+                            <option value="">-- Seleccionar --</option>
+                            @foreach ($washers as $washer)
+                                <option value="{{ $washer->id }}">{{ $washer->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Lista Servicios -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Servicios Realizados</label>
+                        @foreach ($services as $service)
+                            <div class="flex items-center space-x-2 mt-1">
+                                <input type="checkbox" name="service_ids[]" value="{{ $service->id }}">
+                                <label>{{ $service->name }}</label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div id="drink-fields" class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tragos Vendidos</label>
+                    <div id="drink-list"></div>
+                    <button type="button" onclick="addDrinkRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar trago</button>
+                </div>
+
+                <div class="mt-2 space-x-4">
+                    <button type="button" id="wash-toggle" onclick="toggleWash()" class="text-sm text-blue-600 hover:underline">Agregar Lavado</button>
+                </div>
             </div>
 
             <!-- Productos -->
@@ -98,6 +123,16 @@
     <script>
         const servicePrices = @json($servicePrices);
         const productPrices = @json($productPrices);
+        const drinkPrices = @json($drinkPrices);
+
+        let currentTotal = 0;
+
+        function formatCurrency(value) {
+            return value.toLocaleString('es-DO', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
 
         function updateTotal() {
             const vehicleTypeId = document.querySelector('select[name="vehicle_type_id"]').value;
@@ -116,16 +151,24 @@
                 total += price * qty;
             });
 
-            document.getElementById('total_amount').innerText = total.toFixed(2);
+            document.querySelectorAll('#drink-list > div').forEach(row => {
+                const drinkId = row.querySelector('select').value;
+                const qty = parseFloat(row.querySelector('input[name="drink_quantities[]"]').value) || 0;
+                const price = drinkPrices[drinkId] ? parseFloat(drinkPrices[drinkId]) : 0;
+                total += price * qty;
+            });
+
+            currentTotal = total;
+            document.getElementById('total_amount').innerText = formatCurrency(total);
             updateChange();
         }
 
         function updateChange() {
-            const total = parseFloat(document.getElementById('total_amount').innerText) || 0;
+            const total = currentTotal;
             const paidField = document.getElementById('paid_amount');
             const paid = paidField.value === '' ? null : parseFloat(paidField.value);
             const change = paid === null ? 0 : paid - total;
-            document.getElementById('change_display').innerText = change.toFixed(2);
+            document.getElementById('change_display').innerText = formatCurrency(change);
         }
 
         function addProductRow() {
@@ -144,6 +187,41 @@
             `;
             container.appendChild(row);
         }
+
+        function addDrinkRow() {
+            const container = document.getElementById('drink-list');
+            const row = document.createElement('div');
+            row.classList.add('flex', 'gap-4', 'mb-2', 'items-center');
+            row.innerHTML = `
+                <select name="drink_ids[]" class="form-select w-full" onchange="updateTotal()">
+                    <option value="">-- Seleccionar trago --</option>
+                    @foreach ($drinks as $drink)
+                        <option value="{{ $drink->id }}">{{ $drink->name }} (RD$ {{ number_format($drink->price, 2) }})</option>
+                    @endforeach
+                </select>
+                <input type="number" name="drink_quantities[]" placeholder="Cantidad" min="1" class="form-input w-24" oninput="updateTotal()">
+                <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
+            `;
+            container.appendChild(row);
+        }
+
+        function toggleWash() {
+            const wash = document.getElementById('wash-fields');
+            const btn = document.getElementById('wash-toggle');
+            if (wash.style.display === 'none') {
+                wash.style.display = '';
+                btn.textContent = 'Quitar lavado';
+            } else {
+                wash.style.display = 'none';
+                btn.textContent = 'Agregar Lavado';
+                wash.querySelectorAll('select, input[type=checkbox]').forEach(el => {
+                    if (el.tagName === 'SELECT') el.value = '';
+                    if (el.type === 'checkbox') el.checked = false;
+                });
+                updateTotal();
+            }
+        }
+
 
         document.querySelectorAll('input[name="service_ids[]"], select[name="vehicle_type_id"]').forEach(el => {
             el.addEventListener('change', updateTotal);

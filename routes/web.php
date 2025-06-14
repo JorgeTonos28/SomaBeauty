@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\DrinkController;
 use App\Http\Controllers\WasherController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\PettyCashExpenseController;
@@ -37,6 +38,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 Route::middleware(['auth', 'role:admin,cajero'])->group(function () {
     Route::resource('products', ProductController::class);
+    Route::resource('drinks', DrinkController::class);
     Route::resource('inventory', InventoryMovementController::class)->only(['index', 'create', 'store']);
 });
 Route::middleware(['auth', 'role:admin'])->group(function () {

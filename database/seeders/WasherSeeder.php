@@ -18,7 +18,7 @@ class WasherSeeder extends Seeder
 
         foreach ($washers as $washer) {
             $washer['pending_amount'] = 0;
-            Washer::create($washer);
+            Washer::updateOrCreate(['name' => $washer['name']], $washer);
         }
     }
 }
