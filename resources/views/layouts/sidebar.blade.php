@@ -10,6 +10,9 @@
             <a href="{{ route('products.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('products.*') ? 'bg-gray-200' : '' }}">
                 Productos
             </a>
+            <a href="{{ route('drinks.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('drinks.*') ? 'bg-gray-200' : '' }}">
+                Tragos
+            </a>
             <a href="{{ route('inventory.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('inventory.*') ? 'bg-gray-200' : '' }}">
                 Inventario
             </a>

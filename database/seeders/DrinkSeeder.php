@@ -36,7 +36,7 @@ class DrinkSeeder extends Seeder
         ];
 
         foreach ($drinks as $drink) {
-            \App\Models\Drink::create($drink);
+            \App\Models\Drink::updateOrCreate(['name' => $drink['name']], $drink);
         }
     }
 }

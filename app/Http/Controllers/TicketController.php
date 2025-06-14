@@ -22,7 +22,7 @@ class TicketController extends Controller
 
     public function index(Request $request)
     {
-        $query = Ticket::where('canceled', false);
+        $query = Ticket::with('details')->where('canceled', false);
 
         if ($request->filled('start')) {
             $query->whereDate('created_at', '>=', $request->start);
@@ -48,7 +48,7 @@ class TicketController extends Controller
 
     public function canceled(Request $request)
     {
-        $query = Ticket::where('canceled', true);
+        $query = Ticket::with('details')->where('canceled', true);
 
         if ($request->filled('start')) {
             $query->whereDate('created_at', '>=', $request->start);
@@ -104,6 +104,8 @@ class TicketController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_cedula' => 'nullable|string|max:50',
             'vehicle_type_id' => 'nullable|exists:vehicle_types,id',
             'washer_id' => 'nullable|exists:washers,id',
             'service_ids' => 'nullable|array',
@@ -211,6 +213,8 @@ class TicketController extends Controller
                 'user_id' => auth()->id(),
                 'washer_id' => $request->washer_id,
                 'vehicle_type_id' => $request->vehicle_type_id,
+                'customer_name' => $request->customer_name,
+                'customer_cedula' => $request->customer_cedula,
                 'total_amount' => $total,
                 'paid_amount' => $request->paid_amount,
                 'change' => $request->paid_amount - $total,

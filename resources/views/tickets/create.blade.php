@@ -10,6 +10,15 @@
         <form x-ref="form" action="{{ route('tickets.store') }}" method="POST" @submit.prevent="submitForm" class="space-y-6 pb-32">
             @csrf
 
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
+                <input type="text" name="customer_name" required class="form-input w-full mt-1">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Cédula</label>
+                <input type="text" name="customer_cedula" class="form-input w-full mt-1">
+            </div>
+
             <!-- Servicios -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Servicios</label>
@@ -48,7 +57,7 @@
                     </div>
                 </div>
 
-                <div id="drink-fields" style="display:none" class="mt-4">
+                <div id="drink-fields" class="mt-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tragos Vendidos</label>
                     <div id="drink-list"></div>
                     <button type="button" onclick="addDrinkRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar trago</button>
@@ -56,7 +65,6 @@
 
                 <div class="mt-2 space-x-4">
                     <button type="button" id="wash-toggle" onclick="toggleWash()" class="text-sm text-blue-600 hover:underline">Agregar Lavado</button>
-                    <button type="button" id="drink-toggle" onclick="toggleDrink()" class="text-sm text-blue-600 hover:underline">Agregar Trago</button>
                 </div>
             </div>
 
@@ -204,20 +212,6 @@
             }
         }
 
-        function toggleDrink() {
-            const drink = document.getElementById('drink-fields');
-            const btn = document.getElementById('drink-toggle');
-            if (drink.style.display === 'none') {
-                drink.style.display = '';
-                btn.textContent = 'Quitar trago';
-            } else {
-                drink.style.display = 'none';
-                btn.textContent = 'Agregar Trago';
-                drink.querySelectorAll('select').forEach(el => el.value = '');
-                drink.querySelectorAll('input[type=number]').forEach(el => el.value = '');
-                updateTotal();
-            }
-        }
 
         document.querySelectorAll('input[name="service_ids[]"], select[name="vehicle_type_id"]').forEach(el => {
             el.addEventListener('change', updateTotal);
