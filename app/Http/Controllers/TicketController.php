@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\Ticket;
 use App\Models\TicketDetail;
+use App\Models\InventoryMovement;
 use App\Models\VehicleType;
 use App\Models\Washer;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class TicketController extends Controller
     public function create()
     {
         return view('tickets.create', [
-            'services' => Service::all(),
+            'services' => Service::where('active', true)->get(),
             'vehicleTypes' => VehicleType::all(),
             'products' => Product::where('stock', '>', 0)->get(),
             'washers' => Washer::all(),
@@ -62,7 +63,10 @@ class TicketController extends Controller
 
             // Servicios
             foreach ($request->service_ids as $serviceId) {
-                $service = Service::find($serviceId);
+                $service = Service::where('active', true)->find($serviceId);
+                if (!$service) {
+                    continue;
+                }
                 $priceRow = $service->prices()->where('vehicle_type_id', $vehicleType->id)->first();
                 $price = $priceRow ? $priceRow->price : 0;
 
@@ -97,6 +101,12 @@ class TicketController extends Controller
                     $total += $subtotal;
 
                     $product->decrement('stock', $qty);
+                    InventoryMovement::create([
+                        'product_id' => $productId,
+                        'movement_type' => 'salida',
+                        'quantity' => $qty,
+                        'description' => 'Venta',
+                    ]);
                 }
             }
 

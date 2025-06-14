@@ -53,9 +53,8 @@
                                             Eliminar
                                         </button>
                                     </form>
-                                @else
-                                    <span class="text-gray-400 italic">SÃ³lo lectura</span>
                                 @endif
+                                <a href="{{ route('inventory.create', ['product_id' => $product->id]) }}" class="text-blue-600 hover:underline">Entrada</a>
                             </td>
                         </tr>
                     @endforeach

@@ -20,7 +20,8 @@ class ServiceSeeder extends Seeder
         foreach ($services as $name) {
             Service::create([
                 'name' => $name,
-                'description' => $name . ' para todo tipo de vehículo.'
+                'description' => $name . ' para todo tipo de vehículo.',
+                'active' => true
             ]);
         }
     }

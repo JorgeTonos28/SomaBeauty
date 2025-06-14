@@ -49,11 +49,10 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:products,name,' . $product->id,
             'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0'
+            'price' => 'required|numeric|min:0'
         ]);
 
-        $product->update($request->only('name', 'description', 'price', 'stock'));
+        $product->update($request->only('name', 'description', 'price'));
 
         return redirect()->route('products.index')
             ->with('success', 'Producto actualizado correctamente.');

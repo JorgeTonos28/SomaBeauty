@@ -26,8 +26,8 @@
             </div>
 
             <div>
-                <label for="stock" class="block font-medium text-sm text-gray-700">Stock</label>
-                <input type="number" name="stock" value="{{ $product->stock }}" required class="form-input w-full">
+                <label class="block font-medium text-sm text-gray-700">Stock actual</label>
+                <input type="number" value="{{ $product->stock }}" disabled class="form-input w-full bg-gray-100">
             </div>
 
             <div class="flex items-center gap-4">
