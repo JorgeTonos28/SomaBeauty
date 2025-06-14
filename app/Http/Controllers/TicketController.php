@@ -201,12 +201,20 @@ class TicketController extends Controller
 
             if (count($details) === 0) {
                 DB::rollBack();
-                return back()->withErrors(['service_ids' => 'Debe agregar al menos un servicio, producto o trago'])->withInput();
+                $message = ['service_ids' => ['Debe agregar al menos un servicio, producto o trago']];
+                if ($request->expectsJson()) {
+                    return response()->json(['errors' => $message], 422);
+                }
+                return back()->withErrors($message)->withInput();
             }
 
             if ($request->paid_amount < $total) {
                 DB::rollBack();
-                return back()->withErrors(['paid_amount' => 'El monto pagado es menor al total a pagar'])->withInput();
+                $message = ['paid_amount' => ['El monto pagado es menor al total a pagar']];
+                if ($request->expectsJson()) {
+                    return response()->json(['errors' => $message], 422);
+                }
+                return back()->withErrors($message)->withInput();
             }
 
             $ticket = Ticket::create([
