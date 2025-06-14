@@ -125,6 +125,15 @@
         const productPrices = @json($productPrices);
         const drinkPrices = @json($drinkPrices);
 
+        let currentTotal = 0;
+
+        function formatCurrency(value) {
+            return value.toLocaleString('es-DO', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
         function updateTotal() {
             const vehicleTypeId = document.querySelector('select[name="vehicle_type_id"]').value;
             let total = 0;
@@ -149,16 +158,17 @@
                 total += price * qty;
             });
 
-            document.getElementById('total_amount').innerText = total.toFixed(2);
+            currentTotal = total;
+            document.getElementById('total_amount').innerText = formatCurrency(total);
             updateChange();
         }
 
         function updateChange() {
-            const total = parseFloat(document.getElementById('total_amount').innerText) || 0;
+            const total = currentTotal;
             const paidField = document.getElementById('paid_amount');
             const paid = paidField.value === '' ? null : parseFloat(paidField.value);
             const change = paid === null ? 0 : paid - total;
-            document.getElementById('change_display').innerText = change.toFixed(2);
+            document.getElementById('change_display').innerText = formatCurrency(change);
         }
 
         function addProductRow() {

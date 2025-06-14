@@ -120,6 +120,21 @@ class TicketController extends Controller
             'drink_quantities.*' => 'integer|min:1',
             'payment_method' => 'required|in:efectivo,tarjeta,transferencia,mixto',
             'paid_amount' => 'required|numeric|min:0'
+        ], [
+            'customer_name.required' => 'El nombre del cliente es obligatorio.',
+            'customer_name.max' => 'El nombre del cliente es demasiado largo.',
+            'customer_cedula.max' => 'La cédula es demasiado larga.',
+            'vehicle_type_id.exists' => 'El tipo de vehículo seleccionado no es válido.',
+            'washer_id.exists' => 'El lavador seleccionado no es válido.',
+            'service_ids.*.exists' => 'Alguno de los servicios seleccionados es inválido.',
+            'product_ids.*.exists' => 'Alguno de los productos seleccionados es inválido.',
+            'quantities.*.min' => 'La cantidad debe ser al menos 1.',
+            'drink_ids.*.exists' => 'Alguno de los tragos seleccionados es inválido.',
+            'drink_quantities.*.min' => 'La cantidad debe ser al menos 1.',
+            'payment_method.required' => 'Debe seleccionar un método de pago.',
+            'paid_amount.required' => 'Debe ingresar el monto pagado.',
+            'paid_amount.numeric' => 'El monto pagado debe ser un número válido.',
+            'paid_amount.min' => 'El monto pagado no puede ser negativo.'
         ]);
 
         DB::beginTransaction();

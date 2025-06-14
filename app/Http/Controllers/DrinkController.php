@@ -46,6 +46,12 @@ class DrinkController extends Controller
             'name' => 'required|string|max:255|unique:drinks,name',
             'price' => 'required|numeric|min:0',
             'ingredients' => 'nullable|string',
+        ], [
+            'name.required' => 'El nombre del trago es obligatorio.',
+            'name.unique' => 'Ya existe un trago con ese nombre.',
+            'price.required' => 'El precio es obligatorio.',
+            'price.numeric' => 'El precio debe ser un número válido.',
+            'price.min' => 'El precio no puede ser negativo.',
         ]);
 
         Drink::create($request->only('name', 'price', 'ingredients'));
@@ -65,6 +71,12 @@ class DrinkController extends Controller
             'name' => 'required|string|max:255|unique:drinks,name,' . $drink->id,
             'price' => 'required|numeric|min:0',
             'ingredients' => 'nullable|string',
+        ], [
+            'name.required' => 'El nombre del trago es obligatorio.',
+            'name.unique' => 'Ya existe un trago con ese nombre.',
+            'price.required' => 'El precio es obligatorio.',
+            'price.numeric' => 'El precio debe ser un número válido.',
+            'price.min' => 'El precio no puede ser negativo.',
         ]);
 
         $drink->update($request->only('name', 'price', 'ingredients'));
