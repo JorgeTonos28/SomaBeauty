@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div x-data="{selected: null}" x-on:click.away="selected = null" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div x-data="filterTable('{{ route('products.index') }}', {selected: null})" x-on:click.away="selected = null" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
         @if (session('success'))
             <div class="mb-4 font-medium text-sm text-green-600">
@@ -37,31 +37,11 @@
             </div>
         @endif
 
-        <form method="GET" class="mb-4" x-data>
-            <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Buscar producto" class="form-input" x-on:input.debounce.500ms="$root.submit()">
+        <form method="GET" x-ref="form" class="mb-4">
+            <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Buscar producto" class="form-input" @input.debounce.500ms="fetchTable()">
         </form>
 
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <table class="min-w-full table-auto border">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="px-4 py-2 border">Nombre</th>
-                        <th class="px-4 py-2 border">Precio</th>
-                        <th class="px-4 py-2 border">Stock</th>
-                        
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($products as $product)
-                        <tr class="border-t cursor-pointer" x-on:click="selected = {{ $product->id }}" :class="selected === {{ $product->id }} ? 'bg-blue-100' : ''">
-                            <td class="px-4 py-2">{{ $product->name }}</td>
-                            <td class="px-4 py-2">RD$ {{ number_format($product->price, 2) }}</td>
-                            <td class="px-4 py-2">{{ $product->stock }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-</div>
+        <div x-html="tableHtml"></div>
         @foreach ($products as $product)
             <x-modal name="edit-{{ $product->id }}" focusable>
                 <form method="POST" action="{{ route('products.update', $product) }}" class="p-6 space-y-6">

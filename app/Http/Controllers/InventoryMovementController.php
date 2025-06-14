@@ -33,6 +33,12 @@ class InventoryMovementController extends Controller
 
         $movements = $query->latest()->paginate(20);
 
+        if ($request->ajax()) {
+            return view('inventory.partials.table', [
+                'movements' => $movements,
+            ]);
+        }
+
         return view('inventory.index', [
             'movements' => $movements,
             'filters' => $request->only(['start', 'end', 'product']),

@@ -33,6 +33,12 @@ class TicketController extends Controller
 
         $tickets = $query->latest()->paginate(20);
 
+        if ($request->ajax()) {
+            return view('tickets.partials.table', [
+                'tickets' => $tickets,
+            ]);
+        }
+
         return view('tickets.index', [
             'tickets' => $tickets,
             'filters' => $request->only(['start', 'end']),
@@ -52,6 +58,12 @@ class TicketController extends Controller
         }
 
         $tickets = $query->latest()->paginate(20);
+
+        if ($request->ajax()) {
+            return view('tickets.partials.canceled-table', [
+                'tickets' => $tickets,
+            ]);
+        }
 
         return view('tickets.canceled', [
             'tickets' => $tickets,

@@ -26,6 +26,12 @@ class PettyCashExpenseController extends Controller
 
         $expenses = $query->latest()->paginate(20);
 
+        if ($request->ajax()) {
+            return view('petty_cash.partials.table', [
+                'expenses' => $expenses,
+            ]);
+        }
+
         return view('petty_cash.index', [
             'expenses' => $expenses,
             'filters' => $request->only(['start', 'end']),
