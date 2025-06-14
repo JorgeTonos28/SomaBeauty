@@ -12,10 +12,24 @@ class PettyCashExpenseController extends Controller
         $this->middleware(['auth', 'role:admin,cajero']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $expenses = PettyCashExpense::latest()->get();
-        return view('petty_cash.index', compact('expenses'));
+        $query = PettyCashExpense::query();
+
+        if ($request->filled('start')) {
+            $query->whereDate('created_at', '>=', $request->start);
+        }
+
+        if ($request->filled('end')) {
+            $query->whereDate('created_at', '<=', $request->end);
+        }
+
+        $expenses = $query->latest()->paginate(20);
+
+        return view('petty_cash.index', [
+            'expenses' => $expenses,
+            'filters' => $request->only(['start', 'end']),
+        ]);
     }
 
     public function create()

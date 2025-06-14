@@ -12,7 +12,20 @@
             </div>
         @endif
 
-        <div class="mb-4">
+        <div class="mb-4 flex flex-wrap items-end gap-4">
+            <form method="GET" class="flex items-end gap-2">
+                <div>
+                    <label class="block text-sm">Desde</label>
+                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input">
+                </div>
+                <div>
+                    <label class="block text-sm">Hasta</label>
+                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input">
+                </div>
+                <div class="pb-1">
+                    <button type="submit" class="px-3 py-2 bg-gray-200 rounded">Filtrar</button>
+                </div>
+            </form>
             <a href="{{ route('inventory.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
                 Nueva Entrada
             </a>
@@ -43,7 +56,7 @@
             </table>
         </div>
         <div class="mt-4">
-            {{ $movements->links() }}
+            {{ $movements->withQueryString()->links() }}
         </div>
     </div>
 </x-app-layout>
