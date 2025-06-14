@@ -11,7 +11,20 @@
             <div class="mb-4 font-medium text-sm text-green-600">{{ session('success') }}</div>
         @endif
 
-        <div class="mb-4">
+        <div class="mb-4 flex flex-wrap items-end gap-4">
+            <form method="GET" class="flex items-end gap-2">
+                <div>
+                    <label class="block text-sm">Desde</label>
+                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input">
+                </div>
+                <div>
+                    <label class="block text-sm">Hasta</label>
+                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input">
+                </div>
+                <div class="pb-1">
+                    <button type="submit" class="px-3 py-2 bg-gray-200 rounded">Filtrar</button>
+                </div>
+            </form>
             <a href="{{ route('tickets.index') }}" class="text-blue-600 hover:underline">&laquo; Volver a activos</a>
         </div>
 
@@ -42,6 +55,9 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+        <div class="mt-4">
+            {{ $tickets->withQueryString()->links() }}
         </div>
     </div>
 </x-app-layout>

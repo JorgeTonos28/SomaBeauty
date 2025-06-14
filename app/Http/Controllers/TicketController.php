@@ -19,21 +19,43 @@ class TicketController extends Controller
         $this->middleware(['auth', 'role:admin,cajero']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $tickets = Ticket::where('canceled', false)->latest()->take(10)->get();
+        $query = Ticket::where('canceled', false);
+
+        if ($request->filled('start')) {
+            $query->whereDate('created_at', '>=', $request->start);
+        }
+
+        if ($request->filled('end')) {
+            $query->whereDate('created_at', '<=', $request->end);
+        }
+
+        $tickets = $query->latest()->paginate(20);
 
         return view('tickets.index', [
-            'tickets' => $tickets
+            'tickets' => $tickets,
+            'filters' => $request->only(['start', 'end']),
         ]);
     }
 
-    public function canceled()
+    public function canceled(Request $request)
     {
-        $tickets = Ticket::where('canceled', true)->latest()->take(10)->get();
+        $query = Ticket::where('canceled', true);
+
+        if ($request->filled('start')) {
+            $query->whereDate('created_at', '>=', $request->start);
+        }
+
+        if ($request->filled('end')) {
+            $query->whereDate('created_at', '<=', $request->end);
+        }
+
+        $tickets = $query->latest()->paginate(20);
 
         return view('tickets.canceled', [
-            'tickets' => $tickets
+            'tickets' => $tickets,
+            'filters' => $request->only(['start', 'end']),
         ]);
     }
 
