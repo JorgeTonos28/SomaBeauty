@@ -26,7 +26,7 @@
                         <th class="px-4 py-2 border">Producto</th>
                         <th class="px-4 py-2 border">Tipo</th>
                         <th class="px-4 py-2 border">Cantidad</th>
-                        <th class="px-4 py-2 border">Descripción</th>
+                        <th class="px-4 py-2 border">Usuario</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,7 +36,7 @@
                             <td class="px-4 py-2">{{ $move->product->name }}</td>
                             <td class="px-4 py-2">{{ ucfirst($move->movement_type) }}</td>
                             <td class="px-4 py-2">{{ $move->quantity }}</td>
-                            <td class="px-4 py-2">{{ $move->description }}</td>
+                            <td class="px-4 py-2">{{ optional($move->user)->name }}</td>
                         </tr>
                     @endforeach
                 </tbody>

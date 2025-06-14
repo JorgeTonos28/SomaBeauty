@@ -31,10 +31,6 @@
                 <label for="quantity" class="block font-medium text-sm text-gray-700">Cantidad</label>
                 <input type="number" name="quantity" min="1" required class="form-input w-full">
             </div>
-            <div>
-                <label for="description" class="block font-medium text-sm text-gray-700">Descripción</label>
-                <input type="text" name="description" class="form-input w-full">
-            </div>
             <div class="flex items-center gap-4">
                 <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Guardar</button>
                 <a href="{{ route('inventory.index') }}" class="text-gray-600 hover:underline">Cancelar</a>

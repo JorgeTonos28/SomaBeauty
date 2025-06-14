@@ -15,7 +15,7 @@ class InventoryMovementController extends Controller
 
     public function index()
     {
-        $movements = InventoryMovement::with('product')->latest()->paginate(20);
+        $movements = InventoryMovement::with(['product','user'])->latest()->paginate(20);
         return view('inventory.index', compact('movements'));
     }
 
@@ -30,15 +30,14 @@ class InventoryMovementController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
-            'description' => 'nullable|string|max:255'
         ]);
 
         $product = Product::findOrFail($request->product_id);
         InventoryMovement::create([
             'product_id' => $product->id,
+            'user_id' => auth()->id(),
             'movement_type' => 'entrada',
             'quantity' => $request->quantity,
-            'description' => $request->description,
         ]);
         $product->increment('stock', $request->quantity);
 

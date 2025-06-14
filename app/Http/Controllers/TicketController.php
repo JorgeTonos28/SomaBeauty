@@ -103,9 +103,9 @@ class TicketController extends Controller
                     $product->decrement('stock', $qty);
                     InventoryMovement::create([
                         'product_id' => $productId,
+                        'user_id' => auth()->id(),
                         'movement_type' => 'salida',
                         'quantity' => $qty,
-                        'description' => 'Venta',
                     ]);
                 }
             }
