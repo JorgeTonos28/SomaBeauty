@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div x-data="{selected: null}" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div x-data="{selected: null}" x-on:click.away="selected = null" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
         @if (session('success'))
             <div class="mb-4 font-medium text-sm text-green-600">
