@@ -16,15 +16,15 @@
             <form method="GET" class="flex items-end gap-2" x-data>
                 <div>
                     <label class="block text-sm">Desde</label>
-                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input" x-on:change="submit()">
+                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input" x-on:change="$root.submit()">
                 </div>
                 <div>
                     <label class="block text-sm">Hasta</label>
-                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" x-on:change="submit()">
+                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" x-on:change="$root.submit()">
                 </div>
                 <div>
                     <label class="block text-sm">Producto</label>
-                    <input type="text" name="product" value="{{ $filters['product'] ?? '' }}" class="form-input" x-on:input.debounce.500ms="submit()">
+                    <input type="text" name="product" value="{{ $filters['product'] ?? '' }}" class="form-input" x-on:input.debounce.500ms="$root.submit()">
                 </div>
             </form>
             <a href="{{ route('inventory.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">

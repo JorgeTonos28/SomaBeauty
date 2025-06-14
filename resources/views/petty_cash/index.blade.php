@@ -14,11 +14,11 @@
             <form method="GET" class="flex items-end gap-2" x-data>
                 <div>
                     <label class="block text-sm">Desde</label>
-                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input" x-on:change="submit()">
+                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input" x-on:change="$root.submit()">
                 </div>
                 <div>
                     <label class="block text-sm">Hasta</label>
-                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" x-on:change="submit()">
+                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" x-on:change="$root.submit()">
                 </div>
             </form>
             <a href="{{ route('petty-cash.create') }}" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">Nuevo Gasto</a>

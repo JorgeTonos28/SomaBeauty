@@ -38,7 +38,7 @@
         @endif
 
         <form method="GET" class="mb-4" x-data>
-            <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Buscar producto" class="form-input" x-on:input.debounce.500ms="submit()">
+            <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Buscar producto" class="form-input" x-on:input.debounce.500ms="$root.submit()">
         </form>
 
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
