@@ -167,12 +167,148 @@ class TicketController extends Controller
 
     public function edit(Ticket $ticket)
     {
-        abort(403); // Edición de tickets deshabilitada por integridad
+        $ticket->load('details');
+
+        $services = Service::where('active', true)->with('prices')->get();
+        $servicePrices = [];
+        foreach ($services as $service) {
+            foreach ($service->prices as $price) {
+                $servicePrices[$service->id][$price->vehicle_type_id] = $price->price;
+            }
+        }
+
+        $products = Product::all();
+        $productPrices = $products->pluck('price', 'id');
+
+        $selectedServices = $ticket->details->where('type', 'service')->pluck('service_id')->toArray();
+        $selectedProducts = $ticket->details->where('type', 'product')->map(function ($d) {
+            return ['product_id' => $d->product_id, 'quantity' => $d->quantity];
+        });
+
+        return view('tickets.edit', [
+            'ticket' => $ticket,
+            'services' => $services,
+            'vehicleTypes' => VehicleType::all(),
+            'products' => $products,
+            'washers' => Washer::all(),
+            'servicePrices' => $servicePrices,
+            'productPrices' => $productPrices,
+            'selectedServices' => $selectedServices,
+            'selectedProducts' => $selectedProducts,
+        ]);
     }
 
     public function update(Request $request, Ticket $ticket)
     {
-        abort(403); // Lo mismo
+        $request->validate([
+            'vehicle_type_id' => 'required|exists:vehicle_types,id',
+            'washer_id' => 'required|exists:washers,id',
+            'service_ids' => 'required|array',
+            'service_ids.*' => 'exists:services,id',
+            'product_ids' => 'nullable|array',
+            'product_ids.*' => 'exists:products,id',
+            'quantities' => 'nullable|array',
+            'quantities.*' => 'integer|min:1',
+            'payment_method' => 'required|in:efectivo,tarjeta,transferencia,mixto',
+            'paid_amount' => 'required|numeric|min:0'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $vehicleType = VehicleType::findOrFail($request->vehicle_type_id);
+            $total = 0;
+            $details = [];
+
+            foreach ($ticket->details as $detail) {
+                if ($detail->type === 'product' && $detail->product_id) {
+                    Product::whereId($detail->product_id)->increment('stock', $detail->quantity);
+                }
+                $detail->delete();
+            }
+
+            foreach ($request->service_ids as $serviceId) {
+                $service = Service::where('active', true)->find($serviceId);
+                if (!$service) {
+                    continue;
+                }
+                $priceRow = $service->prices()->where('vehicle_type_id', $vehicleType->id)->first();
+                $price = $priceRow ? $priceRow->price : 0;
+
+                $details[] = [
+                    'type' => 'service',
+                    'service_id' => $serviceId,
+                    'product_id' => null,
+                    'quantity' => 1,
+                    'unit_price' => $price,
+                    'subtotal' => $price,
+                ];
+
+                $total += $price;
+            }
+
+            if ($request->product_ids) {
+                foreach ($request->product_ids as $index => $productId) {
+                    $product = Product::find($productId);
+                    $qty = $request->quantities[$index];
+                    $subtotal = $product->price * $qty;
+
+                    $details[] = [
+                        'type' => 'product',
+                        'service_id' => null,
+                        'product_id' => $productId,
+                        'quantity' => $qty,
+                        'unit_price' => $product->price,
+                        'subtotal' => $subtotal,
+                    ];
+
+                    $total += $subtotal;
+
+                    $product->decrement('stock', $qty);
+                    InventoryMovement::create([
+                        'product_id' => $productId,
+                        'user_id' => auth()->id(),
+                        'movement_type' => 'salida',
+                        'quantity' => $qty,
+                    ]);
+                }
+            }
+
+            if ($request->paid_amount < $total) {
+                DB::rollBack();
+                return back()->withErrors(['paid_amount' => 'El monto pagado es menor al total a pagar'])->withInput();
+            }
+
+            $oldWasher = $ticket->washer_id;
+
+            $ticket->update([
+                'user_id' => auth()->id(),
+                'washer_id' => $request->washer_id,
+                'vehicle_type_id' => $request->vehicle_type_id,
+                'total_amount' => $total,
+                'paid_amount' => $request->paid_amount,
+                'change' => $request->paid_amount - $total,
+                'payment_method' => $request->payment_method,
+            ]);
+
+            foreach ($details as $detail) {
+                $detail['ticket_id'] = $ticket->id;
+                TicketDetail::create($detail);
+            }
+
+            if ($oldWasher != $request->washer_id) {
+                Washer::whereId($oldWasher)->decrement('pending_amount', 100);
+                Washer::whereId($request->washer_id)->increment('pending_amount', 100);
+            }
+
+            DB::commit();
+
+            return redirect()->route('tickets.index')->with('success', 'Ticket actualizado correctamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error actualizando ticket: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Ticket $ticket)
