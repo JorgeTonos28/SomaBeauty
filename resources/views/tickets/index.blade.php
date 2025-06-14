@@ -14,11 +14,6 @@
         <div class="mb-4 flex items-center gap-4">
             <a href="{{ route('tickets.create') }}" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">Nuevo Ticket</a>
             <a href="{{ route('tickets.canceled') }}" class="text-blue-600 hover:underline">Ver cancelados</a>
-            <button x-show="selected" x-on:click="window.location='{{ url('tickets') }}/' + selected + '/edit'" class="text-yellow-600" title="Editar">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.1 2.1 0 113 3L6.75 19.5H3v-3.75L16.862 3.487z" />
-                </svg>
-            </button>
             <button x-show="selected" x-on:click="$dispatch('open-modal', 'cancel-' + selected)" class="text-red-600" title="Cancelar">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />

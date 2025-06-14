@@ -72,7 +72,7 @@
             </div>
 
             <!-- Botón y Resumen -->
-            <div class="flex items-center gap-6 mt-4 fixed bottom-0 left-0 right-0 bg-white p-4 shadow z-10 max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div class="flex items-center gap-6 mt-4 fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white p-4 shadow z-10 sm:px-6 lg:px-8">
                 <div class="flex-1 space-x-4">
                     <span>Total: RD$ <span id="total_amount">0.00</span></span>
                     <span>Cambio: RD$ <span id="change_display">0.00</span></span>

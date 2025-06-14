@@ -47,7 +47,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'role:admin,cajero'])->group(function () {
     Route::get('tickets/canceled', [TicketController::class, 'canceled'])->name('tickets.canceled');
     Route::post('tickets/{ticket}/cancel', [TicketController::class, 'cancel'])->name('tickets.cancel');
-    Route::resource('tickets', TicketController::class)->except(['show']);
+    Route::resource('tickets', TicketController::class)->except(['show', 'edit', 'update']);
     Route::resource('petty-cash', PettyCashExpenseController::class)->except(['show', 'edit', 'update']);
 });
 require __DIR__.'/auth.php';
