@@ -16,9 +16,13 @@
             <a href="{{ route('washers.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('washers.*') ? 'bg-gray-200' : '' }}">
                 Lavadores
             </a>
-            <a href="{{ route('tickets.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('tickets.*') ? 'bg-gray-200' : '' }}">
-                Tickets
-            </a>
+            <div>
+                <div class="px-3 py-2 font-semibold">Tickets</div>
+                <div class="pl-6 space-y-1">
+                    <a href="{{ route('tickets.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('tickets.index') ? 'bg-gray-200' : '' }}">Activos</a>
+                    <a href="{{ route('tickets.canceled') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('tickets.canceled') ? 'bg-gray-200' : '' }}">Cancelados</a>
+                </div>
+            </div>
             @if(auth()->user()->role === 'admin')
                 <a href="{{ route('users.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('users.*') ? 'bg-gray-200' : '' }}">
                     Usuarios

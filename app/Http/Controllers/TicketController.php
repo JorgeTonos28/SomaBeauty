@@ -19,23 +19,79 @@ class TicketController extends Controller
         $this->middleware(['auth', 'role:admin,cajero']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $tickets = Ticket::latest()->take(10)->get();
-    
+        $query = Ticket::where('canceled', false);
+
+        if ($request->filled('start')) {
+            $query->whereDate('created_at', '>=', $request->start);
+        }
+
+        if ($request->filled('end')) {
+            $query->whereDate('created_at', '<=', $request->end);
+        }
+
+        $tickets = $query->latest()->paginate(20);
+
+        if ($request->ajax()) {
+            return view('tickets.partials.table', [
+                'tickets' => $tickets,
+            ]);
+        }
+
         return view('tickets.index', [
-            'tickets' => $tickets
+            'tickets' => $tickets,
+            'filters' => $request->only(['start', 'end']),
+        ]);
+    }
+
+    public function canceled(Request $request)
+    {
+        $query = Ticket::where('canceled', true);
+
+        if ($request->filled('start')) {
+            $query->whereDate('created_at', '>=', $request->start);
+        }
+
+        if ($request->filled('end')) {
+            $query->whereDate('created_at', '<=', $request->end);
+        }
+
+        $tickets = $query->latest()->paginate(20);
+
+        if ($request->ajax()) {
+            return view('tickets.partials.canceled-table', [
+                'tickets' => $tickets,
+            ]);
+        }
+
+        return view('tickets.canceled', [
+            'tickets' => $tickets,
+            'filters' => $request->only(['start', 'end']),
         ]);
     }
 
 
     public function create()
     {
+        $services = Service::where('active', true)->with('prices')->get();
+        $servicePrices = [];
+        foreach ($services as $service) {
+            foreach ($service->prices as $price) {
+                $servicePrices[$service->id][$price->vehicle_type_id] = $price->price;
+            }
+        }
+
+        $products = Product::where('stock', '>', 0)->get();
+        $productPrices = $products->pluck('price', 'id');
+
         return view('tickets.create', [
-            'services' => Service::where('active', true)->get(),
+            'services' => $services,
             'vehicleTypes' => VehicleType::all(),
-            'products' => Product::where('stock', '>', 0)->get(),
+            'products' => $products,
             'washers' => Washer::all(),
+            'servicePrices' => $servicePrices,
+            'productPrices' => $productPrices,
         ]);
     }
 
@@ -110,6 +166,11 @@ class TicketController extends Controller
                 }
             }
 
+            if ($request->paid_amount < $total) {
+                DB::rollBack();
+                return back()->withErrors(['paid_amount' => 'El monto pagado es menor al total a pagar'])->withInput();
+            }
+
             $ticket = Ticket::create([
                 'user_id' => auth()->id(),
                 'washer_id' => $request->washer_id,
@@ -140,17 +201,23 @@ class TicketController extends Controller
 
     public function edit(Ticket $ticket)
     {
-        abort(403); // Edición de tickets deshabilitada por integridad
+        abort(403);
     }
 
     public function update(Request $request, Ticket $ticket)
     {
-        abort(403); // Lo mismo
+        abort(403);
     }
 
     public function destroy(Ticket $ticket)
     {
         $ticket->delete();
         return redirect()->route('tickets.index')->with('success', 'Ticket eliminado');
+    }
+
+    public function cancel(Ticket $ticket)
+    {
+        $ticket->update(['canceled' => true]);
+        return redirect()->route('tickets.index')->with('success', 'Ticket cancelado');
     }
 }

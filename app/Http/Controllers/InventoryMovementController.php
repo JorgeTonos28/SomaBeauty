@@ -13,10 +13,36 @@ class InventoryMovementController extends Controller
         $this->middleware(['auth', 'role:admin,cajero']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $movements = InventoryMovement::with(['product','user'])->latest()->paginate(20);
-        return view('inventory.index', compact('movements'));
+        $query = InventoryMovement::with(['product', 'user']);
+
+        if ($request->filled('start')) {
+            $query->whereDate('created_at', '>=', $request->start);
+        }
+
+        if ($request->filled('end')) {
+            $query->whereDate('created_at', '<=', $request->end);
+        }
+
+        if ($request->filled('product')) {
+            $query->whereHas('product', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->product . '%');
+            });
+        }
+
+        $movements = $query->latest()->paginate(20);
+
+        if ($request->ajax()) {
+            return view('inventory.partials.table', [
+                'movements' => $movements,
+            ]);
+        }
+
+        return view('inventory.index', [
+            'movements' => $movements,
+            'filters' => $request->only(['start', 'end', 'product']),
+        ]);
     }
 
     public function create()

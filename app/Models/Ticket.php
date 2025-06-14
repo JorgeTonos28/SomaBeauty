@@ -11,7 +11,11 @@ class Ticket extends Model
 
     protected $fillable = [
         'user_id', 'washer_id', 'vehicle_type_id',
-        'total_amount', 'paid_amount', 'change', 'payment_method'
+        'total_amount', 'paid_amount', 'change', 'payment_method', 'canceled'
+    ];
+
+    protected $casts = [
+        'canceled' => 'boolean',
     ];
 
     public function user()

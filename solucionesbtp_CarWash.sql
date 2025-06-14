@@ -268,6 +268,7 @@ CREATE TABLE `tickets` (
   `paid_amount` decimal(10,2) NOT NULL,
   `change` decimal(10,2) NOT NULL DEFAULT 0.00,
   `payment_method` enum('efectivo','tarjeta','transferencia','mixto') NOT NULL,
+  `canceled` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -276,9 +277,9 @@ CREATE TABLE `tickets` (
 -- Dumping data for table `tickets`
 --
 
-INSERT INTO `tickets` (`id`, `user_id`, `washer_id`, `vehicle_type_id`, `total_amount`, `paid_amount`, `change`, `payment_method`, `created_at`, `updated_at`) VALUES
-(1, 1, 2, 4, 1995.00, 5000.00, 3005.00, 'efectivo', '2025-04-14 08:07:12', '2025-04-14 08:07:12'),
-(2, 1, 3, 5, 584.00, 200.00, -384.00, 'efectivo', '2025-04-14 08:14:02', '2025-04-14 08:14:02');
+INSERT INTO `tickets` (`id`, `user_id`, `washer_id`, `vehicle_type_id`, `total_amount`, `paid_amount`, `change`, `payment_method`, `canceled`, `created_at`, `updated_at`) VALUES
+(1, 1, 2, 4, 1995.00, 5000.00, 3005.00, 'efectivo', 0, '2025-04-14 08:07:12', '2025-04-14 08:07:12'),
+(2, 1, 3, 5, 584.00, 200.00, -384.00, 'efectivo', 0, '2025-04-14 08:14:02', '2025-04-14 08:14:02');
 
 -- --------------------------------------------------------
 
