@@ -35,6 +35,9 @@
                 <a href="{{ route('users.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('users.*') ? 'bg-gray-200' : '' }}">
                     Usuarios
                 </a>
+                <a href="{{ route('bank-accounts.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('bank-accounts.*') ? 'bg-gray-200' : '' }}">
+                    Cuentas Bancarias
+                </a>
             @endif
             <a href="{{ route('petty-cash.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('petty-cash.*') ? 'bg-gray-200' : '' }}">
                 Caja Chica
