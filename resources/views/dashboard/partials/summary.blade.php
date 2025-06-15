@@ -7,7 +7,7 @@
         <p>Ventas de lavados: RD$ {{ number_format($serviceTotal, 2) }}</p>
         <p>Ventas de productos: RD$ {{ number_format($productTotal, 2) }}</p>
         <p>Ventas de tragos: RD$ {{ number_format($drinkTotal, 2) }}</p>
-        @if(Auth::user()->hasRole('admin'))
+        @if(Auth::user()->role === 'admin')
             <p>Beneficio bruto: RD$ {{ number_format($grossProfit, 2) }}</p>
         @endif
 </div>
