@@ -29,7 +29,7 @@
                         <select name="vehicle_type_id" class="form-select w-full mt-1">
                             <option value="">-- Seleccionar --</option>
                             @foreach ($vehicleTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                <option value="{{ $type->id }}" data-name="{{ $type->name }}">{{ $type->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -48,12 +48,18 @@
                     <!-- Lista Servicios -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Servicios Realizados</label>
+                        <div id="service-list">
                         @foreach ($services as $service)
                             <div class="flex items-center space-x-2 mt-1">
                                 <input type="checkbox" name="service_ids[]" value="{{ $service->id }}">
-                                <label>{{ $service->name }}</label>
+                                <label data-service-id="{{ $service->id }}" data-name="{{ $service->name }}">{{ $service->name }}</label>
                             </div>
                         @endforeach
+                        </div>
+                        <div class="mt-2 text-sm">
+                            <span>Total lavado: RD$ <span id="wash_total">0.00</span></span>
+                            <span class="ml-4">Descuento: RD$ <span id="wash_discount">0.00</span></span>
+                        </div>
                     </div>
                 </div>
 
@@ -99,6 +105,7 @@
             <!-- Botón y Resumen -->
             <div class="flex items-center gap-6 mt-4 fixed bottom-0 inset-x-0 mx-auto max-w-4xl bg-white p-4 shadow z-10 sm:px-6 lg:px-8">
                 <div class="flex-1 space-x-4">
+                    <span>Descuento: RD$ <span id="discount_total">0.00</span></span>
                     <span>Total: RD$ <span id="total_amount">0.00</span></span>
                     <span>Cambio: RD$ <span id="change_display">0.00</span></span>
                 </div>
@@ -124,8 +131,12 @@
         const servicePrices = @json($servicePrices);
         const productPrices = @json($productPrices);
         const drinkPrices = @json($drinkPrices);
+        const serviceDiscounts = @json($serviceDiscounts);
+        const productDiscounts = @json($productDiscounts);
+        const drinkDiscounts = @json($drinkDiscounts);
 
         let currentTotal = 0;
+        let currentDiscount = 0;
 
         function formatCurrency(value) {
             return value.toLocaleString('es-DO', {
@@ -134,32 +145,106 @@
             });
         }
 
+        function updateServiceLabels() {
+            const vehicleTypeId = document.querySelector('select[name="vehicle_type_id"]').value;
+            document.querySelectorAll('#service-list label[data-service-id]').forEach(label => {
+                const id = label.dataset.serviceId;
+                const name = label.dataset.name;
+                let price = servicePrices[id] && servicePrices[id][vehicleTypeId] ? parseFloat(servicePrices[id][vehicleTypeId]) : 0;
+                const disc = serviceDiscounts[id];
+                let final = price;
+                if(disc){
+                    const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount)/100;
+                    final = Math.max(0, price - d);
+                }
+                let text = name + ' (RD$ ' + price.toFixed(2) + ')';
+                if(final !== price) text += ' -> (' + final.toFixed(2) + ')';
+                label.textContent = text;
+            });
+        }
+
+        function updateVehicleOptions() {
+            document.querySelectorAll('select[name="vehicle_type_id"] option[data-name]').forEach(opt => {
+                const vtId = opt.value;
+                const name = opt.dataset.name;
+                if(!vtId){
+                    opt.textContent = '-- Seleccionar --';
+                    return;
+                }
+                let price = 0;
+                let discTotal = 0;
+                document.querySelectorAll('input[name="service_ids[]"]:checked').forEach(cb => {
+                    const sid = cb.value;
+                    const p = servicePrices[sid] && servicePrices[sid][vtId] ? parseFloat(servicePrices[sid][vtId]) : 0;
+                    price += p;
+                    const disc = serviceDiscounts[sid];
+                    if(disc){
+                        const d = disc.type === 'fixed' ? parseFloat(disc.amount) : p * parseFloat(disc.amount)/100;
+                        discTotal += d;
+                    }
+                });
+                const final = Math.max(0, price - discTotal);
+                let text = name + ' (RD$ ' + price.toFixed(2) + ')';
+                if(discTotal > 0) text += ' -> (' + final.toFixed(2) + ')';
+                opt.textContent = text;
+            });
+        }
+
         function updateTotal() {
             const vehicleTypeId = document.querySelector('select[name="vehicle_type_id"]').value;
             let total = 0;
+            let discount = 0;
+            let serviceTotal = 0;
+            let serviceDisc = 0;
 
             document.querySelectorAll('input[name="service_ids[]"]:checked').forEach(cb => {
                 const serviceId = cb.value;
-                const price = servicePrices[serviceId] && servicePrices[serviceId][vehicleTypeId] ? parseFloat(servicePrices[serviceId][vehicleTypeId]) : 0;
+                let price = servicePrices[serviceId] && servicePrices[serviceId][vehicleTypeId] ? parseFloat(servicePrices[serviceId][vehicleTypeId]) : 0;
+                const disc = serviceDiscounts[serviceId];
+                if(disc){
+                    const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
+                    discount += d;
+                    serviceDisc += d;
+                    price = Math.max(0, price - d);
+                }
                 total += price;
+                serviceTotal += price;
             });
 
             document.querySelectorAll('#product-list > div').forEach(row => {
                 const productId = row.querySelector('select').value;
                 const qty = parseFloat(row.querySelector('input[name="quantities[]"]').value) || 0;
-                const price = productPrices[productId] ? parseFloat(productPrices[productId]) : 0;
+                let price = productPrices[productId] ? parseFloat(productPrices[productId]) : 0;
+                const disc = productDiscounts[productId];
+                if(disc){
+                    const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
+                    discount += d * qty;
+                    price = Math.max(0, price - d);
+                }
                 total += price * qty;
             });
 
             document.querySelectorAll('#drink-list > div').forEach(row => {
                 const drinkId = row.querySelector('select').value;
                 const qty = parseFloat(row.querySelector('input[name="drink_quantities[]"]').value) || 0;
-                const price = drinkPrices[drinkId] ? parseFloat(drinkPrices[drinkId]) : 0;
+                let price = drinkPrices[drinkId] ? parseFloat(drinkPrices[drinkId]) : 0;
+                const disc = drinkDiscounts[drinkId];
+                if(disc){
+                    const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
+                    discount += d * qty;
+                    price = Math.max(0, price - d);
+                }
                 total += price * qty;
             });
 
+            document.getElementById('wash_total').innerText = formatCurrency(serviceTotal);
+            document.getElementById('wash_discount').innerText = formatCurrency(serviceDisc);
             currentTotal = total;
+            currentDiscount = discount;
             document.getElementById('total_amount').innerText = formatCurrency(total);
+            document.getElementById('discount_total').innerText = formatCurrency(discount);
+            updateServiceLabels();
+            updateVehicleOptions();
             updateChange();
         }
 
@@ -179,7 +264,21 @@
                 <select name="product_ids[]" class="form-select w-full" onchange="updateTotal()">
                     <option value="">-- Seleccionar producto --</option>
                     @foreach ($products as $product)
-                        <option value="{{ $product->id }}">{{ $product->name }} (RD$ {{ number_format($product->price, 2) }})</option>
+                        @php
+                            $disc = $productDiscounts->get($product->id);
+                            $new = null;
+                            if($disc){
+                                $new = $disc['type'] === 'fixed'
+                                    ? max(0, $product->price - $disc['amount'])
+                                    : max(0, $product->price - $product->price * $disc['amount']/100);
+                            }
+                        @endphp
+                        <option value="{{ $product->id }}">
+                            {{ $product->name }} (RD$ {{ number_format($product->price, 2) }})
+                            @if($new !== null)
+                                <span class="text-red-600"> -> ({{ number_format($new, 2) }})</span>
+                            @endif
+                        </option>
                     @endforeach
                 </select>
                 <input type="number" name="quantities[]" placeholder="Cantidad" min="1" class="form-input w-24" oninput="updateTotal()">
@@ -196,7 +295,21 @@
                 <select name="drink_ids[]" class="form-select w-full" onchange="updateTotal()">
                     <option value="">-- Seleccionar trago --</option>
                     @foreach ($drinks as $drink)
-                        <option value="{{ $drink->id }}">{{ $drink->name }} (RD$ {{ number_format($drink->price, 2) }})</option>
+                        @php
+                            $disc = $drinkDiscounts->get($drink->id);
+                            $new = null;
+                            if($disc){
+                                $new = $disc['type'] === 'fixed'
+                                    ? max(0, $drink->price - $disc['amount'])
+                                    : max(0, $drink->price - $drink->price * $disc['amount']/100);
+                            }
+                        @endphp
+                        <option value="{{ $drink->id }}">
+                            {{ $drink->name }} (RD$ {{ number_format($drink->price, 2) }})
+                            @if($new !== null)
+                                <span class="text-red-600"> -> ({{ number_format($new, 2) }})</span>
+                            @endif
+                        </option>
                     @endforeach
                 </select>
                 <input type="number" name="drink_quantities[]" placeholder="Cantidad" min="1" class="form-input w-24" oninput="updateTotal()">

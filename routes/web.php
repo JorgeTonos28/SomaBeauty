@@ -35,6 +35,9 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('services', ServiceController::class);
     Route::resource('users', UserController::class)->except(['show']);
+    Route::put('discounts/{discount}/activate', [\App\Http\Controllers\DiscountController::class, 'activate'])->name('discounts.activate');
+    Route::put('discounts/{discount}/deactivate', [\App\Http\Controllers\DiscountController::class, 'deactivate'])->name('discounts.deactivate');
+    Route::resource('discounts', \App\Http\Controllers\DiscountController::class);
 });
 Route::middleware(['auth', 'role:admin,cajero'])->group(function () {
     Route::resource('products', ProductController::class);

@@ -14,7 +14,6 @@
                 <input type="text" name="name" required class="form-input w-full">
             </div>
 
-
             <div>
                 <label for="price" class="block font-medium text-sm text-gray-700">Precio (RD$)</label>
                 <input type="number" step="0.01" name="price" required class="form-input w-full">

@@ -15,7 +15,6 @@
                 <input type="text" name="name" value="{{ $product->name }}" required class="form-input w-full">
             </div>
 
-
             <div>
                 <label for="price" class="block font-medium text-sm text-gray-700">Precio (RD$)</label>
                 <input type="number" step="0.01" name="price" value="{{ $product->price }}" required class="form-input w-full">

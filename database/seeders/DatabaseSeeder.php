@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             WasherSeeder::class,
             DrinkSeeder::class,
+            DiscountSeeder::class,
         ]);
     }
 

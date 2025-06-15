@@ -13,6 +13,11 @@
             <a href="{{ route('drinks.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('drinks.*') ? 'bg-gray-200' : '' }}">
                 Tragos
             </a>
+            @if(auth()->user()->role === 'admin')
+                <a href="{{ route('discounts.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('discounts.*') ? 'bg-gray-200' : '' }}">
+                    Descuentos
+                </a>
+            @endif
             <a href="{{ route('inventory.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('inventory.*') ? 'bg-gray-200' : '' }}">
                 Inventario
             </a>

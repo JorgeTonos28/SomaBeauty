@@ -11,7 +11,7 @@ class TicketDetail extends Model
 
     protected $fillable = [
         'ticket_id', 'type', 'service_id',
-        'product_id', 'drink_id', 'quantity', 'unit_price', 'subtotal'
+        'product_id', 'drink_id', 'quantity', 'unit_price', 'discount_amount', 'subtotal'
     ];
 
     public function ticket()
