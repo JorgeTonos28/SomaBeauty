@@ -29,7 +29,7 @@
                         <select name="vehicle_type_id" class="form-select w-full mt-1">
                             <option value="">-- Seleccionar --</option>
                             @foreach ($vehicleTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                <option value="{{ $type->id }}" data-name="{{ $type->name }}">{{ $type->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -48,12 +48,18 @@
                     <!-- Lista Servicios -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Servicios Realizados</label>
+                        <div id="service-list">
                         @foreach ($services as $service)
                             <div class="flex items-center space-x-2 mt-1">
                                 <input type="checkbox" name="service_ids[]" value="{{ $service->id }}">
-                                <label>{{ $service->name }}</label>
+                                <label data-service-id="{{ $service->id }}" data-name="{{ $service->name }}">{{ $service->name }}</label>
                             </div>
                         @endforeach
+                        </div>
+                        <div class="mt-2 text-sm">
+                            <span>Total lavado: RD$ <span id="wash_total">0.00</span></span>
+                            <span class="ml-4">Descuento: RD$ <span id="wash_discount">0.00</span></span>
+                        </div>
                     </div>
                 </div>
 
@@ -139,10 +145,57 @@
             });
         }
 
+        function updateServiceLabels() {
+            const vehicleTypeId = document.querySelector('select[name="vehicle_type_id"]').value;
+            document.querySelectorAll('#service-list label[data-service-id]').forEach(label => {
+                const id = label.dataset.serviceId;
+                const name = label.dataset.name;
+                let price = servicePrices[id] && servicePrices[id][vehicleTypeId] ? parseFloat(servicePrices[id][vehicleTypeId]) : 0;
+                const disc = serviceDiscounts[id];
+                let final = price;
+                if(disc){
+                    const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount)/100;
+                    final = Math.max(0, price - d);
+                }
+                let text = name + ' (RD$ ' + price.toFixed(2) + ')';
+                if(final !== price) text += ' -> (' + final.toFixed(2) + ')';
+                label.textContent = text;
+            });
+        }
+
+        function updateVehicleOptions() {
+            document.querySelectorAll('select[name="vehicle_type_id"] option[data-name]').forEach(opt => {
+                const vtId = opt.value;
+                const name = opt.dataset.name;
+                if(!vtId){
+                    opt.textContent = '-- Seleccionar --';
+                    return;
+                }
+                let price = 0;
+                let discTotal = 0;
+                document.querySelectorAll('input[name="service_ids[]"]:checked').forEach(cb => {
+                    const sid = cb.value;
+                    const p = servicePrices[sid] && servicePrices[sid][vtId] ? parseFloat(servicePrices[sid][vtId]) : 0;
+                    price += p;
+                    const disc = serviceDiscounts[sid];
+                    if(disc){
+                        const d = disc.type === 'fixed' ? parseFloat(disc.amount) : p * parseFloat(disc.amount)/100;
+                        discTotal += d;
+                    }
+                });
+                const final = Math.max(0, price - discTotal);
+                let text = name + ' (RD$ ' + price.toFixed(2) + ')';
+                if(discTotal > 0) text += ' -> (' + final.toFixed(2) + ')';
+                opt.textContent = text;
+            });
+        }
+
         function updateTotal() {
             const vehicleTypeId = document.querySelector('select[name="vehicle_type_id"]').value;
             let total = 0;
             let discount = 0;
+            let serviceTotal = 0;
+            let serviceDisc = 0;
 
             document.querySelectorAll('input[name="service_ids[]"]:checked').forEach(cb => {
                 const serviceId = cb.value;
@@ -151,9 +204,11 @@
                 if(disc){
                     const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
                     discount += d;
+                    serviceDisc += d;
                     price = Math.max(0, price - d);
                 }
                 total += price;
+                serviceTotal += price;
             });
 
             document.querySelectorAll('#product-list > div').forEach(row => {
@@ -182,10 +237,14 @@
                 total += price * qty;
             });
 
+            document.getElementById('wash_total').innerText = formatCurrency(serviceTotal);
+            document.getElementById('wash_discount').innerText = formatCurrency(serviceDisc);
             currentTotal = total;
             currentDiscount = discount;
             document.getElementById('total_amount').innerText = formatCurrency(total);
             document.getElementById('discount_total').innerText = formatCurrency(discount);
+            updateServiceLabels();
+            updateVehicleOptions();
             updateChange();
         }
 

@@ -101,5 +101,12 @@
         }
         percent.addEventListener('input', syncFromPercent);
         fixed.addEventListener('input', syncFromFixed);
+        document.addEventListener('DOMContentLoaded', () => {
+            if(percent.value){
+                syncFromPercent();
+            } else if(fixed.value){
+                syncFromFixed();
+            }
+        });
     </script>
 </x-app-layout>
