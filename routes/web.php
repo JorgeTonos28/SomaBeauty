@@ -23,12 +23,12 @@ Route::get('/', function () {
 
 use App\Http\Controllers\DashboardController;
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-Route::get('/dashboard/download', [DashboardController::class, 'download'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard.download');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
+    Route::get('/dashboard/download', [DashboardController::class, 'download'])
+        ->name('dashboard.download');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
