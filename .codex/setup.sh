@@ -7,7 +7,7 @@ apt-get install -y \
   git curl unzip gnupg \
   php-cli php-mbstring php-xml php-sqlite3 php-pdo-sqlite \
   php-pdo php-dom php-json php-tokenizer php-curl php-zip php-bcmath \
-  php-gd
+  php-gd  # ⬅️ esto resuelve el problema actual
 
 # 2. Composer
 curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -21,16 +21,14 @@ composer install --optimize-autoloader
 npm install
 npm run build
 
-# Crear archivo .env.testing si no existe
+# 5. Entorno de pruebas
 cp .env .env.testing || true
-
-# Asegurar configuración mínima del entorno de testing
 echo "APP_ENV=testing" >> .env.testing
 echo "DB_CONNECTION=sqlite" >> .env.testing
 echo "DB_DATABASE=:memory:" >> .env.testing
 
-# 🟢 Generar APP_KEY para entorno de pruebas
+# 6. Generar clave
 php artisan key:generate --env=testing
 
-# 6. Ejecutar tests
+# 7. Ejecutar tests
 vendor/bin/phpunit --testdox || true
