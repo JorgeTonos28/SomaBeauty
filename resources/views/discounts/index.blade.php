@@ -20,6 +20,7 @@
                     <tr>
                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Producto/Servicio</th>
                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descuento</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Precio con descuento</th>
                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fin</th>
                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
                         <th class="px-3 py-2"></th>
@@ -36,6 +37,17 @@
                                     {{ $d->amount }}%
                                 @endif
                             </td>
+                            @php
+                                $price = null;
+                                if($d->discountable_type === App\Models\Product::class) $price = $d->discountable->price;
+                                elseif($d->discountable_type === App\Models\Drink::class) $price = $d->discountable->price;
+                                elseif($d->discountable_type === App\Models\Service::class) $price = optional($d->discountable->prices->first())->price;
+                                if($price !== null){
+                                    $disc = $d->amount_type === 'fixed' ? $d->amount : $price * $d->amount/100;
+                                    $final = max(0, $price - $disc);
+                                }
+                            @endphp
+                            <td class="px-3 py-2">{{ isset($final) ? 'RD$'.number_format($final,2) : '-' }}</td>
                             <td class="px-3 py-2">{{ optional($d->end_at)->format('d/m/Y H:i') }}</td>
                             <td class="px-3 py-2">{{ $d->active ? 'Activo' : 'Inactivo' }}</td>
                             <td class="px-3 py-2 text-right">

@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('action');
             $table->enum('amount_type', ['fixed', 'percentage'])->nullable();
             $table->decimal('amount', 10, 2)->nullable();
+            $table->dateTime('start_at')->nullable();
             $table->dateTime('end_at')->nullable();
             $table->timestamps();
         });

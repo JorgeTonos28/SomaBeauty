@@ -14,6 +14,7 @@ class Discount extends Model
         'discountable_type',
         'amount_type',
         'amount',
+        'start_at',
         'end_at',
         'active',
         'created_by',
@@ -22,6 +23,7 @@ class Discount extends Model
     protected $casts = [
         'active' => 'boolean',
         'end_at' => 'datetime',
+        'start_at' => 'datetime',
     ];
 
     public function discountable(): MorphTo

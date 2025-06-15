@@ -5,6 +5,7 @@ use App\Models\Discount;
 use App\Models\DiscountLog;
 use App\Models\Product;
 use App\Models\Service;
+use App\Models\Drink;
 use Illuminate\Http\Request;
 
 class DiscountController extends Controller
@@ -24,26 +25,50 @@ class DiscountController extends Controller
     {
         $products = Product::orderBy('name')->get();
         $services = Service::orderBy('name')->get();
-        return view('discounts.create', compact('products', 'services'));
+        $drinks = Drink::orderBy('name')->get();
+        return view('discounts.create', compact('products', 'services', 'drinks'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:product,service',
-            'discountable_id' => 'required|integer',
-            'amount_type' => 'required|in:fixed,percentage',
-            'amount' => 'required|numeric|min:0',
+            'service_id' => 'nullable|integer|exists:services,id',
+            'product_id' => 'nullable|integer|exists:products,id',
+            'drink_id' => 'nullable|integer|exists:drinks,id',
+            'amount' => 'nullable|numeric|min:0',
+            'amount_percentage' => 'nullable|numeric|min:0',
+            'start_at' => 'nullable|date',
             'end_at' => 'nullable|date',
         ]);
 
-        $model = $request->type === 'product' ? Product::class : Service::class;
+        $model = null;
+        $id = null;
+        if ($request->service_id) {
+            $model = Service::class;
+            $id = $request->service_id;
+        } elseif ($request->drink_id) {
+            $model = Drink::class;
+            $id = $request->drink_id;
+        } else {
+            $model = Product::class;
+            $id = $request->product_id;
+        }
+
+        $amount = $request->amount ?? 0;
+        $type = 'fixed';
+        if(!$amount && $request->amount_percentage){
+            $amount = $request->amount_percentage;
+            $type = 'percentage';
+        }elseif($request->amount_percentage){
+            $type = 'fixed';
+        }
 
         $discount = Discount::updateOrCreate(
-            ['discountable_type' => $model, 'discountable_id' => $request->discountable_id],
+            ['discountable_type' => $model, 'discountable_id' => $id],
             [
-                'amount_type' => $request->amount_type,
-                'amount' => $request->amount,
+                'amount_type' => $type,
+                'amount' => $amount,
+                'start_at' => $request->start_at,
                 'end_at' => $request->end_at,
                 'active' => true,
                 'created_by' => auth()->id(),
@@ -56,6 +81,7 @@ class DiscountController extends Controller
             'action' => 'create',
             'amount_type' => $discount->amount_type,
             'amount' => $discount->amount,
+            'start_at' => $discount->start_at,
             'end_at' => $discount->end_at,
         ]);
 
@@ -66,26 +92,48 @@ class DiscountController extends Controller
     {
         $products = Product::orderBy('name')->get();
         $services = Service::orderBy('name')->get();
-        return view('discounts.edit', compact('discount', 'products', 'services'));
+        $drinks = Drink::orderBy('name')->get();
+        return view('discounts.edit', compact('discount', 'products', 'services', 'drinks'));
     }
 
     public function update(Request $request, Discount $discount)
     {
         $request->validate([
-            'type' => 'required|in:product,service',
-            'discountable_id' => 'required|integer',
-            'amount_type' => 'required|in:fixed,percentage',
-            'amount' => 'required|numeric|min:0',
+            'service_id' => 'nullable|integer|exists:services,id',
+            'product_id' => 'nullable|integer|exists:products,id',
+            'drink_id' => 'nullable|integer|exists:drinks,id',
+            'amount' => 'nullable|numeric|min:0',
+            'amount_percentage' => 'nullable|numeric|min:0',
+            'start_at' => 'nullable|date',
             'end_at' => 'nullable|date',
         ]);
 
-        $model = $request->type === 'product' ? Product::class : Service::class;
+        if ($request->service_id) {
+            $model = Service::class;
+            $id = $request->service_id;
+        } elseif ($request->drink_id) {
+            $model = Drink::class;
+            $id = $request->drink_id;
+        } else {
+            $model = Product::class;
+            $id = $request->product_id;
+        }
+
+        $amount = $request->amount ?? 0;
+        $type = 'fixed';
+        if(!$amount && $request->amount_percentage){
+            $amount = $request->amount_percentage;
+            $type = 'percentage';
+        }elseif($request->amount_percentage){
+            $type = 'fixed';
+        }
 
         $discount->update([
             'discountable_type' => $model,
-            'discountable_id' => $request->discountable_id,
-            'amount_type' => $request->amount_type,
-            'amount' => $request->amount,
+            'discountable_id' => $id,
+            'amount_type' => $type,
+            'amount' => $amount,
+            'start_at' => $request->start_at,
             'end_at' => $request->end_at,
         ]);
 
@@ -95,6 +143,7 @@ class DiscountController extends Controller
             'action' => 'update',
             'amount_type' => $discount->amount_type,
             'amount' => $discount->amount,
+            'start_at' => $discount->start_at,
             'end_at' => $discount->end_at,
         ]);
 
@@ -123,6 +172,7 @@ class DiscountController extends Controller
             'action' => 'activate',
             'amount_type' => $discount->amount_type,
             'amount' => $discount->amount,
+            'start_at' => $discount->start_at,
             'end_at' => $discount->end_at,
         ]);
         return back()->with('success', 'Descuento activado');
@@ -137,6 +187,7 @@ class DiscountController extends Controller
             'action' => 'deactivate',
             'amount_type' => $discount->amount_type,
             'amount' => $discount->amount,
+            'start_at' => $discount->start_at,
             'end_at' => $discount->end_at,
         ]);
         return back()->with('success', 'Descuento desactivado');

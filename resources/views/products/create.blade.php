@@ -14,6 +14,14 @@
                 <input type="text" name="name" required class="form-input w-full">
             </div>
 
+            <div>
+                <label class="block font-medium text-sm text-gray-700">Tipo</label>
+                <select name="type" class="form-select w-full" required>
+                    <option value="producto">Producto</option>
+                    <option value="bebida">Bebida</option>
+                </select>
+            </div>
+
 
             <div>
                 <label for="price" class="block font-medium text-sm text-gray-700">Precio (RD$)</label>

@@ -9,7 +9,7 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'price', 'stock'];
+    protected $fillable = ['name', 'type', 'price', 'stock'];
 
     public function inventoryMovements()
     {

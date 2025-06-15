@@ -14,11 +14,13 @@ class DiscountLog extends Model
         'action',
         'amount_type',
         'amount',
+        'start_at',
         'end_at',
     ];
 
     protected $casts = [
         'end_at' => 'datetime',
+        'start_at' => 'datetime',
     ];
 
     public function discount()

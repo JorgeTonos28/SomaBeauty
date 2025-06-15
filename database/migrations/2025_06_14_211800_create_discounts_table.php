@@ -12,6 +12,7 @@ return new class extends Migration
             $table->morphs('discountable');
             $table->enum('amount_type', ['fixed', 'percentage']);
             $table->decimal('amount', 10, 2);
+            $table->dateTime('start_at')->nullable();
             $table->boolean('active')->default(true);
             $table->dateTime('end_at')->nullable();
             $table->foreignId('created_by')->constrained('users');

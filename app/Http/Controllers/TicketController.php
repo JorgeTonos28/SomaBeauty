@@ -157,6 +157,9 @@ class TicketController extends Controller
                 $discount = Discount::where('discountable_type', Service::class)
                     ->where('discountable_id', $serviceId)
                     ->where('active', true)
+                    ->where(function($q){
+                        $q->whereNull('start_at')->orWhere('start_at','<=', now());
+                    })
                     ->where(function($q){ $q->whereNull('end_at')->orWhere('end_at','>', now()); })
                     ->first();
                 if ($discount && $discount->end_at && $discount->end_at->isPast()) {
@@ -189,6 +192,9 @@ class TicketController extends Controller
                     $discount = Discount::where('discountable_type', Product::class)
                         ->where('discountable_id', $productId)
                         ->where('active', true)
+                        ->where(function($q){
+                            $q->whereNull('start_at')->orWhere('start_at','<=', now());
+                        })
                         ->where(function($q){ $q->whereNull('end_at')->orWhere('end_at','>', now()); })
                         ->first();
                     if ($discount && $discount->end_at && $discount->end_at->isPast()) {
@@ -227,7 +233,24 @@ class TicketController extends Controller
                 foreach ($request->drink_ids as $index => $drinkId) {
                     $drink = Drink::find($drinkId);
                     $qty = $request->drink_quantities[$index];
-                    $subtotal = $drink->price * $qty;
+                    $price = $drink->price;
+                    $discount = Discount::where('discountable_type', Drink::class)
+                        ->where('discountable_id', $drinkId)
+                        ->where('active', true)
+                        ->where(function($q){
+                            $q->whereNull('start_at')->orWhere('start_at','<=', now());
+                        })
+                        ->where(function($q){ $q->whereNull('end_at')->orWhere('end_at','>', now()); })
+                        ->first();
+                    if ($discount && $discount->end_at && $discount->end_at->isPast()) {
+                        $discount->update(['active' => false]);
+                        $discount = null;
+                    }
+                    if ($discount) {
+                        $disc = $discount->amount_type === 'fixed' ? $discount->amount : ($price * $discount->amount / 100);
+                        $price = max(0, $price - $disc);
+                    }
+                    $subtotal = $price * $qty;
 
                     $details[] = [
                         'type' => 'drink',
@@ -235,7 +258,7 @@ class TicketController extends Controller
                         'product_id' => null,
                         'drink_id' => $drinkId,
                         'quantity' => $qty,
-                        'unit_price' => $drink->price,
+                        'unit_price' => $price,
                         'subtotal' => $subtotal,
                     ];
 
