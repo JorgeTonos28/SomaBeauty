@@ -5,6 +5,10 @@
         </h2>
     </x-slot>
 
+    <div class="pb-4">
+        <a href="{{ route('discounts.index') }}" class="text-blue-500 hover:underline">&larr; Volver</a>
+    </div>
+
     <div class="py-6 max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
         <div class="bg-white p-4 rounded shadow">
             <div><strong>Elemento:</strong> {{ $discount->discountable->name ?? '' }}</div>
