@@ -30,6 +30,9 @@
             <a href="{{ route('inventory.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
                 Nueva Entrada
             </a>
+            <a href="{{ route('inventory.createExit') }}" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+                Nueva Salida
+            </a>
         </div>
 
         <div x-html="tableHtml"></div>

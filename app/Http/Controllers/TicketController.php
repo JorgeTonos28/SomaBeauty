@@ -87,8 +87,9 @@ class TicketController extends Controller
 
         $products = Product::where('stock', '>', 0)->get();
         $productPrices = $products->pluck('price', 'id');
+        $productStocks = $products->pluck('stock', 'id');
 
-        $drinks = Drink::all();
+        $drinks = Drink::where('active', true)->get();
         $drinkPrices = $drinks->pluck('price', 'id');
 
         $serviceDiscounts = Discount::where('discountable_type', Service::class)
@@ -131,10 +132,11 @@ class TicketController extends Controller
             'services' => $services,
             'vehicleTypes' => VehicleType::all(),
             'products' => $products,
-            'washers' => Washer::all(),
+            'washers' => Washer::where('active', true)->get(),
             'bankAccounts' => BankAccount::all(),
             'servicePrices' => $servicePrices,
             'productPrices' => $productPrices,
+            'productStocks' => $productStocks,
             'drinks' => $drinks,
             'drinkPrices' => $drinkPrices,
             'serviceDiscounts' => $serviceDiscounts,
@@ -235,6 +237,14 @@ class TicketController extends Controller
                 foreach ($request->product_ids as $index => $productId) {
                     $product = Product::find($productId);
                     $qty = $request->quantities[$index];
+                    if (!$product || $product->stock < $qty) {
+                        DB::rollBack();
+                        $message = ['quantities' => ['Stock insuficiente para ' . ($product->name ?? 'producto')]];
+                        if ($request->expectsJson()) {
+                            return response()->json(['errors' => $message], 422);
+                        }
+                        return back()->withErrors($message)->withInput();
+                    }
                     $price = $product->price;
                     $discount = Discount::where('discountable_type', Product::class)
                         ->where('discountable_id', $productId)
@@ -281,8 +291,16 @@ class TicketController extends Controller
             // Tragos
             if ($request->drink_ids) {
                 foreach ($request->drink_ids as $index => $drinkId) {
-                    $drink = Drink::find($drinkId);
+                    $drink = Drink::where('active', true)->find($drinkId);
                     $qty = $request->drink_quantities[$index];
+                    if (!$drink) {
+                        DB::rollBack();
+                        $message = ['drink_ids' => ['Trago no disponible']];
+                        if ($request->expectsJson()) {
+                            return response()->json(['errors' => $message], 422);
+                        }
+                        return back()->withErrors($message)->withInput();
+                    }
                     $price = $drink->price;
                     $discount = Discount::where('discountable_type', Drink::class)
                         ->where('discountable_id', $drinkId)
@@ -389,7 +407,30 @@ class TicketController extends Controller
 
     public function cancel(Ticket $ticket)
     {
-        $ticket->update(['canceled' => true]);
+        if ($ticket->canceled) {
+            return redirect()->route('tickets.index');
+        }
+
+        DB::transaction(function() use ($ticket) {
+            foreach ($ticket->details as $detail) {
+                if ($detail->type === 'product' && $detail->product) {
+                    $detail->product->increment('stock', $detail->quantity);
+                    InventoryMovement::create([
+                        'product_id' => $detail->product_id,
+                        'user_id' => auth()->id(),
+                        'movement_type' => 'entrada',
+                        'quantity' => $detail->quantity,
+                    ]);
+                }
+            }
+
+            if ($ticket->washer_id) {
+                Washer::whereId($ticket->washer_id)->decrement('pending_amount', 100);
+            }
+
+            $ticket->update(['canceled' => true]);
+        });
+
         return redirect()->route('tickets.index')->with('success', 'Ticket cancelado');
     }
 }

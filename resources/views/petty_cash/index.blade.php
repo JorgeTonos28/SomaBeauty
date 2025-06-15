@@ -20,8 +20,20 @@
                     <label class="block text-sm">Hasta</label>
                     <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" @change="fetchTable()">
                 </div>
+                <div class="flex items-end">
+                    <button type="button" class="px-3 py-2 bg-gray-200 rounded" @click="
+                        $refs.form.start.value = new Date().toISOString().slice(0,10);
+                        $refs.form.end.value = new Date().toISOString().slice(0,10);
+                        fetchTable();
+                    ">Ahora</button>
+                </div>
             </form>
             <a href="{{ route('petty-cash.create') }}" class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">Nuevo Gasto</a>
+        </div>
+
+        <div class="mb-4 text-sm text-gray-700">
+            Gastado hoy: RD$ {{ number_format($todayTotal, 2) }} |
+            Disponible hoy: RD$ {{ number_format($remaining, 2) }}
         </div>
 
         <div x-html="tableHtml"></div>

@@ -51,6 +51,12 @@ class InventoryMovementController extends Controller
         return view('inventory.create', compact('products'));
     }
 
+    public function createExit()
+    {
+        $products = Product::orderBy('name')->get();
+        return view('inventory.create_exit', compact('products'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -69,5 +75,29 @@ class InventoryMovementController extends Controller
 
         return redirect()->route('inventory.index')
             ->with('success', 'Entrada registrada correctamente.');
+    }
+
+    public function storeExit(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $product = Product::findOrFail($request->product_id);
+        if ($product->stock < $request->quantity) {
+            return back()->withErrors(['quantity' => 'Stock insuficiente'])->withInput();
+        }
+
+        InventoryMovement::create([
+            'product_id' => $product->id,
+            'user_id' => auth()->id(),
+            'movement_type' => 'salida',
+            'quantity' => $request->quantity,
+        ]);
+        $product->decrement('stock', $request->quantity);
+
+        return redirect()->route('inventory.index')
+            ->with('success', 'Salida registrada correctamente.');
     }
 }

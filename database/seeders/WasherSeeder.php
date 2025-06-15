@@ -10,10 +10,10 @@ class WasherSeeder extends Seeder
     public function run()
     {
         $washers = [
-            ['name' => 'Carlos Martínez'],
-            ['name' => 'Luis Gómez'],
-            ['name' => 'Pedro Rodríguez'],
-            ['name' => 'Jonathan Ramírez'],
+            ['name' => 'Carlos Martínez', 'active' => true],
+            ['name' => 'Luis Gómez', 'active' => true],
+            ['name' => 'Pedro Rodríguez', 'active' => true],
+            ['name' => 'Jonathan Ramírez', 'active' => true],
         ];
 
         foreach ($washers as $washer) {

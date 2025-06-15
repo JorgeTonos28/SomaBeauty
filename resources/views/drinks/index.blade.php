@@ -54,6 +54,12 @@
                         <label class="block font-medium text-sm text-gray-700">Precio (RD$)</label>
                         <input type="number" step="0.01" name="price" value="{{ $drink->price }}" required class="form-input w-full">
                     </div>
+                    <div>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="active" value="1" class="mr-2" {{ $drink->active ? 'checked' : '' }}>
+                            <span>Activo</span>
+                        </label>
+                    </div>
                     <div class="mt-6 flex justify-end">
                         <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>
                         <x-primary-button class="ms-3">Actualizar</x-primary-button>

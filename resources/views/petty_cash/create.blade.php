@@ -7,6 +7,7 @@
 
     <div class="py-4">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8 bg-white p-6 shadow sm:rounded-lg">
+            <p class="mb-4 text-sm text-gray-700">Disponible hoy: RD$ {{ number_format($remaining, 2) }}</p>
             @if ($errors->any())
                 <div class="mb-4 text-sm text-red-600">
                     <ul class="list-disc list-inside">

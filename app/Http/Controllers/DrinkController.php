@@ -46,6 +46,7 @@ class DrinkController extends Controller
             'name' => 'required|string|max:255|unique:drinks,name',
             'price' => 'required|numeric|min:0',
             'ingredients' => 'nullable|string',
+            'active' => 'sometimes|boolean',
         ], [
             'name.required' => 'El nombre del trago es obligatorio.',
             'name.unique' => 'Ya existe un trago con ese nombre.',
@@ -54,7 +55,12 @@ class DrinkController extends Controller
             'price.min' => 'El precio no puede ser negativo.',
         ]);
 
-        Drink::create($request->only('name', 'price', 'ingredients'));
+        Drink::create([
+            'name' => $request->name,
+            'price' => $request->price,
+            'ingredients' => $request->ingredients,
+            'active' => $request->boolean('active'),
+        ]);
 
         return redirect()->route('drinks.index')
             ->with('success', 'Trago creado exitosamente.');
@@ -71,6 +77,7 @@ class DrinkController extends Controller
             'name' => 'required|string|max:255|unique:drinks,name,' . $drink->id,
             'price' => 'required|numeric|min:0',
             'ingredients' => 'nullable|string',
+            'active' => 'sometimes|boolean',
         ], [
             'name.required' => 'El nombre del trago es obligatorio.',
             'name.unique' => 'Ya existe un trago con ese nombre.',
@@ -79,7 +86,12 @@ class DrinkController extends Controller
             'price.min' => 'El precio no puede ser negativo.',
         ]);
 
-        $drink->update($request->only('name', 'price', 'ingredients'));
+        $drink->update([
+            'name' => $request->name,
+            'price' => $request->price,
+            'ingredients' => $request->ingredients,
+            'active' => $request->boolean('active'),
+        ]);
 
         return redirect()->route('drinks.index')
             ->with('success', 'Trago actualizado correctamente.');

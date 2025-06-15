@@ -140,6 +140,7 @@
     <script>
         const servicePrices = @json($servicePrices);
         const productPrices = @json($productPrices);
+        const productStocks = @json($productStocks);
         const drinkPrices = @json($drinkPrices);
         const serviceDiscounts = @json($serviceDiscounts);
         const productDiscounts = @json($productDiscounts);
@@ -271,7 +272,7 @@
             const row = document.createElement('div');
             row.classList.add('flex', 'gap-4', 'mb-2', 'items-center');
             row.innerHTML = `
-                <select name="product_ids[]" class="form-select w-full" onchange="updateTotal()">
+                <select name="product_ids[]" class="form-select w-full" onchange="updateTotal(); checkStock(this.parentElement)">
                     <option value="">-- Seleccionar producto --</option>
                     @foreach ($products as $product)
                         @php
@@ -291,10 +292,26 @@
                         </option>
                     @endforeach
                 </select>
-                <input type="number" name="quantities[]" placeholder="Cantidad" min="1" class="form-input w-24" oninput="updateTotal()">
+                <input type="number" name="quantities[]" placeholder="Cantidad" min="1" class="form-input w-24" oninput="checkStock(this.parentElement); updateTotal()">
                 <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
             `;
             container.appendChild(row);
+            checkStock(row);
+        }
+
+        function checkStock(row) {
+            const select = row.querySelector('select');
+            const qtyInput = row.querySelector('input[name="quantities[]"]');
+            const pid = select.value;
+            if (!pid) return;
+            const stock = parseInt(productStocks[pid] ?? 0);
+            const qty = parseInt(qtyInput.value || 0);
+            if (qty > stock) {
+                qtyInput.value = stock;
+                const list = document.getElementById('error-list');
+                list.innerHTML = `<li>Stock insuficiente para el producto seleccionado</li>`;
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+            }
         }
 
         function addDrinkRow() {

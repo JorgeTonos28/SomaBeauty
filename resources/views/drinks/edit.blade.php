@@ -24,6 +24,13 @@
                 <input type="number" step="0.01" name="price" value="{{ $drink->price }}" required class="form-input w-full">
             </div>
 
+            <div>
+                <label class="inline-flex items-center">
+                    <input type="checkbox" name="active" value="1" class="mr-2" {{ $drink->active ? 'checked' : '' }}>
+                    <span>Activo</span>
+                </label>
+            </div>
+
             <div class="flex items-center gap-4">
                 <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                     Actualizar
