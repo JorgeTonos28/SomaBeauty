@@ -14,17 +14,24 @@ class PettyCashExpenseController extends Controller
 
     public function index(Request $request)
     {
+        $filters = $request->only(['start', 'end']);
+        $filters['start'] = $filters['start'] ?? now()->toDateString();
+        $filters['end'] = $filters['end'] ?? now()->toDateString();
+
         $query = PettyCashExpense::query();
 
-        if ($request->filled('start')) {
-            $query->whereDate('created_at', '>=', $request->start);
+        if ($filters['start']) {
+            $query->whereDate('created_at', '>=', $filters['start']);
         }
 
-        if ($request->filled('end')) {
-            $query->whereDate('created_at', '<=', $request->end);
+        if ($filters['end']) {
+            $query->whereDate('created_at', '<=', $filters['end']);
         }
 
         $expenses = $query->latest()->paginate(20);
+
+        $todayTotal = PettyCashExpense::whereDate('created_at', now()->toDateString())->sum('amount');
+        $remaining = max(0, 3200 - $todayTotal);
 
         if ($request->ajax()) {
             return view('petty_cash.partials.table', [
@@ -34,13 +41,17 @@ class PettyCashExpenseController extends Controller
 
         return view('petty_cash.index', [
             'expenses' => $expenses,
-            'filters' => $request->only(['start', 'end']),
+            'filters' => $filters,
+            'todayTotal' => $todayTotal,
+            'remaining' => $remaining,
         ]);
     }
 
     public function create()
     {
-        return view('petty_cash.create');
+        $todayTotal = PettyCashExpense::whereDate('created_at', now()->toDateString())->sum('amount');
+        $remaining = max(0, 3200 - $todayTotal);
+        return view('petty_cash.create', compact('remaining'));
     }
 
     public function store(Request $request)

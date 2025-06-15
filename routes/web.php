@@ -48,6 +48,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'role:admin,cajero'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('drinks', DrinkController::class);
+    Route::get('inventory/out/create', [InventoryMovementController::class, 'createExit'])->name('inventory.createExit');
+    Route::post('inventory/out', [InventoryMovementController::class, 'storeExit'])->name('inventory.storeExit');
     Route::resource('inventory', InventoryMovementController::class)->only(['index', 'create', 'store']);
 });
 Route::middleware(['auth', 'role:admin'])->group(function () {
