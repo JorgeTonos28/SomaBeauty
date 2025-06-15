@@ -99,6 +99,7 @@
             <!-- Botón y Resumen -->
             <div class="flex items-center gap-6 mt-4 fixed bottom-0 inset-x-0 mx-auto max-w-4xl bg-white p-4 shadow z-10 sm:px-6 lg:px-8">
                 <div class="flex-1 space-x-4">
+                    <span>Descuento: RD$ <span id="discount_total">0.00</span></span>
                     <span>Total: RD$ <span id="total_amount">0.00</span></span>
                     <span>Cambio: RD$ <span id="change_display">0.00</span></span>
                 </div>
@@ -129,6 +130,7 @@
         const drinkDiscounts = @json($drinkDiscounts);
 
         let currentTotal = 0;
+        let currentDiscount = 0;
 
         function formatCurrency(value) {
             return value.toLocaleString('es-DO', {
@@ -140,6 +142,7 @@
         function updateTotal() {
             const vehicleTypeId = document.querySelector('select[name="vehicle_type_id"]').value;
             let total = 0;
+            let discount = 0;
 
             document.querySelectorAll('input[name="service_ids[]"]:checked').forEach(cb => {
                 const serviceId = cb.value;
@@ -147,6 +150,7 @@
                 const disc = serviceDiscounts[serviceId];
                 if(disc){
                     const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
+                    discount += d;
                     price = Math.max(0, price - d);
                 }
                 total += price;
@@ -159,6 +163,7 @@
                 const disc = productDiscounts[productId];
                 if(disc){
                     const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
+                    discount += d * qty;
                     price = Math.max(0, price - d);
                 }
                 total += price * qty;
@@ -171,13 +176,16 @@
                 const disc = drinkDiscounts[drinkId];
                 if(disc){
                     const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
+                    discount += d * qty;
                     price = Math.max(0, price - d);
                 }
                 total += price * qty;
             });
 
             currentTotal = total;
+            currentDiscount = discount;
             document.getElementById('total_amount').innerText = formatCurrency(total);
+            document.getElementById('discount_total').innerText = formatCurrency(discount);
             updateChange();
         }
 
@@ -197,7 +205,21 @@
                 <select name="product_ids[]" class="form-select w-full" onchange="updateTotal()">
                     <option value="">-- Seleccionar producto --</option>
                     @foreach ($products as $product)
-                        <option value="{{ $product->id }}">{{ $product->name }} (RD$ {{ number_format($product->price, 2) }})</option>
+                        @php
+                            $disc = $productDiscounts->get($product->id);
+                            $new = null;
+                            if($disc){
+                                $new = $disc['type'] === 'fixed'
+                                    ? max(0, $product->price - $disc['amount'])
+                                    : max(0, $product->price - $product->price * $disc['amount']/100);
+                            }
+                        @endphp
+                        <option value="{{ $product->id }}">
+                            {{ $product->name }} (RD$ {{ number_format($product->price, 2) }})
+                            @if($new !== null)
+                                <span class="text-red-600"> -> ({{ number_format($new, 2) }})</span>
+                            @endif
+                        </option>
                     @endforeach
                 </select>
                 <input type="number" name="quantities[]" placeholder="Cantidad" min="1" class="form-input w-24" oninput="updateTotal()">
@@ -214,7 +236,21 @@
                 <select name="drink_ids[]" class="form-select w-full" onchange="updateTotal()">
                     <option value="">-- Seleccionar trago --</option>
                     @foreach ($drinks as $drink)
-                        <option value="{{ $drink->id }}">{{ $drink->name }} (RD$ {{ number_format($drink->price, 2) }})</option>
+                        @php
+                            $disc = $drinkDiscounts->get($drink->id);
+                            $new = null;
+                            if($disc){
+                                $new = $disc['type'] === 'fixed'
+                                    ? max(0, $drink->price - $disc['amount'])
+                                    : max(0, $drink->price - $drink->price * $disc['amount']/100);
+                            }
+                        @endphp
+                        <option value="{{ $drink->id }}">
+                            {{ $drink->name }} (RD$ {{ number_format($drink->price, 2) }})
+                            @if($new !== null)
+                                <span class="text-red-600"> -> ({{ number_format($new, 2) }})</span>
+                            @endif
+                        </option>
                     @endforeach
                 </select>
                 <input type="number" name="drink_quantities[]" placeholder="Cantidad" min="1" class="form-input w-24" oninput="updateTotal()">
