@@ -124,6 +124,9 @@
         const servicePrices = @json($servicePrices);
         const productPrices = @json($productPrices);
         const drinkPrices = @json($drinkPrices);
+        const serviceDiscounts = @json($serviceDiscounts);
+        const productDiscounts = @json($productDiscounts);
+        const drinkDiscounts = @json($drinkDiscounts);
 
         let currentTotal = 0;
 
@@ -140,21 +143,36 @@
 
             document.querySelectorAll('input[name="service_ids[]"]:checked').forEach(cb => {
                 const serviceId = cb.value;
-                const price = servicePrices[serviceId] && servicePrices[serviceId][vehicleTypeId] ? parseFloat(servicePrices[serviceId][vehicleTypeId]) : 0;
+                let price = servicePrices[serviceId] && servicePrices[serviceId][vehicleTypeId] ? parseFloat(servicePrices[serviceId][vehicleTypeId]) : 0;
+                const disc = serviceDiscounts[serviceId];
+                if(disc){
+                    const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
+                    price = Math.max(0, price - d);
+                }
                 total += price;
             });
 
             document.querySelectorAll('#product-list > div').forEach(row => {
                 const productId = row.querySelector('select').value;
                 const qty = parseFloat(row.querySelector('input[name="quantities[]"]').value) || 0;
-                const price = productPrices[productId] ? parseFloat(productPrices[productId]) : 0;
+                let price = productPrices[productId] ? parseFloat(productPrices[productId]) : 0;
+                const disc = productDiscounts[productId];
+                if(disc){
+                    const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
+                    price = Math.max(0, price - d);
+                }
                 total += price * qty;
             });
 
             document.querySelectorAll('#drink-list > div').forEach(row => {
                 const drinkId = row.querySelector('select').value;
                 const qty = parseFloat(row.querySelector('input[name="drink_quantities[]"]').value) || 0;
-                const price = drinkPrices[drinkId] ? parseFloat(drinkPrices[drinkId]) : 0;
+                let price = drinkPrices[drinkId] ? parseFloat(drinkPrices[drinkId]) : 0;
+                const disc = drinkDiscounts[drinkId];
+                if(disc){
+                    const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
+                    price = Math.max(0, price - d);
+                }
                 total += price * qty;
             });
 

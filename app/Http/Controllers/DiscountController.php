@@ -32,27 +32,19 @@ class DiscountController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'service_id' => 'nullable|integer|exists:services,id',
-            'product_id' => 'nullable|integer|exists:products,id',
-            'drink_id' => 'nullable|integer|exists:drinks,id',
+            'item' => 'required|string',
             'amount' => 'nullable|numeric|min:0',
             'amount_percentage' => 'nullable|numeric|min:0',
             'start_at' => 'nullable|date',
             'end_at' => 'nullable|date',
         ]);
 
-        $model = null;
-        $id = null;
-        if ($request->service_id) {
-            $model = Service::class;
-            $id = $request->service_id;
-        } elseif ($request->drink_id) {
-            $model = Drink::class;
-            $id = $request->drink_id;
-        } else {
-            $model = Product::class;
-            $id = $request->product_id;
-        }
+        [$itemType, $id] = explode('-', $request->item);
+        $model = match($itemType) {
+            'service' => Service::class,
+            'drink' => Drink::class,
+            default => Product::class,
+        };
 
         $amount = $request->amount ?? 0;
         $type = 'fixed';
@@ -75,10 +67,11 @@ class DiscountController extends Controller
             ]
         );
 
+        $action = $discount->wasRecentlyCreated ? 'crear' : 'actualizar';
         DiscountLog::create([
             'discount_id' => $discount->id,
             'user_id' => auth()->id(),
-            'action' => 'create',
+            'action' => $action,
             'amount_type' => $discount->amount_type,
             'amount' => $discount->amount,
             'start_at' => $discount->start_at,
@@ -99,25 +92,19 @@ class DiscountController extends Controller
     public function update(Request $request, Discount $discount)
     {
         $request->validate([
-            'service_id' => 'nullable|integer|exists:services,id',
-            'product_id' => 'nullable|integer|exists:products,id',
-            'drink_id' => 'nullable|integer|exists:drinks,id',
+            'item' => 'required|string',
             'amount' => 'nullable|numeric|min:0',
             'amount_percentage' => 'nullable|numeric|min:0',
             'start_at' => 'nullable|date',
             'end_at' => 'nullable|date',
         ]);
 
-        if ($request->service_id) {
-            $model = Service::class;
-            $id = $request->service_id;
-        } elseif ($request->drink_id) {
-            $model = Drink::class;
-            $id = $request->drink_id;
-        } else {
-            $model = Product::class;
-            $id = $request->product_id;
-        }
+        [$itemType, $id] = explode('-', $request->item);
+        $model = match($itemType) {
+            'service' => Service::class,
+            'drink' => Drink::class,
+            default => Product::class,
+        };
 
         $amount = $request->amount ?? 0;
         $type = 'fixed';
@@ -140,7 +127,7 @@ class DiscountController extends Controller
         DiscountLog::create([
             'discount_id' => $discount->id,
             'user_id' => auth()->id(),
-            'action' => 'update',
+            'action' => 'actualizar',
             'amount_type' => $discount->amount_type,
             'amount' => $discount->amount,
             'start_at' => $discount->start_at,
@@ -155,7 +142,7 @@ class DiscountController extends Controller
         DiscountLog::create([
             'discount_id' => $discount->id,
             'user_id' => auth()->id(),
-            'action' => 'delete',
+            'action' => 'eliminar',
         ]);
 
         $discount->delete();
@@ -169,7 +156,7 @@ class DiscountController extends Controller
         DiscountLog::create([
             'discount_id' => $discount->id,
             'user_id' => auth()->id(),
-            'action' => 'activate',
+            'action' => 'activar',
             'amount_type' => $discount->amount_type,
             'amount' => $discount->amount,
             'start_at' => $discount->start_at,
@@ -184,7 +171,7 @@ class DiscountController extends Controller
         DiscountLog::create([
             'discount_id' => $discount->id,
             'user_id' => auth()->id(),
-            'action' => 'deactivate',
+            'action' => 'desactivar',
             'amount_type' => $discount->amount_type,
             'amount' => $discount->amount,
             'start_at' => $discount->start_at,
