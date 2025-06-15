@@ -94,11 +94,21 @@
             <!-- Método de Pago -->
             <div>
                 <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-                <select name="payment_method" required class="form-select w-full mt-1">
+                <select name="payment_method" id="payment_method" required class="form-select w-full mt-1" onchange="toggleBank()">
                     <option value="efectivo">Efectivo</option>
                     <option value="tarjeta">Tarjeta</option>
                     <option value="transferencia">Transferencia</option>
                     <option value="mixto">Mixto</option>
+                </select>
+            </div>
+
+            <div id="bank-field" style="display:none">
+                <label class="block text-sm font-medium text-gray-700">Cuenta Bancaria</label>
+                <select name="bank_account_id" class="form-select w-full mt-1">
+                    <option value="">-- Seleccionar --</option>
+                    @foreach($bankAccounts as $acc)
+                        <option value="{{ $acc->id }}">{{ $acc->bank }} - {{ $acc->account }}</option>
+                    @endforeach
                 </select>
             </div>
 
@@ -335,12 +345,19 @@
             }
         }
 
+        function toggleBank() {
+            const field = document.getElementById('bank-field');
+            const method = document.getElementById('payment_method').value;
+            field.style.display = method === 'transferencia' ? '' : 'none';
+        }
+
 
         document.querySelectorAll('input[name="service_ids[]"], select[name="vehicle_type_id"]').forEach(el => {
             el.addEventListener('change', updateTotal);
         });
 
         updateTotal();
+        toggleBank();
 
         function ticketForm() {
             return {

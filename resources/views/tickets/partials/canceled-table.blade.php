@@ -6,6 +6,7 @@
                 <th class="border px-4 py-2">Facturaciones</th>
                 <th class="border px-4 py-2">Descuento</th>
                 <th class="border px-4 py-2">Total</th>
+                <th class="border px-4 py-2">Cuenta</th>
                 <th class="border px-4 py-2">Fecha</th>
             </tr>
         </thead>
@@ -20,6 +21,9 @@
                     </td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->discount_total, 2) }}</td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->total_amount, 2) }}</td>
+                    <td class="px-4 py-2">
+                        {{ optional($ticket->bankAccount)->bank ? $ticket->bankAccount->bank.' - '.$ticket->bankAccount->account : '' }}
+                    </td>
                     <td class="px-4 py-2">{{ $ticket->created_at->format('d/m/Y H:i') }}</td>
                 </tr>
             @endforeach
