@@ -9,5 +9,9 @@ class Drink extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'ingredients', 'price'];
+    protected $fillable = ['name', 'ingredients', 'price', 'active'];
+
+    protected $casts = [
+        'active' => 'boolean',
+    ];
 }

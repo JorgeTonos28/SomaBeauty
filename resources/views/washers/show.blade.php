@@ -10,6 +10,10 @@
             <div class="mb-4 font-medium text-sm text-green-600">{{ session('success') }}</div>
         @endif
 
+        <div class="mb-4">
+            <a href="{{ route('washers.index') }}" class="text-blue-600 hover:underline">&larr; Volver a lista</a>
+        </div>
+
         <div class="mb-4 flex justify-end space-x-2">
             <a href="{{ route('washers.edit', $washer) }}" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Editar</a>
             <form action="{{ route('washers.destroy', $washer) }}" method="POST" onsubmit="return confirm('¿Eliminar lavador?')">

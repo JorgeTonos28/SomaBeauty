@@ -50,6 +50,11 @@ class PettyCashExpenseController extends Controller
             'amount' => 'required|numeric|min:0.01',
         ]);
 
+        $todayTotal = PettyCashExpense::whereDate('created_at', now()->toDateString())->sum('amount');
+        if ($todayTotal + $request->amount > 3200) {
+            return back()->withErrors(['amount' => 'Fondo insuficiente en caja chica para hoy.'])->withInput();
+        }
+
         PettyCashExpense::create([
             'user_id' => auth()->id(),
             'description' => $request->description,

@@ -28,9 +28,14 @@ class WasherController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'active' => 'sometimes|boolean',
         ]);
 
-        Washer::create(['name' => $request->name, 'pending_amount' => 0]);
+        Washer::create([
+            'name' => $request->name,
+            'pending_amount' => 0,
+            'active' => $request->boolean('active'),
+        ]);
 
         return redirect()->route('washers.index')
             ->with('success', 'Lavador creado correctamente.');
@@ -45,9 +50,13 @@ class WasherController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'active' => 'sometimes|boolean',
         ]);
 
-        $washer->update($request->only('name'));
+        $washer->update([
+            'name' => $request->name,
+            'active' => $request->boolean('active'),
+        ]);
 
         return redirect()->route('washers.index')
             ->with('success', 'Lavador actualizado correctamente.');

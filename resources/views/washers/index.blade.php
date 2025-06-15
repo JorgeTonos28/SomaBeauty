@@ -30,6 +30,7 @@
                         <tr>
                             <th class="px-4 py-2">Nombre</th>
                             <th class="px-4 py-2">Pendiente</th>
+                            <th class="px-4 py-2">Estado</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -37,6 +38,7 @@
                         <tr class="border-b cursor-pointer" ondblclick="window.location='{{ route('washers.show', $washer) }}'">
                             <td class="px-4 py-2">{{ $washer->name }}</td>
                             <td class="px-4 py-2">RD$ {{ number_format($washer->pending_amount, 2) }}</td>
+                            <td class="px-4 py-2">{{ $washer->active ? 'Activo' : 'Inactivo' }}</td>
                         </tr>
                         @endforeach
                     </tbody>
