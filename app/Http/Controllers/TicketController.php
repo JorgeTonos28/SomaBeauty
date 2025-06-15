@@ -11,6 +11,7 @@ use App\Models\VehicleType;
 use App\Models\Washer;
 use App\Models\Drink;
 use App\Models\Discount;
+use App\Models\BankAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +24,7 @@ class TicketController extends Controller
 
     public function index(Request $request)
     {
-        $query = Ticket::with('details')->where('canceled', false);
+        $query = Ticket::with(['details', 'bankAccount'])->where('canceled', false);
 
         if ($request->filled('start')) {
             $query->whereDate('created_at', '>=', $request->start);
@@ -49,7 +50,7 @@ class TicketController extends Controller
 
     public function canceled(Request $request)
     {
-        $query = Ticket::with('details')->where('canceled', true);
+        $query = Ticket::with(['details', 'bankAccount'])->where('canceled', true);
 
         if ($request->filled('start')) {
             $query->whereDate('created_at', '>=', $request->start);
@@ -131,6 +132,7 @@ class TicketController extends Controller
             'vehicleTypes' => VehicleType::all(),
             'products' => $products,
             'washers' => Washer::all(),
+            'bankAccounts' => BankAccount::all(),
             'servicePrices' => $servicePrices,
             'productPrices' => $productPrices,
             'drinks' => $drinks,
@@ -159,6 +161,7 @@ class TicketController extends Controller
             'drink_quantities' => 'nullable|array',
             'drink_quantities.*' => 'integer|min:1',
             'payment_method' => 'required|in:efectivo,tarjeta,transferencia,mixto',
+            'bank_account_id' => 'required_if:payment_method,transferencia|nullable|exists:bank_accounts,id',
             'paid_amount' => 'required|numeric|min:0'
         ], [
             'customer_name.required' => 'El nombre del cliente es obligatorio.',
@@ -172,6 +175,7 @@ class TicketController extends Controller
             'drink_ids.*.exists' => 'Alguno de los tragos seleccionados es inválido.',
             'drink_quantities.*.min' => 'La cantidad debe ser al menos 1.',
             'payment_method.required' => 'Debe seleccionar un método de pago.',
+            'bank_account_id.required_if' => 'Debe seleccionar una cuenta bancaria.',
             'paid_amount.required' => 'Debe ingresar el monto pagado.',
             'paid_amount.numeric' => 'El monto pagado debe ser un número válido.',
             'paid_amount.min' => 'El monto pagado no puede ser negativo.'
@@ -344,6 +348,7 @@ class TicketController extends Controller
                 'change' => $request->paid_amount - $total,
                 'discount_total' => $discountTotal,
                 'payment_method' => $request->payment_method,
+                'bank_account_id' => $request->bank_account_id,
             ]);
 
             foreach ($details as $detail) {
