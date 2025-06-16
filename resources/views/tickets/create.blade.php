@@ -84,13 +84,13 @@
             <!-- Monto Pagado -->
             <div>
                 <label class="block text-sm font-medium text-gray-700">Monto Pagado (RD$)</label>
-                <input type="number" name="paid_amount" id="paid_amount" required step="0.01" class="form-input w-full mt-1" oninput="updateChange()">
+                <input type="number" name="paid_amount" id="paid_amount" step="0.01" class="form-input w-full mt-1" oninput="updateChange()">
             </div>
 
             <!-- Método de Pago -->
             <div>
                 <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-                <select name="payment_method" id="payment_method" required class="form-select w-full mt-1" onchange="toggleBank()">
+                <select name="payment_method" id="payment_method" class="form-select w-full mt-1" onchange="toggleBank()">
                     <option value="efectivo">Efectivo</option>
                     <option value="tarjeta">Tarjeta</option>
                     <option value="transferencia">Transferencia</option>
@@ -115,10 +115,10 @@
                     <span>Total: RD$ <span id="total_amount">0.00</span></span>
                     <span>Cambio: RD$ <span id="change_display">0.00</span></span>
                 </div>
-                <button type="submit" name="action" value="pending" class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
+                <button type="submit" name="ticket_action" value="pending" class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
                     Crear
                 </button>
-                <button type="submit" name="action" value="pay" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                <button type="submit" name="ticket_action" value="pay" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
                     Pagar
                 </button>
                 <a href="{{ route('tickets.index') }}" class="text-gray-600 hover:underline">Cancelar</a>

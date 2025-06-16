@@ -26,6 +26,10 @@ class TicketController extends Controller
     {
         $query = Ticket::with(['details', 'bankAccount'])->where('canceled', false);
 
+        if ($request->boolean('pending')) {
+            $query->where('pending', true);
+        }
+
         if ($request->filled('start')) {
             $query->whereDate('created_at', '>=', $request->start);
         }
@@ -47,7 +51,7 @@ class TicketController extends Controller
 
         return view('tickets.index', [
             'tickets' => $tickets,
-            'filters' => $request->only(['start', 'end']),
+            'filters' => $request->only(['start', 'end', 'pending']),
             'bankAccounts' => $bankAccounts,
         ]);
     }
@@ -182,7 +186,7 @@ class TicketController extends Controller
 
     public function store(Request $request)
     {
-        $pending = $request->input('action') === 'pending';
+        $pending = $request->input('ticket_action') === 'pending';
 
         $rules = [
             'customer_name' => 'required|string|max:255',

@@ -61,11 +61,14 @@ class DashboardController extends Controller
 
         $pettyCashTotal = $pettyCashExpenses->sum('amount');
 
-        $accountsReceivable = Ticket::where('canceled', false)
+        $pendingTickets = Ticket::with('details')
+            ->where('canceled', false)
             ->where('pending', true)
             ->whereDate('created_at', '>=', $start)
             ->whereDate('created_at', '<=', $end)
-            ->sum('total_amount');
+            ->get();
+
+        $accountsReceivable = $pendingTickets->sum('total_amount');
 
         $lastExpenses = $pettyCashExpenses->take(5);
 
@@ -114,7 +117,8 @@ class DashboardController extends Controller
                 'pettyCashTotal',
                 'lastExpenses',
                 'movements',
-                'accountsReceivable'
+                'accountsReceivable',
+                'pendingTickets'
             ));
         }
 
@@ -130,6 +134,7 @@ class DashboardController extends Controller
             'movements' => $movements,
             'pettyCashTotal' => $pettyCashTotal,
             'accountsReceivable' => $accountsReceivable,
+            'pendingTickets' => $pendingTickets,
         ]);
     }
 
