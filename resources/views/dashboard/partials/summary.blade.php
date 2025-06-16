@@ -4,6 +4,7 @@
         <p>Total en caja: <strong>RD$ {{ number_format($generalCash, 2) }}</strong></p>
         <p>Caja chica: <strong>RD$ 3,200.00</strong></p>
         <p>Gastos de caja chica: <strong>RD$ {{ number_format($pettyCashTotal, 2) }}</strong></p>
+        <p>Cuentas por cobrar: <strong>RD$ {{ number_format($accountsReceivable, 2) }}</strong></p>
         <p>Para lavadores: <strong>RD$ {{ number_format($washerPayDue, 2) }}</strong></p>
         <p>Ventas de lavados: RD$ {{ number_format($serviceTotal, 2) }}</p>
         <p>Ventas de productos: RD$ {{ number_format($productTotal, 2) }}</p>

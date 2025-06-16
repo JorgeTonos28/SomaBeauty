@@ -115,8 +115,11 @@
                     <span>Total: RD$ <span id="total_amount">0.00</span></span>
                     <span>Cambio: RD$ <span id="change_display">0.00</span></span>
                 </div>
-                <button type="submit" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
-                    Guardar Ticket
+                <button type="submit" name="action" value="pending" class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
+                    Crear
+                </button>
+                <button type="submit" name="action" value="pay" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                    Pagar
                 </button>
                 <a href="{{ route('tickets.index') }}" class="text-gray-600 hover:underline">Cancelar</a>
             </div>

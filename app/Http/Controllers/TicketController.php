@@ -36,15 +36,19 @@ class TicketController extends Controller
 
         $tickets = $query->latest()->paginate(20);
 
+        $bankAccounts = BankAccount::all();
+
         if ($request->ajax()) {
             return view('tickets.partials.table', [
                 'tickets' => $tickets,
+                'bankAccounts' => $bankAccounts,
             ]);
         }
 
         return view('tickets.index', [
             'tickets' => $tickets,
             'filters' => $request->only(['start', 'end']),
+            'bankAccounts' => $bankAccounts,
         ]);
     }
 
@@ -71,6 +75,37 @@ class TicketController extends Controller
         return view('tickets.canceled', [
             'tickets' => $tickets,
             'filters' => $request->only(['start', 'end']),
+        ]);
+    }
+
+    public function pending(Request $request)
+    {
+        $query = Ticket::with(['details', 'bankAccount'])
+            ->where('canceled', false)
+            ->where('pending', true);
+
+        if ($request->filled('start')) {
+            $query->whereDate('created_at', '>=', $request->start);
+        }
+
+        if ($request->filled('end')) {
+            $query->whereDate('created_at', '<=', $request->end);
+        }
+
+        $tickets = $query->latest()->paginate(20);
+        $bankAccounts = BankAccount::all();
+
+        if ($request->ajax()) {
+            return view('tickets.partials.table', [
+                'tickets' => $tickets,
+                'bankAccounts' => $bankAccounts,
+            ]);
+        }
+
+        return view('tickets.pending', [
+            'tickets' => $tickets,
+            'filters' => $request->only(['start', 'end']),
+            'bankAccounts' => $bankAccounts,
         ]);
     }
 
@@ -147,7 +182,9 @@ class TicketController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $pending = $request->input('action') === 'pending';
+
+        $rules = [
             'customer_name' => 'required|string|max:255',
             'vehicle_type_id' => 'nullable|exists:vehicle_types,id',
             'washer_id' => 'nullable|exists:washers,id',
@@ -161,10 +198,14 @@ class TicketController extends Controller
             'drink_ids.*' => 'exists:drinks,id',
             'drink_quantities' => 'nullable|array',
             'drink_quantities.*' => 'integer|min:1',
-            'payment_method' => 'required|in:efectivo,tarjeta,transferencia,mixto',
-            'bank_account_id' => 'required_if:payment_method,transferencia|nullable|exists:bank_accounts,id',
-            'paid_amount' => 'required|numeric|min:0'
-        ], [
+        ];
+        if (!$pending) {
+            $rules['payment_method'] = 'required|in:efectivo,tarjeta,transferencia,mixto';
+            $rules['bank_account_id'] = 'required_if:payment_method,transferencia|nullable|exists:bank_accounts,id';
+            $rules['paid_amount'] = 'required|numeric|min:0';
+        }
+
+        $request->validate($rules, [
             'customer_name.required' => 'El nombre del cliente es obligatorio.',
             'customer_name.max' => 'El nombre del cliente es demasiado largo.',
             'vehicle_type_id.exists' => 'El tipo de vehículo seleccionado no es válido.',
@@ -345,7 +386,7 @@ class TicketController extends Controller
                 return back()->withErrors($message)->withInput();
             }
 
-            if ($request->paid_amount < $total) {
+            if (!$pending && $request->paid_amount < $total) {
                 DB::rollBack();
                 $message = ['paid_amount' => ['El monto pagado es menor al total a pagar']];
                 if ($request->expectsJson()) {
@@ -360,11 +401,13 @@ class TicketController extends Controller
                 'vehicle_type_id' => $request->vehicle_type_id,
                 'customer_name' => $request->customer_name,
                 'total_amount' => $total,
-                'paid_amount' => $request->paid_amount,
-                'change' => $request->paid_amount - $total,
+                'paid_amount' => $pending ? 0 : $request->paid_amount,
+                'change' => $pending ? 0 : ($request->paid_amount - $total),
                 'discount_total' => $discountTotal,
-                'payment_method' => $request->payment_method,
-                'bank_account_id' => $request->bank_account_id,
+                'payment_method' => $pending ? null : $request->payment_method,
+                'bank_account_id' => $pending ? null : $request->bank_account_id,
+                'pending' => $pending,
+                'paid_at' => $pending ? null : now(),
             ]);
 
             foreach ($details as $detail) {
@@ -401,6 +444,34 @@ class TicketController extends Controller
     {
         $ticket->delete();
         return redirect()->route('tickets.index')->with('success', 'Ticket eliminado');
+    }
+
+    public function pay(Request $request, Ticket $ticket)
+    {
+        if (!$ticket->pending) {
+            return redirect()->route('tickets.index');
+        }
+
+        $request->validate([
+            'payment_method' => 'required|in:efectivo,tarjeta,transferencia,mixto',
+            'bank_account_id' => 'required_if:payment_method,transferencia|nullable|exists:bank_accounts,id',
+            'paid_amount' => 'required|numeric|min:0',
+        ]);
+
+        if ($request->paid_amount < $ticket->total_amount) {
+            return back()->withErrors(['paid_amount' => 'El monto pagado es menor al total a pagar'])->withInput();
+        }
+
+        $ticket->update([
+            'payment_method' => $request->payment_method,
+            'bank_account_id' => $request->bank_account_id,
+            'paid_amount' => $request->paid_amount,
+            'change' => $request->paid_amount - $ticket->total_amount,
+            'pending' => false,
+            'paid_at' => now(),
+        ]);
+
+        return redirect()->route('tickets.index')->with('success', 'Ticket pagado correctamente.');
     }
 
     public function cancel(Ticket $ticket)
