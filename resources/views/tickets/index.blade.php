@@ -13,7 +13,7 @@
 
         <div class="mb-4 flex flex-wrap items-end gap-4">
             <form method="GET" x-ref="form" class="flex items-end gap-2">
-                <input type="hidden" name="pending" :value="pending">
+                <input type="hidden" name="pending" x-model="pending">
                 <div>
                     <label class="block text-sm">Desde</label>
                     <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input" @change="fetchTable()">

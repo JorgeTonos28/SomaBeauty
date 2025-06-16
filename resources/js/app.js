@@ -10,6 +10,7 @@ Alpine.data('filterTable', (url, extra = {}) => ({
     fetchTable() {
         const form = this.$refs.form;
         const params = new URLSearchParams(new FormData(form));
+        params.set('pending', this.pending);
         params.append('ajax', '1');
         fetch(`${url}?${params.toString()}`, {
             headers: {

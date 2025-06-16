@@ -12,7 +12,7 @@
         </thead>
         <tbody>
             @foreach ($tickets as $ticket)
-                <tr class="border-t cursor-pointer {{ $ticket->pending ? 'bg-red-50' : '' }}"
+                <tr class="border-t cursor-pointer {{ $ticket->pending ? 'bg-red-100' : '' }}"
                     x-on:click="
                         if (selected === {{ $ticket->id }}) {
                             selected = null; selectedPending = false;
@@ -20,7 +20,7 @@
                             selected = {{ $ticket->id }}; selectedPending = {{ $ticket->pending ? 'true' : 'false' }};
                         }
                     "
-                    :class="selected === {{ $ticket->id }} ? (selectedPending ? 'bg-red-200' : 'bg-blue-100') : ''">
+                    :class="selected === {{ $ticket->id }} ? (selectedPending ? 'bg-red-300' : 'bg-blue-100') : ''">
                     <td class="px-4 py-2">{{ $ticket->customer_name }}</td>
                     <td class="px-4 py-2">
                         {{ $ticket->details->pluck('type')->unique()->map(fn($t) => match($t){
