@@ -10,7 +10,9 @@
         </thead>
         <tbody>
             @foreach ($drinks as $drink)
-                <tr class="border-t cursor-pointer" x-on:click="selected = {{ $drink->id }}" :class="selected === {{ $drink->id }} ? 'bg-blue-100' : ''">
+                <tr class="border-t cursor-pointer"
+                    x-on:click="selected = selected === {{ $drink->id }} ? null : {{ $drink->id }}"
+                    :class="selected === {{ $drink->id }} ? 'bg-blue-100' : ''">
                     <td class="px-4 py-2">{{ $drink->name }}</td>
                     <td class="px-4 py-2">{{ $drink->ingredients }}</td>
                     <td class="px-4 py-2">RD$ {{ number_format($drink->price, 2) }}</td>
