@@ -14,10 +14,6 @@
                 <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
                 <input type="text" name="customer_name" required class="form-input w-full mt-1">
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Cédula</label>
-                <input type="text" name="customer_cedula" class="form-input w-full mt-1">
-            </div>
 
             <!-- Servicios -->
             <div>

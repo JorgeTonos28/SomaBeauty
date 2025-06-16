@@ -104,6 +104,7 @@ class DashboardController extends Controller
                 'productTotal',
                 'drinkTotal',
                 'grossProfit',
+                'pettyCashTotal',
                 'lastExpenses',
                 'movements'
             ));
@@ -119,6 +120,7 @@ class DashboardController extends Controller
             'grossProfit' => $grossProfit,
             'lastExpenses' => $lastExpenses,
             'movements' => $movements,
+            'pettyCashTotal' => $pettyCashTotal,
         ]);
     }
 

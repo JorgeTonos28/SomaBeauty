@@ -149,7 +149,6 @@ class TicketController extends Controller
     {
         $request->validate([
             'customer_name' => 'required|string|max:255',
-            'customer_cedula' => 'nullable|string|max:50',
             'vehicle_type_id' => 'nullable|exists:vehicle_types,id',
             'washer_id' => 'nullable|exists:washers,id',
             'service_ids' => 'nullable|array',
@@ -168,7 +167,6 @@ class TicketController extends Controller
         ], [
             'customer_name.required' => 'El nombre del cliente es obligatorio.',
             'customer_name.max' => 'El nombre del cliente es demasiado largo.',
-            'customer_cedula.max' => 'La cédula es demasiado larga.',
             'vehicle_type_id.exists' => 'El tipo de vehículo seleccionado no es válido.',
             'washer_id.exists' => 'El lavador seleccionado no es válido.',
             'service_ids.*.exists' => 'Alguno de los servicios seleccionados es inválido.',
@@ -284,6 +282,7 @@ class TicketController extends Controller
                         'user_id' => auth()->id(),
                         'movement_type' => 'salida',
                         'quantity' => $qty,
+                        'concept' => 'Venta',
                     ]);
                 }
             }
@@ -360,7 +359,6 @@ class TicketController extends Controller
                 'washer_id' => $request->washer_id,
                 'vehicle_type_id' => $request->vehicle_type_id,
                 'customer_name' => $request->customer_name,
-                'customer_cedula' => $request->customer_cedula,
                 'total_amount' => $total,
                 'paid_amount' => $request->paid_amount,
                 'change' => $request->paid_amount - $total,
@@ -420,6 +418,7 @@ class TicketController extends Controller
                         'user_id' => auth()->id(),
                         'movement_type' => 'entrada',
                         'quantity' => $detail->quantity,
+                        'concept' => 'Cancelación',
                     ]);
                 }
             }
