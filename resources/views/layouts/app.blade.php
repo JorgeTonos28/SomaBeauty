@@ -36,7 +36,7 @@
                 </main>
                 <footer class="bg-gray-100 text-sm px-4 py-2 flex justify-between items-center">
                     <span>&copy; {{ date('Y') }} 3Glam</span>
-                    <img src="{{ asset('images/signature.png') }}" alt="Firma" class="h-10">
+                    <img src="{{ asset('images/signature.png') }}" alt="Firma" class="h-15">
                 </footer>
             </div>
         </div>
