@@ -422,6 +422,8 @@ class TicketController extends Controller
                         'color' => $request->color,
                         'year' => $request->year,
                     ]);
+                } elseif (!$vehicle->year && $request->filled('year')) {
+                    $vehicle->update(['year' => $request->year]);
                 }
             }
 
