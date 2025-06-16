@@ -20,19 +20,13 @@
                     Nuevo Producto
                 </a>
                 <button x-show="selected" x-on:click="$dispatch('open-modal', 'edit-' + selected)" class="text-yellow-600" title="Editar">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.1 2.1 0 113 3L6.75 19.5H3v-3.75L16.862 3.487z" />
-                    </svg>
+                    <i class="fa-solid fa-pen fa-lg"></i>
                 </button>
                 <button x-show="selected" x-on:click="$dispatch('open-modal', 'delete-' + selected)" class="text-red-600" title="Eliminar">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <i class="fa-solid fa-trash fa-lg"></i>
                 </button>
                 <button x-show="selected" x-on:click="$dispatch('open-modal', 'entry-' + selected)" class="text-blue-600" title="Entrada">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
+                    <i class="fa-solid fa-plus fa-lg"></i>
                 </button>
             </div>
         @endif
