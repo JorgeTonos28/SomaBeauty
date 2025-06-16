@@ -10,6 +10,7 @@ Alpine.data('filterTable', (url, extra = {}) => ({
     fetchTable() {
         const form = this.$refs.form;
         const params = new URLSearchParams(new FormData(form));
+        params.set('pending', this.pending);
         params.append('ajax', '1');
         fetch(`${url}?${params.toString()}`, {
             headers: {
@@ -23,6 +24,20 @@ Alpine.data('filterTable', (url, extra = {}) => ({
     },
     init() {
         this.fetchTable();
+    }
+}));
+
+Alpine.data('payForm', (total) => ({
+    paid: total,
+    method: 'efectivo',
+    get change() {
+        return (this.paid || 0) - total;
+    },
+    formatCurrency(v) {
+        return (v).toLocaleString('es-DO', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
     }
 }));
 

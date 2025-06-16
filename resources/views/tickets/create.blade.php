@@ -7,16 +7,12 @@
 
     <div x-data="ticketForm()" class="py-6 max-w-4xl mx-auto sm:px-6 lg:px-8">
 
-        <form x-ref="form" action="{{ route('tickets.store') }}" method="POST" @submit.prevent="submitForm" class="space-y-6 pb-32">
+        <form x-ref="form" action="{{ route('tickets.store') }}" method="POST" @submit.prevent="submitForm($event)" class="space-y-6 pb-32">
             @csrf
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
                 <input type="text" name="customer_name" required class="form-input w-full mt-1">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Cédula</label>
-                <input type="text" name="customer_cedula" class="form-input w-full mt-1">
             </div>
 
             <!-- Servicios -->
@@ -88,13 +84,13 @@
             <!-- Monto Pagado -->
             <div>
                 <label class="block text-sm font-medium text-gray-700">Monto Pagado (RD$)</label>
-                <input type="number" name="paid_amount" id="paid_amount" required step="0.01" class="form-input w-full mt-1" oninput="updateChange()">
+                <input type="number" name="paid_amount" id="paid_amount" step="0.01" class="form-input w-full mt-1" oninput="updateChange()">
             </div>
 
             <!-- Método de Pago -->
             <div>
                 <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-                <select name="payment_method" id="payment_method" required class="form-select w-full mt-1" onchange="toggleBank()">
+                <select name="payment_method" id="payment_method" class="form-select w-full mt-1" onchange="toggleBank()">
                     <option value="efectivo">Efectivo</option>
                     <option value="tarjeta">Tarjeta</option>
                     <option value="transferencia">Transferencia</option>
@@ -119,8 +115,11 @@
                     <span>Total: RD$ <span id="total_amount">0.00</span></span>
                     <span>Cambio: RD$ <span id="change_display">0.00</span></span>
                 </div>
-                <button type="submit" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
-                    Guardar Ticket
+                <button type="submit" name="ticket_action" value="pending" class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
+                    Crear
+                </button>
+                <button type="submit" name="ticket_action" value="pay" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                    Pagar
                 </button>
                 <a href="{{ route('tickets.index') }}" class="text-gray-600 hover:underline">Cancelar</a>
             </div>
@@ -379,9 +378,20 @@
         function ticketForm() {
             return {
                 errors: [],
-                async submitForm() {
+                async submitForm(e) {
                     const form = this.$refs.form;
+                    const submitter = e?.submitter;
                     this.errors = [];
+
+                    if (submitter?.value === 'pending') {
+                        const paid = form.querySelector('[name=paid_amount]').value;
+                        if (paid && parseFloat(paid) > 0) {
+                            this.errors.push('Si desea pagar el ticket use el botón "Pagar".');
+                            this.showErrors();
+                            return;
+                        }
+                    }
+
                     try {
                         const res = await fetch(form.action, {
                             method: 'POST',
@@ -390,7 +400,7 @@
                                 'Accept': 'application/json',
                                 'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value
                             },
-                            body: new FormData(form)
+                            body: new FormData(form, submitter)
                         });
                         if (res.ok) {
                             window.location = '{{ route('tickets.index') }}';
@@ -406,6 +416,13 @@
                     } catch (e) {
                         this.errors = ['Error de red'];
                     }
+                    this.showErrors();
+                },
+                closeError() {
+                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'error-modal' }));
+                }
+                ,
+                showErrors() {
                     const list = document.getElementById('error-list');
                     list.innerHTML = '';
                     this.errors.forEach(msg => {
@@ -414,9 +431,6 @@
                         list.appendChild(li);
                     });
                     window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
-                },
-                closeError() {
-                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'error-modal' }));
                 }
             }
         }

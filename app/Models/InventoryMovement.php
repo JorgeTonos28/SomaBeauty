@@ -8,7 +8,7 @@ class InventoryMovement extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['product_id', 'user_id', 'movement_type', 'quantity'];
+    protected $fillable = ['product_id', 'user_id', 'movement_type', 'quantity', 'concept'];
 
     public function product()
     {

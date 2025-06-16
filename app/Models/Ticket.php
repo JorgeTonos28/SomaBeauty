@@ -12,11 +12,14 @@ class Ticket extends Model
     protected $fillable = [
         'user_id', 'washer_id', 'vehicle_type_id',
         'customer_name', 'customer_cedula',
-        'total_amount', 'paid_amount', 'change', 'discount_total', 'payment_method', 'bank_account_id', 'canceled'
+        'total_amount', 'paid_amount', 'change', 'discount_total',
+        'payment_method', 'bank_account_id', 'canceled', 'pending', 'paid_at'
     ];
 
     protected $casts = [
         'canceled' => 'boolean',
+        'pending' => 'boolean',
+        'paid_at' => 'datetime',
     ];
 
     public function user()

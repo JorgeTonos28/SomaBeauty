@@ -21,8 +21,9 @@ class DashboardController extends Controller
 
         $ticketQuery = Ticket::with('details')
             ->where('canceled', false)
-            ->whereDate('created_at', '>=', $start)
-            ->whereDate('created_at', '<=', $end);
+            ->where('pending', false)
+            ->whereDate('paid_at', '>=', $start)
+            ->whereDate('paid_at', '<=', $end);
 
         $tickets = $ticketQuery->get();
 
@@ -60,13 +61,22 @@ class DashboardController extends Controller
 
         $pettyCashTotal = $pettyCashExpenses->sum('amount');
 
+        $pendingTickets = Ticket::with('details')
+            ->where('canceled', false)
+            ->where('pending', true)
+            ->whereDate('created_at', '>=', $start)
+            ->whereDate('created_at', '<=', $end)
+            ->get();
+
+        $accountsReceivable = $pendingTickets->sum('total_amount');
+
         $lastExpenses = $pettyCashExpenses->take(5);
 
         $movements = [];
         foreach ($tickets as $t) {
             $movements[] = [
                 'description' => 'Ticket '.$t->id,
-                'date' => $t->created_at->format('d/m/Y H:i'),
+                'date' => $t->paid_at->format('d/m/Y H:i'),
                 'amount' => $t->total_amount,
             ];
         }
@@ -104,8 +114,11 @@ class DashboardController extends Controller
                 'productTotal',
                 'drinkTotal',
                 'grossProfit',
+                'pettyCashTotal',
                 'lastExpenses',
-                'movements'
+                'movements',
+                'accountsReceivable',
+                'pendingTickets'
             ));
         }
 
@@ -119,6 +132,9 @@ class DashboardController extends Controller
             'grossProfit' => $grossProfit,
             'lastExpenses' => $lastExpenses,
             'movements' => $movements,
+            'pettyCashTotal' => $pettyCashTotal,
+            'accountsReceivable' => $accountsReceivable,
+            'pendingTickets' => $pendingTickets,
         ]);
     }
 

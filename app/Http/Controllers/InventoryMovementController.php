@@ -70,6 +70,7 @@ class InventoryMovementController extends Controller
             'user_id' => auth()->id(),
             'movement_type' => 'entrada',
             'quantity' => $request->quantity,
+            'concept' => 'Entrada',
         ]);
         $product->increment('stock', $request->quantity);
 
@@ -82,6 +83,7 @@ class InventoryMovementController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
+            'concept' => 'required|string|max:255',
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -94,6 +96,7 @@ class InventoryMovementController extends Controller
             'user_id' => auth()->id(),
             'movement_type' => 'salida',
             'quantity' => $request->quantity,
+            'concept' => $request->concept,
         ]);
         $product->decrement('stock', $request->quantity);
 
