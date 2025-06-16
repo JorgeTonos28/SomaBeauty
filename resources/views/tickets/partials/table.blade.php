@@ -54,22 +54,22 @@
     </x-modal>
     @if($ticket->pending)
     <x-modal name="pay-{{ $ticket->id }}" focusable>
-        <form method="POST" action="{{ route('tickets.pay', $ticket) }}" class="p-6 space-y-4">
+        <form method="POST" action="{{ route('tickets.pay', $ticket) }}" class="p-6 space-y-4" x-data="payForm({{ $ticket->total_amount }})">
             @csrf
             <div>
                 <label class="block text-sm font-medium text-gray-700">Monto Pagado</label>
-                <input type="number" name="paid_amount" step="0.01" value="{{ $ticket->total_amount }}" class="form-input w-full" required>
+                <input type="number" name="paid_amount" step="0.01" x-model.number="paid" class="form-input w-full" required>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-                <select name="payment_method" class="form-select w-full" required onchange="this.closest('form').querySelector('[name=\'bank_account_id\']').parentElement.style.display = this.value === 'transferencia' ? '' : 'none'">
+                <select name="payment_method" x-model="method" class="form-select w-full" required>
                     <option value="efectivo">Efectivo</option>
                     <option value="tarjeta">Tarjeta</option>
                     <option value="transferencia">Transferencia</option>
                     <option value="mixto">Mixto</option>
                 </select>
             </div>
-            <div style="display:none">
+            <div x-show="method === 'transferencia'">
                 <label class="block text-sm font-medium text-gray-700">Cuenta Bancaria</label>
                 <select name="bank_account_id" class="form-select w-full">
                     <option value="">-- Seleccionar --</option>
@@ -77,6 +77,10 @@
                         <option value="{{ $acc->id }}">{{ $acc->bank }} - {{ $acc->account }}</option>
                     @endforeach
                 </select>
+            </div>
+            <div class="text-sm space-x-4">
+                <span>Total: RD$ {{ number_format($ticket->total_amount,2) }}</span>
+                <span>Cambio: RD$ <span x-text="formatCurrency(change)"></span></span>
             </div>
             <div class="mt-6 flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>

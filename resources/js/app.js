@@ -26,4 +26,18 @@ Alpine.data('filterTable', (url, extra = {}) => ({
     }
 }));
 
+Alpine.data('payForm', (total) => ({
+    paid: total,
+    method: 'efectivo',
+    get change() {
+        return (this.paid || 0) - total;
+    },
+    formatCurrency(v) {
+        return (v).toLocaleString('es-DO', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+}));
+
 Alpine.start();

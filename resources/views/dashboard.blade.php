@@ -32,7 +32,10 @@
                 'drinkTotal' => $drinkTotal,
                 'grossProfit' => $grossProfit,
                 'lastExpenses' => $lastExpenses,
-                'movements' => $movements
+                'movements' => $movements,
+                'pettyCashTotal' => $pettyCashTotal,
+                'accountsReceivable' => $accountsReceivable,
+                'pendingTickets' => $pendingTickets,
             ])
         </div>
     </div>

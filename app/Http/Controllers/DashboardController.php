@@ -76,7 +76,7 @@ class DashboardController extends Controller
         foreach ($tickets as $t) {
             $movements[] = [
                 'description' => 'Ticket '.$t->id,
-                'date' => $t->created_at->format('d/m/Y H:i'),
+                'date' => $t->paid_at->format('d/m/Y H:i'),
                 'amount' => $t->total_amount,
             ];
         }
