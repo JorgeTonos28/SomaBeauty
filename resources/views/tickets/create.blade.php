@@ -19,6 +19,37 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Servicios</label>
                 <div id="wash-fields" style="display:none" class="space-y-4">
+                    <!-- Placa -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Placa</label>
+                        <input type="text" name="plate" id="plate" list="plate-options" class="form-input w-full mt-1">
+                        <datalist id="plate-options"></datalist>
+                    </div>
+
+                    <!-- Marca -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Marca</label>
+                        <input type="text" name="brand" class="form-input w-full mt-1">
+                    </div>
+
+                    <!-- Modelo -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Modelo</label>
+                        <input type="text" name="model" class="form-input w-full mt-1">
+                    </div>
+
+                    <!-- Color -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Color</label>
+                        <input type="text" name="color" class="form-input w-full mt-1">
+                    </div>
+
+                    <!-- Año -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Año</label>
+                        <input type="number" name="year" class="form-input w-full mt-1">
+                    </div>
+
                     <!-- Tipo de Vehículo -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Tipo de Vehículo</label>
@@ -366,6 +397,41 @@
             const method = document.getElementById('payment_method').value;
             field.style.display = method === 'transferencia' ? '' : 'none';
         }
+
+        const plateInput = document.getElementById('plate');
+        const plateList = document.getElementById('plate-options');
+        let plateData = [];
+
+        plateInput.addEventListener('input', async () => {
+            const q = plateInput.value;
+            if (!q) { plateList.innerHTML = ''; return; }
+            try {
+                const res = await fetch(`{{ route('vehicles.search') }}?plate=${encodeURIComponent(q)}`, {headers:{'Accept':'application/json'}});
+                if(res.ok){
+                    plateData = await res.json();
+                    plateList.innerHTML = '';
+                    plateData.forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v.plate;
+                        opt.label = `${v.model} | ${v.color} | ${v.year ?? ''} | ${v.plate} | ${v.type}`;
+                        plateList.appendChild(opt);
+                    });
+                }
+            } catch(e) {}
+        });
+
+        plateInput.addEventListener('change', () => {
+            const plate = plateInput.value;
+            const found = plateData.find(v => v.plate === plate);
+            if(found){
+                document.querySelector('input[name="brand"]').value = found.brand;
+                document.querySelector('input[name="model"]').value = found.model;
+                document.querySelector('input[name="color"]').value = found.color;
+                document.querySelector('input[name="year"]').value = found.year || '';
+                document.querySelector('select[name="vehicle_type_id"]').value = found.vehicle_type_id;
+                updateTotal();
+            }
+        });
 
 
         document.querySelectorAll('input[name="service_ids[]"], select[name="vehicle_type_id"]').forEach(el => {

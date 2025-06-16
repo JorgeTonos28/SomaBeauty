@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             ServicePriceSeeder::class,
             ProductSeeder::class,
             WasherSeeder::class,
+            VehicleSeeder::class,
             DrinkSeeder::class,
             DiscountSeeder::class,
             BankAccountSeeder::class,

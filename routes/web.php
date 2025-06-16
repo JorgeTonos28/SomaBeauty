@@ -58,6 +58,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('washers', WasherController::class);
 });
 Route::middleware(['auth', 'role:admin,cajero'])->group(function () {
+    Route::get('vehicles/search', [\App\Http\Controllers\VehicleController::class, 'search'])->name('vehicles.search');
     Route::get('tickets/canceled', [TicketController::class, 'canceled'])->name('tickets.canceled');
     Route::get('tickets/pending', [TicketController::class, 'pending'])->name('tickets.pending');
     Route::post('tickets/{ticket}/pay', [TicketController::class, 'pay'])->name('tickets.pay');

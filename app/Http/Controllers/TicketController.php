@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\TicketDetail;
 use App\Models\InventoryMovement;
 use App\Models\VehicleType;
+use App\Models\Vehicle;
 use App\Models\Washer;
 use App\Models\Drink;
 use App\Models\Discount;
@@ -191,6 +192,11 @@ class TicketController extends Controller
         $rules = [
             'customer_name' => 'required|string|max:255',
             'vehicle_type_id' => 'nullable|exists:vehicle_types,id',
+            'plate' => 'required_with:service_ids|string|max:20',
+            'brand' => 'required_with:service_ids|string|max:50',
+            'model' => 'required_with:service_ids|string|max:50',
+            'color' => 'required_with:service_ids|string|max:50',
+            'year' => 'nullable|integer',
             'washer_id' => 'nullable|exists:washers,id',
             'service_ids' => 'nullable|array',
             'service_ids.*' => 'exists:services,id',
@@ -213,6 +219,10 @@ class TicketController extends Controller
             'customer_name.required' => 'El nombre del cliente es obligatorio.',
             'customer_name.max' => 'El nombre del cliente es demasiado largo.',
             'vehicle_type_id.exists' => 'El tipo de vehículo seleccionado no es válido.',
+            'plate.required_with' => 'La placa es obligatoria.',
+            'brand.required_with' => 'La marca es obligatoria.',
+            'model.required_with' => 'El modelo es obligatorio.',
+            'color.required_with' => 'El color es obligatorio.',
             'washer_id.exists' => 'El lavador seleccionado no es válido.',
             'service_ids.*.exists' => 'Alguno de los servicios seleccionados es inválido.',
             'product_ids.*.exists' => 'Alguno de los productos seleccionados es inválido.',
@@ -399,10 +409,27 @@ class TicketController extends Controller
                 return back()->withErrors($message)->withInput();
             }
 
+            $vehicle = null;
+            if ($request->filled('plate')) {
+                $vehicle = Vehicle::where('plate', $request->plate)->first();
+                if (!$vehicle) {
+                    $vehicle = Vehicle::create([
+                        'customer_name' => $request->customer_name,
+                        'vehicle_type_id' => $request->vehicle_type_id,
+                        'plate' => $request->plate,
+                        'brand' => $request->brand,
+                        'model' => $request->model,
+                        'color' => $request->color,
+                        'year' => $request->year,
+                    ]);
+                }
+            }
+
             $ticket = Ticket::create([
                 'user_id' => auth()->id(),
                 'washer_id' => $request->washer_id,
                 'vehicle_type_id' => $request->vehicle_type_id,
+                'vehicle_id' => optional($vehicle)->id,
                 'customer_name' => $request->customer_name,
                 'total_amount' => $total,
                 'paid_amount' => $pending ? 0 : $request->paid_amount,
