@@ -7,7 +7,7 @@
 
     <div x-data="ticketForm()" class="py-6 max-w-4xl mx-auto sm:px-6 lg:px-8">
 
-        <form x-ref="form" action="{{ route('tickets.store') }}" method="POST" @submit.prevent="submitForm" class="space-y-6 pb-32">
+        <form x-ref="form" action="{{ route('tickets.store') }}" method="POST" @submit.prevent="submitForm($event)" class="space-y-6 pb-32">
             @csrf
 
             <div>
@@ -378,9 +378,20 @@
         function ticketForm() {
             return {
                 errors: [],
-                async submitForm() {
+                async submitForm(e) {
                     const form = this.$refs.form;
+                    const submitter = e?.submitter;
                     this.errors = [];
+
+                    if (submitter?.value === 'pending') {
+                        const paid = form.querySelector('[name=paid_amount]').value;
+                        if (paid && parseFloat(paid) > 0) {
+                            this.errors.push('Si desea pagar el ticket use el botón "Pagar".');
+                            this.showErrors();
+                            return;
+                        }
+                    }
+
                     try {
                         const res = await fetch(form.action, {
                             method: 'POST',
@@ -389,7 +400,7 @@
                                 'Accept': 'application/json',
                                 'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value
                             },
-                            body: new FormData(form)
+                            body: new FormData(form, submitter)
                         });
                         if (res.ok) {
                             window.location = '{{ route('tickets.index') }}';
@@ -405,6 +416,13 @@
                     } catch (e) {
                         this.errors = ['Error de red'];
                     }
+                    this.showErrors();
+                },
+                closeError() {
+                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'error-modal' }));
+                }
+                ,
+                showErrors() {
                     const list = document.getElementById('error-list');
                     list.innerHTML = '';
                     this.errors.forEach(msg => {
@@ -413,9 +431,6 @@
                         list.appendChild(li);
                     });
                     window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
-                },
-                closeError() {
-                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'error-modal' }));
                 }
             }
         }
