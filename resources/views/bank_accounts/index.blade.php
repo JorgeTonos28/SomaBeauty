@@ -7,17 +7,10 @@
 
     <div class="py-4">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @if (session('success'))
-                <div class="mb-4 font-medium text-sm text-green-600">
-                    {{ session('success') }}
-                </div>
-            @endif
-
             <div class="flex justify-end mb-4">
-                <a href="{{ route('bank-accounts.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <a href="{{ route('bank-accounts.create') }}" class="btn-primary">
                     Nueva Cuenta
                 </a>
-            </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg max-h-96 overflow-y-auto">
                 <table class="min-w-full table-auto border">
@@ -51,7 +44,4 @@
                         @endforeach
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
 </x-app-layout>

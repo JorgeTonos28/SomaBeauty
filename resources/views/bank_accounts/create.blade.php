@@ -40,8 +40,8 @@
                     <input type="text" name="holder_cedula" required class="form-input w-full rounded border-gray-300 mt-1">
                 </div>
                 <div class="flex justify-end">
-                    <a href="{{ route('bank-accounts.index') }}" class="mr-3 px-4 py-2 bg-gray-300 text-gray-700 rounded">Cancelar</a>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>
+                    <a href="{{ route('bank-accounts.index') }}" class="mr-3 btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn-primary">Guardar</button>
                 </div>
             </form>
         </div>

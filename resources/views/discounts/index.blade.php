@@ -6,12 +6,10 @@
     </x-slot>
 
     <div class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
-        @if (session('success'))
-            <div class="mb-4 font-medium text-sm text-green-600">{{ session('success') }}</div>
-        @endif
+
 
         <div class="mb-4">
-            <a href="{{ route('discounts.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Nuevo Descuento</a>
+            <a href="{{ route('discounts.create') }}" class="btn-primary">Nuevo Descuento</a>
         </div>
 
         <div class="bg-white shadow overflow-hidden sm:rounded-lg max-h-96 overflow-y-auto">
