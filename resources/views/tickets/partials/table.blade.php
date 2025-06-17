@@ -43,10 +43,14 @@
 </div>
     @foreach ($tickets as $ticket)
         <x-modal name="cancel-{{ $ticket->id }}" focusable>
-        <form method="POST" action="{{ route('tickets.cancel', $ticket) }}" class="p-6">
+        <form method="POST" action="{{ route('tickets.cancel', $ticket) }}" class="p-6 space-y-4">
             @csrf
             <h2 class="text-lg font-medium text-gray-900">¿Cancelar este ticket?</h2>
-            <div class="mt-6 flex justify-end">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Concepto de cancelación</label>
+                <input type="text" name="cancel_reason" class="form-input w-full" required>
+            </div>
+            <div class="flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>
                 <x-danger-button class="ms-3">Confirmar</x-danger-button>
             </div>
@@ -98,6 +102,12 @@
                 <p><strong>Fecha:</strong> {{ $ticket->created_at->format('d/m/Y H:i') }}</p>
                 @if($ticket->vehicle)
                     <p><strong>Placa:</strong> {{ $ticket->vehicle->plate }}</p>
+                    <p><strong>Marca:</strong> {{ $ticket->vehicle->brand }}</p>
+                    <p><strong>Modelo:</strong> {{ $ticket->vehicle->model }}</p>
+                    <p><strong>Color:</strong> {{ $ticket->vehicle->color }}</p>
+                    @if($ticket->vehicle->year)
+                        <p><strong>Año:</strong> {{ $ticket->vehicle->year }}</p>
+                    @endif
                 @endif
                 @if($ticket->vehicleType)
                     <p><strong>Tipo de Vehículo:</strong> {{ $ticket->vehicleType->name }}</p>

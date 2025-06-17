@@ -557,13 +557,17 @@ class TicketController extends Controller
         return redirect()->route('tickets.index')->with('success', 'Ticket pagado correctamente.');
     }
 
-    public function cancel(Ticket $ticket)
+    public function cancel(Request $request, Ticket $ticket)
     {
         if ($ticket->canceled) {
             return redirect()->route('tickets.index');
         }
 
-        DB::transaction(function() use ($ticket) {
+        $request->validate([
+            'cancel_reason' => 'required|string|max:255',
+        ]);
+
+        DB::transaction(function() use ($ticket, $request) {
             foreach ($ticket->details as $detail) {
                 if ($detail->type === 'product' && $detail->product) {
                     $detail->product->increment('stock', $detail->quantity);
@@ -583,7 +587,11 @@ class TicketController extends Controller
                 $ticket->washer_pending_amount = 0;
             }
 
-            $ticket->update(['canceled' => true, 'washer_pending_amount' => $ticket->washer_pending_amount]);
+            $ticket->update([
+                'canceled' => true,
+                'cancel_reason' => $request->cancel_reason,
+                'washer_pending_amount' => $ticket->washer_pending_amount
+            ]);
         });
 
         return redirect()->route('tickets.index')->with('success', 'Ticket cancelado');

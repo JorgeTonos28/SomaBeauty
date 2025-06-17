@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div x-data="filterTable('{{ route('tickets.canceled') }}')" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div x-data="filterTable('{{ route('tickets.canceled') }}', {selected: null})" x-on:click.away="selected = null" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
         @if (session('success'))
             <div class="mb-4 font-medium text-sm text-green-600">{{ session('success') }}</div>
@@ -23,6 +23,9 @@
                 </div>
             </form>
             <a href="{{ route('tickets.index') }}" class="text-blue-600 hover:underline">&laquo; Volver a activos</a>
+            <button x-show="selected" x-on:click="$dispatch('open-modal', 'view-' + selected)" class="text-gray-600" title="Ver">
+                <i class="fa-solid fa-eye fa-lg"></i>
+            </button>
         </div>
 
         <div x-html="tableHtml"></div>
