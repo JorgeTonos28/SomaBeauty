@@ -399,9 +399,34 @@
         }
 
         const plateInput = document.getElementById('plate');
+        const nameInput = document.querySelector('input[name="customer_name"]');
         const plateList = document.getElementById('plate-options');
         let plateData = [];
         let selectedIndex = -1;
+
+        function restrictInput(el, keyRegex, pasteRegex, msg){
+            el.addEventListener('keydown', e => {
+                if(e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+                if(!keyRegex.test(e.key)){
+                    e.preventDefault();
+                    const list = document.getElementById('error-list');
+                    list.innerHTML = `<li>${msg}</li>`;
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+                }
+            });
+            el.addEventListener('paste', e => {
+                const text = (e.clipboardData || window.clipboardData).getData('text');
+                if(!pasteRegex.test(text)){
+                    e.preventDefault();
+                    const list = document.getElementById('error-list');
+                    list.innerHTML = `<li>${msg}</li>`;
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+                }
+            });
+        }
+
+        restrictInput(nameInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/, 'El nombre solo puede contener letras');
+        restrictInput(plateInput, /^[A-Za-z0-9]$/, /^[A-Za-z0-9]+$/, 'La placa solo puede contener letras y números');
 
         plateInput.addEventListener('input', async () => {
             const q = plateInput.value.trim();
