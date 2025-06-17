@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Ticket;
 use App\Models\PettyCashExpense;
 use App\Models\WasherPayment;
+use App\Models\BankAccount;
 
 class DashboardController extends Controller
 {
@@ -51,6 +52,32 @@ class DashboardController extends Controller
                 $washersCount++;
             }
         }
+
+        $cashTotal = Ticket::where('canceled', false)
+            ->where('pending', false)
+            ->whereDate('paid_at', '>=', $start)
+            ->whereDate('paid_at', '<=', $end)
+            ->where('payment_method', '!=', 'transferencia')
+            ->sum('total_amount');
+
+        $transferTotal = Ticket::where('canceled', false)
+            ->where('pending', false)
+            ->whereDate('paid_at', '>=', $start)
+            ->whereDate('paid_at', '<=', $end)
+            ->where('payment_method', 'transferencia')
+            ->sum('total_amount');
+
+        $bankAccountTotals = Ticket::selectRaw('bank_account_id, SUM(total_amount) as total')
+            ->with('bankAccount')
+            ->where('canceled', false)
+            ->where('pending', false)
+            ->whereDate('paid_at', '>=', $start)
+            ->whereDate('paid_at', '<=', $end)
+            ->where('payment_method', 'transferencia')
+            ->groupBy('bank_account_id')
+            ->get();
+
+        $totalFacturado = $cashTotal + $transferTotal;
 
         $washerPayTotal = $washersCount * 100;
 
@@ -108,6 +135,10 @@ class DashboardController extends Controller
 
         if ($request->ajax()) {
             return view('dashboard.partials.summary', compact(
+                'totalFacturado',
+                'cashTotal',
+                'transferTotal',
+                'bankAccountTotals',
                 'generalCash',
                 'washerPayDue',
                 'serviceTotal',
@@ -124,6 +155,10 @@ class DashboardController extends Controller
 
         return view('dashboard', [
             'filters' => ['start' => $start, 'end' => $end],
+            'totalFacturado' => $totalFacturado,
+            'cashTotal' => $cashTotal,
+            'transferTotal' => $transferTotal,
+            'bankAccountTotals' => $bankAccountTotals,
             'generalCash' => $generalCash,
             'washerPayDue' => $washerPayDue,
             'serviceTotal' => $serviceTotal,

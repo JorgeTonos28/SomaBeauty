@@ -25,6 +25,10 @@
 
         <div x-html="tableHtml">
             @include('dashboard.partials.summary', [
+                'totalFacturado' => $totalFacturado,
+                'cashTotal' => $cashTotal,
+                'transferTotal' => $transferTotal,
+                'bankAccountTotals' => $bankAccountTotals,
                 'generalCash' => $generalCash,
                 'washerPayDue' => $washerPayDue,
                 'serviceTotal' => $serviceTotal,

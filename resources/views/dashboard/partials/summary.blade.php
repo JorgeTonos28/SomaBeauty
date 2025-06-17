@@ -32,7 +32,9 @@
         </div>
         <div class="bg-white p-4 shadow sm:rounded-lg">
             <h3 class="text-lg font-semibold mb-2">Resumen</h3>
-            <p>Total en caja: <strong>RD$ {{ number_format($generalCash, 2) }}</strong></p>
+            <p>Total facturado: <strong>RD$ {{ number_format($totalFacturado, 2) }}</strong></p>
+            <p>Efectivo: <strong>RD$ {{ number_format($cashTotal, 2) }}</strong></p>
+            <p>Transferencias: <strong>RD$ {{ number_format($transferTotal, 2) }}</strong></p>
             <p>Caja chica: <strong>RD$ 3,200.00</strong></p>
             <p>Gastos de caja chica: <strong>RD$ {{ number_format($pettyCashTotal, 2) }}</strong></p>
             <p>Para lavadores: <strong>RD$ {{ number_format($washerPayDue, 2) }}</strong></p>
@@ -44,13 +46,24 @@
             @endif
         </div>
     </div>
-<div class="bg-white p-4 shadow sm:rounded-lg">
-        <h3 class="text-lg font-semibold mb-2">Últimos gastos de caja chica</h3>
-        <ul class="list-disc ms-6">
-            @foreach($lastExpenses as $expense)
-                <li>{{ $expense->created_at->format('d/m H:i') }} - {{ $expense->description }} (RD$ {{ number_format($expense->amount,2) }})</li>
-            @endforeach
-        </ul>
+    <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-white p-4 shadow sm:rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">Últimos gastos de caja chica</h3>
+            <ul class="list-disc ms-6">
+                @foreach($lastExpenses as $expense)
+                    <li>{{ $expense->created_at->format('d/m H:i') }} - {{ $expense->description }} (RD$ {{ number_format($expense->amount,2) }})</li>
+                @endforeach
+            </ul>
+        </div>
+        <div class="bg-white p-4 shadow sm:rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">Transferencias Bancarias</h3>
+            <p>Total: <strong>RD$ {{ number_format($transferTotal, 2) }}</strong></p>
+            <ul class="list-disc ms-6">
+                @foreach($bankAccountTotals as $acc)
+                    <li>{{ $acc->bankAccount->bank }} - {{ $acc->bankAccount->account }}: RD$ {{ number_format($acc->total, 2) }}</li>
+                @endforeach
+            </ul>
+        </div>
     </div>
     <div>
         <h3 class="text-lg font-semibold mb-2">Movimientos</h3>
