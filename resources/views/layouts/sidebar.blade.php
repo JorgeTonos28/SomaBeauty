@@ -27,19 +27,19 @@
                     Catálogo
                 </button>
                 <div x-show="open" x-cloak class="pl-6 space-y-1">
-                    <a href="{{ route('services.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('services.*') ? 'bg-gray-200' : '' }}">
+                    <a href="{{ route('services.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('services.*') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3l1.61 14.49a1.125 1.125 0 0 0 1.12.99h11.04a1.125 1.125 0 0 0 1.12-.99L20.25 3H3.75zm9 18a1.5 1.5 0 0 1-3 0" />
                         </svg>
                         Servicios
                     </a>
-                    <a href="{{ route('products.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('products.*') ? 'bg-gray-200' : '' }}">
+                    <a href="{{ route('products.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('products.*') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25V21l6-3 6 3V5.25a1.5 1.5 0 0 0-1.5-1.5h-9z" />
                         </svg>
                         Productos
                     </a>
-                    <a href="{{ route('drinks.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('drinks.*') ? 'bg-gray-200' : '' }}">
+                    <a href="{{ route('drinks.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('drinks.*') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3h10.5M9 3v12a3 3 0 1 0 6 0V3" />
                         </svg>
@@ -55,13 +55,13 @@
                     Tickets
                 </button>
                 <div x-show="open" x-cloak class="pl-6 space-y-1">
-                    <a href="{{ route('tickets.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('tickets.index') ? 'bg-gray-200' : '' }}">
+                    <a href="{{ route('tickets.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('tickets.index') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                         Activos
                     </a>
-                    <a href="{{ route('tickets.canceled') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('tickets.canceled') ? 'bg-gray-200' : '' }}">
+                    <a href="{{ route('tickets.canceled') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('tickets.canceled') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75l10.5 10.5m0-10.5L6.75 17.25" />
                         </svg>
@@ -78,19 +78,19 @@
                     Configuración
                 </button>
                 <div x-show="open" x-cloak class="pl-6 space-y-1">
-                    <a href="{{ route('discounts.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('discounts.*') ? 'bg-gray-200' : '' }}">
+                    <a href="{{ route('discounts.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('discounts.*') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75v10.5M6.75 6.75v10.5m-1.5-9h14.5m-14.5 4.5h14.5" />
                         </svg>
                         Descuentos
                     </a>
-                    <a href="{{ route('bank-accounts.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('bank-accounts.*') ? 'bg-gray-200' : '' }}">
+                    <a href="{{ route('bank-accounts.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('bank-accounts.*') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l9.72-9.72a.75.75 0 0 1 1.06 0l9.72 9.72m-19.5 0h19.5M4.5 12v8.25a.75.75 0 0 0 .75.75h13.5a.75.75 0 0 0 .75-.75V12" />
                         </svg>
                         Cuentas Bancarias
                     </a>
-                    <a href="{{ route('users.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('users.*') ? 'bg-gray-200' : '' }}">
+                    <a href="{{ route('users.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('users.*') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-4.215A3 3 0 0 0 15.101 10.8L12 10.2l-3.101.6a3 3 0 0 0-3.494 1.985L4 17h5m6 0v2.25a3 3 0 1 1-6 0V17m6 0h-6" />
                         </svg>
