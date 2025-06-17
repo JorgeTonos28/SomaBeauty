@@ -5,7 +5,8 @@
         </h2>
     </x-slot>
 
-    <div class="py-6 max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-4">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 bg-white p-6 shadow sm:rounded-lg">
         <form method="POST" action="{{ route('discounts.update', $discount) }}" class="space-y-6">
             @csrf
             @method('PUT')
