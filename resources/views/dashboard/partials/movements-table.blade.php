@@ -1,4 +1,4 @@
-<div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+<div class="bg-white shadow-sm sm:rounded-lg overflow-hidden max-h-96 overflow-y-auto">
     <table class="min-w-full table-auto border">
         <thead class="bg-gray-200">
             <tr>

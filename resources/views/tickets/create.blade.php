@@ -116,6 +116,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700">Monto Pagado (RD$)</label>
                 <input type="number" name="paid_amount" id="paid_amount" step="0.01" class="form-input w-full mt-1" oninput="updateChange()">
+                <p id="paid_warning" class="text-sm text-red-600"></p>
             </div>
 
             <!-- Método de Pago -->
@@ -295,6 +296,12 @@
             const paid = paidField.value === '' ? null : parseFloat(paidField.value);
             const change = paid === null ? 0 : paid - total;
             document.getElementById('change_display').innerText = formatCurrency(change);
+            const warn = document.getElementById('paid_warning');
+            if (paid !== null && paid < total) {
+                warn.textContent = 'Monto insuficiente';
+            } else {
+                warn.textContent = '';
+            }
         }
 
         function addProductRow() {
@@ -384,9 +391,10 @@
             } else {
                 wash.style.display = 'none';
                 btn.textContent = 'Agregar Lavado';
-                wash.querySelectorAll('select, input[type=checkbox]').forEach(el => {
+                wash.querySelectorAll('select, input[type=checkbox], input[type=text], input[type=number]').forEach(el => {
                     if (el.tagName === 'SELECT') el.value = '';
                     if (el.type === 'checkbox') el.checked = false;
+                    if (el.type === 'text' || el.type === 'number') el.value = '';
                 });
                 updateTotal();
             }

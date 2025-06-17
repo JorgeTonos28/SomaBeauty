@@ -28,7 +28,7 @@ class PettyCashExpenseController extends Controller
             $query->whereDate('created_at', '<=', $filters['end']);
         }
 
-        $expenses = $query->latest()->paginate(20);
+        $expenses = $query->latest()->get();
 
         $todayTotal = PettyCashExpense::whereDate('created_at', now()->toDateString())->sum('amount');
         $remaining = max(0, 3200 - $todayTotal);

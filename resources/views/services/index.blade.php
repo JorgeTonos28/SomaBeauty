@@ -22,7 +22,7 @@
             </div>
         @endif
 
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg max-h-96 overflow-y-auto">
             <table class="min-w-full table-auto border">
                 <thead class="bg-gray-200">
                     <tr>

@@ -14,7 +14,7 @@
             <a href="{{ route('discounts.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Nuevo Descuento</a>
         </div>
 
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg max-h-96 overflow-y-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
