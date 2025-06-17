@@ -20,11 +20,6 @@ class DatabaseSeeder extends Seeder
             DrinkSeeder::class,
             BankAccountSeeder::class,
             UserSeeder::class,
-            DiscountSeeder::class,
-            InventoryMovementSeeder::class,
-            PettyCashExpenseSeeder::class,
-            TicketSeeder::class,
-            WasherPaymentSeeder::class,
         ]);
     }
 }
