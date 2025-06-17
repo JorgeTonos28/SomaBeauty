@@ -7,12 +7,6 @@
 
     <div x-data="filterTable('{{ route('tickets.pending') }}', {selected: null, selectedPending: false, selectedNoWasher: false, selectedCreated: null})" x-on:click.away="selected = null; selectedPending=false; selectedNoWasher=false" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-        @if (session('success'))
-            <div class="mb-4 font-medium text-sm text-green-600">{{ session('success') }}</div>
-        @endif
-        @if (session('error'))
-            <div class="mb-4 font-medium text-sm text-red-600">{{ session('error') }}</div>
-        @endif
 
         <div class="mb-4 flex flex-wrap items-end gap-4">
             <form method="GET" x-ref="form" class="flex items-end gap-2">

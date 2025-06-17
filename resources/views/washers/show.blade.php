@@ -6,9 +6,7 @@
     </x-slot>
 
     <div x-data="filterTable('{{ route('washers.show', $washer) }}')" class="py-4 max-w-6xl mx-auto sm:px-6 lg:px-8">
-        @if (session('success'))
-            <div class="mb-4 font-medium text-sm text-green-600">{{ session('success') }}</div>
-        @endif
+
 
         <div class="mb-4">
             <a href="{{ route('washers.index') }}" class="text-blue-600 hover:underline">&larr; Volver a lista</a>

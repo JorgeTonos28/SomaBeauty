@@ -7,16 +7,10 @@
 
     <div x-data="filterTable('{{ route('drinks.index') }}', {selected: null})" x-on:click.away="selected = null" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-        @if (session('success'))
-            <div class="mb-4 font-medium text-sm text-green-600">
-                {{ session('success') }}
-            </div>
-        @endif
 
         @if (auth()->user()->role === 'admin')
             <div class="mb-4 flex items-center gap-4">
-                <a href="{{ route('drinks.create') }}"
-                   class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                <a href="{{ route('drinks.create') }}" class="btn-primary">
                     Nuevo Trago
                 </a>
                 <button x-show="selected" x-on:click="$dispatch('open-modal', 'edit-' + selected)" class="text-yellow-600" title="Editar">

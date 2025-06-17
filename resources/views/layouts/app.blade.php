@@ -21,6 +21,7 @@
 
             <div class="flex-1">
                 @include('layouts.navigation')
+                @include('partials.flash-messages')
 
             <!-- Page Heading -->
             @if (isset($header))

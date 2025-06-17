@@ -7,16 +7,10 @@
 
     <div class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-        @if (session('success'))
-            <div class="mb-4 font-medium text-sm text-green-600">
-                {{ session('success') }}
-            </div>
-        @endif
 
         @if (auth()->user()->role === 'admin')
             <div class="mb-4">
-                <a href="{{ route('services.create') }}"
-                   class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                <a href="{{ route('services.create') }}" class="btn-primary">
                     Nuevo Servicio
                 </a>
             </div>

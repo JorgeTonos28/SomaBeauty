@@ -5,7 +5,8 @@
         </h2>
     </x-slot>
 
-    <div class="py-6 max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-4">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 bg-white p-6 shadow sm:rounded-lg">
         <form action="{{ route('services.store') }}" method="POST" class="space-y-6">
             @csrf
 
@@ -36,11 +37,10 @@
 
 
             <div class="flex items-center gap-4">
-                <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                    Guardar
-                </button>
-                <a href="{{ route('services.index') }}" class="text-gray-600 hover:underline">Cancelar</a>
+                <x-primary-button>Guardar</x-primary-button>
+                <x-secondary-button type="button" onclick="window.location='{{ route('services.index') }}'">Cancelar</x-secondary-button>
             </div>
         </form>
+        </div>
     </div>
 </x-app-layout>

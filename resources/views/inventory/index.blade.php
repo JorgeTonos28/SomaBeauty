@@ -6,11 +6,6 @@
     </x-slot>
 
     <div x-data="filterTable('{{ route('inventory.index') }}')" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
-        @if (session('success'))
-            <div class="mb-4 font-medium text-sm text-green-600">
-                {{ session('success') }}
-            </div>
-        @endif
 
         <div class="mb-4 flex flex-wrap items-end gap-4">
             <form method="GET" x-ref="form" class="flex items-end gap-2">
@@ -27,10 +22,10 @@
                     <input type="text" name="product" value="{{ $filters['product'] ?? '' }}" class="form-input" @input.debounce.500ms="fetchTable()">
                 </div>
             </form>
-            <a href="{{ route('inventory.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+            <a href="{{ route('inventory.create') }}" class="btn-primary">
                 Nueva Entrada
             </a>
-            <a href="{{ route('inventory.createExit') }}" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+            <a href="{{ route('inventory.createExit') }}" class="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600">
                 Nueva Salida
             </a>
         </div>
