@@ -13,7 +13,8 @@ class Ticket extends Model
         'user_id', 'washer_id', 'vehicle_type_id', 'vehicle_id',
         'customer_name', 'customer_cedula',
         'total_amount', 'paid_amount', 'change', 'discount_total',
-        'payment_method', 'bank_account_id', 'canceled', 'pending', 'paid_at'
+        'payment_method', 'bank_account_id',
+        'washer_pending_amount', 'canceled', 'pending', 'paid_at'
     ];
 
     protected $casts = [

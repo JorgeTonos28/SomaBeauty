@@ -42,11 +42,13 @@ class TicketController extends Controller
         $tickets = $query->latest()->paginate(20);
 
         $bankAccounts = BankAccount::all();
+        $washers = Washer::where('active', true)->get();
 
         if ($request->ajax()) {
             return view('tickets.partials.table', [
                 'tickets' => $tickets,
                 'bankAccounts' => $bankAccounts,
+                'washers' => $washers,
             ]);
         }
 
@@ -54,6 +56,7 @@ class TicketController extends Controller
             'tickets' => $tickets,
             'filters' => $request->only(['start', 'end', 'pending']),
             'bankAccounts' => $bankAccounts,
+            'washers' => $washers,
         ]);
     }
 
@@ -99,11 +102,13 @@ class TicketController extends Controller
 
         $tickets = $query->latest()->paginate(20);
         $bankAccounts = BankAccount::all();
+        $washers = Washer::where('active', true)->get();
 
         if ($request->ajax()) {
             return view('tickets.partials.table', [
                 'tickets' => $tickets,
                 'bankAccounts' => $bankAccounts,
+                'washers' => $washers,
             ]);
         }
 
@@ -111,6 +116,7 @@ class TicketController extends Controller
             'tickets' => $tickets,
             'filters' => $request->only(['start', 'end']),
             'bankAccounts' => $bankAccounts,
+            'washers' => $washers,
         ]);
     }
 
@@ -249,6 +255,7 @@ class TicketController extends Controller
             $total = 0;
             $discountTotal = 0;
             $details = [];
+            $hasService = false;
 
             // Servicios
             foreach ($request->service_ids ?? [] as $serviceId) {
@@ -289,6 +296,7 @@ class TicketController extends Controller
 
                 $total += $price;
                 $discountTotal += $discValue;
+                $hasService = true;
             }
 
             // Productos
@@ -445,6 +453,7 @@ class TicketController extends Controller
                 'discount_total' => $discountTotal,
                 'payment_method' => $pending ? null : $request->payment_method,
                 'bank_account_id' => $pending ? null : $request->bank_account_id,
+                'washer_pending_amount' => $hasService && !$request->washer_id ? 100 : 0,
                 'pending' => $pending,
                 'paid_at' => $pending ? null : now(),
             ]);
@@ -454,7 +463,7 @@ class TicketController extends Controller
                 TicketDetail::create($detail);
             }
 
-            if ($request->washer_id) {
+            if ($request->washer_id && $hasService) {
                 Washer::whereId($request->washer_id)->increment('pending_amount', 100);
             }
 
@@ -476,7 +485,42 @@ class TicketController extends Controller
 
     public function update(Request $request, Ticket $ticket)
     {
-        abort(403);
+        $request->validate([
+            'washer_id' => 'nullable|exists:washers,id',
+            'payment_method' => 'required|in:efectivo,tarjeta,transferencia,mixto',
+            'bank_account_id' => 'required_if:payment_method,transferencia|nullable|exists:bank_accounts,id',
+        ]);
+
+        DB::transaction(function() use ($ticket, $request) {
+            $oldWasher = $ticket->washer_id;
+            $newWasher = $request->washer_id;
+
+            $hasService = $ticket->details()->where('type', 'service')->exists();
+
+            if ($oldWasher !== $newWasher && $hasService) {
+                if ($oldWasher) {
+                    Washer::whereId($oldWasher)->decrement('pending_amount', 100);
+                } elseif ($ticket->washer_pending_amount <= 0) {
+                    $ticket->washer_pending_amount = 100;
+                }
+
+                if ($newWasher) {
+                    Washer::whereId($newWasher)->increment('pending_amount', 100);
+                    $ticket->washer_pending_amount = 0;
+                }
+
+                $ticket->washer_id = $newWasher;
+            }
+
+            $ticket->update([
+                'payment_method' => $request->payment_method,
+                'bank_account_id' => $request->bank_account_id,
+                'washer_id' => $ticket->washer_id,
+                'washer_pending_amount' => $ticket->washer_pending_amount,
+            ]);
+        });
+
+        return redirect()->route('tickets.index')->with('success', 'Ticket actualizado.');
     }
 
     public function destroy(Ticket $ticket)
@@ -535,9 +579,11 @@ class TicketController extends Controller
 
             if ($ticket->washer_id) {
                 Washer::whereId($ticket->washer_id)->decrement('pending_amount', 100);
+            } elseif ($ticket->washer_pending_amount > 0) {
+                $ticket->washer_pending_amount = 0;
             }
 
-            $ticket->update(['canceled' => true]);
+            $ticket->update(['canceled' => true, 'washer_pending_amount' => $ticket->washer_pending_amount]);
         });
 
         return redirect()->route('tickets.index')->with('success', 'Ticket cancelado');
