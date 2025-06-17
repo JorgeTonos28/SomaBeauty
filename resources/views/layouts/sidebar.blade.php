@@ -1,5 +1,5 @@
-<aside class="w-48 bg-white border-r border-gray-200">
-    <div class="p-4">
+<aside x-cloak :class="{'-translate-x-full': !sidebarOpen}" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 md:relative md:translate-x-0 md:w-48">
+    <div class="p-4 h-full overflow-y-auto">
         <nav class="space-y-2">
             <a href="{{ route('dashboard') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('dashboard') ? 'bg-gray-200' : '' }}">
                 <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

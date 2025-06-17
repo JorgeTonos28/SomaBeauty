@@ -18,7 +18,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100 flex">
+        <div x-data="{ sidebarOpen: false }" @open-sidebar.window="sidebarOpen = true" @close-sidebar.window="sidebarOpen = false" class="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+            <div x-show="sidebarOpen" x-cloak class="fixed inset-0 bg-black/50 z-30 md:hidden" @click="sidebarOpen = false"></div>
             @include('layouts.sidebar')
 
             <div class="flex-1">
