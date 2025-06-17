@@ -20,7 +20,7 @@ class WasherPaymentSeeder extends Seeder
         // Pay washer1 for one wash two days ago (today payment)
         WasherPayment::create([
             'washer_id' => $washer1->id,
-            'payment_date' => $now->toDateString(),
+            'payment_date' => $now->toDateTimeString(),
             'total_washes' => 1,
             'amount_paid' => 100,
             'observations' => 'Pago de ejemplo',
@@ -30,7 +30,7 @@ class WasherPaymentSeeder extends Seeder
         // Pay washer2 for wash today
         WasherPayment::create([
             'washer_id' => $washer2->id,
-            'payment_date' => $now->toDateString(),
+            'payment_date' => $now->toDateTimeString(),
             'total_washes' => 1,
             'amount_paid' => 100,
             'observations' => 'Pago de ejemplo',
