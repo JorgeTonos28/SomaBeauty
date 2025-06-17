@@ -12,6 +12,10 @@ class WasherPayment extends Model
         'washer_id', 'payment_date', 'total_washes', 'amount_paid', 'observations'
     ];
 
+    protected $casts = [
+        'payment_date' => 'datetime',
+    ];
+
     public function washer()
     {
         return $this->belongsTo(Washer::class);

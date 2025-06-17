@@ -3,6 +3,7 @@
         <thead class="bg-gray-200">
             <tr>
                 <th class="px-4 py-2">Fecha</th>
+                <th class="px-4 py-2">Ticket ID</th>
                 <th class="px-4 py-2">Cliente</th>
                 <th class="px-4 py-2">Detalle</th>
                 <th class="px-4 py-2">Ganancia</th>
@@ -12,7 +13,8 @@
         <tbody>
             @foreach($events as $e)
                 <tr class="border-b">
-                    <td class="px-4 py-2">{{ \Carbon\Carbon::parse($e['date'])->format('d/m/Y') }}</td>
+                    <td class="px-4 py-2">{{ \Carbon\Carbon::parse($e['date'])->format('d/m/Y H:i') }}</td>
+                    <td class="px-4 py-2">{{ $e['ticket_id'] ?? '' }}</td>
                     <td class="px-4 py-2">{{ $e['customer'] ?? '' }}</td>
                     <td class="px-4 py-2">{{ $e['description'] }}</td>
                     <td class="px-4 py-2">

@@ -1,5 +1,18 @@
 <div class="space-y-4">
     <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-white p-4 shadow sm:rounded-lg flex flex-col items-center justify-center">
+            <p class="text-lg">Total facturado</p>
+            <p class="text-2xl font-bold">RD$ {{ number_format($totalFacturado, 2) }}</p>
+        </div>
+        @if(Auth::user()->role === 'admin')
+        <div class="bg-white p-4 shadow sm:rounded-lg flex flex-col items-center justify-center">
+            <p class="text-lg">Beneficio bruto</p>
+            <p class="text-2xl font-bold">RD$ {{ number_format($grossProfit, 2) }}</p>
+        </div>
+        @endif
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
         <div class="bg-white p-4 shadow sm:rounded-lg">
             <h3 class="text-lg font-semibold mb-2">Cuentas por cobrar</h3>
             <p>Total: <strong>RD$ {{ number_format($accountsReceivable, 2) }}</strong></p>
@@ -32,7 +45,6 @@
         </div>
         <div class="bg-white p-4 shadow sm:rounded-lg">
             <h3 class="text-lg font-semibold mb-2">Resumen</h3>
-            <p>Total facturado: <strong>RD$ {{ number_format($totalFacturado, 2) }}</strong></p>
             <p>Efectivo: <strong>RD$ {{ number_format($cashTotal, 2) }}</strong></p>
             <p>Transferencias: <strong>RD$ {{ number_format($transferTotal, 2) }}</strong></p>
             <p>Caja chica: <strong>RD$ 3,200.00</strong></p>
@@ -42,7 +54,7 @@
             <p>Ventas de productos: RD$ {{ number_format($productTotal, 2) }}</p>
             <p>Ventas de tragos: RD$ {{ number_format($drinkTotal, 2) }}</p>
             @if(Auth::user()->role === 'admin')
-                <p>Beneficio bruto: RD$ {{ number_format($grossProfit, 2) }}</p>
+                <!-- Beneficio bruto se muestra en la sección superior -->
             @endif
         </div>
     </div>
