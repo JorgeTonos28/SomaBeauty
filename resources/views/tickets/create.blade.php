@@ -12,7 +12,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
-                <input type="text" name="customer_name" required class="form-input w-full mt-1">
+                <input type="text" name="customer_name" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" required class="form-input w-full mt-1">
             </div>
 
             <!-- Servicios -->
@@ -22,32 +22,32 @@
                     <!-- Placa -->
                     <div class="relative">
                         <label class="block text-sm font-medium text-gray-700">Placa</label>
-                        <input type="text" name="plate" id="plate" autocomplete="off" class="form-input w-full mt-1">
+                        <input type="text" name="plate" id="plate" autocomplete="off" pattern="[A-Za-z0-9]+" class="form-input w-full mt-1">
                         <ul id="plate-options" class="absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden"></ul>
                     </div>
 
                     <!-- Marca -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Marca</label>
-                        <input type="text" name="brand" class="form-input w-full mt-1">
+                        <input type="text" name="brand" pattern="[A-Za-z0-9\s]+" class="form-input w-full mt-1">
                     </div>
 
                     <!-- Modelo -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Modelo</label>
-                        <input type="text" name="model" class="form-input w-full mt-1">
+                        <input type="text" name="model" pattern="[A-Za-z0-9\s]+" class="form-input w-full mt-1">
                     </div>
 
                     <!-- Color -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Color</label>
-                        <input type="text" name="color" class="form-input w-full mt-1">
+                        <input type="text" name="color" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" class="form-input w-full mt-1">
                     </div>
 
                     <!-- Año -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Año</label>
-                        <input type="number" name="year" class="form-input w-full mt-1">
+                        <input type="number" name="year" min="1890" max="{{ date('Y') }}" class="form-input w-full mt-1">
                     </div>
 
                     <!-- Tipo de Vehículo -->
@@ -401,6 +401,7 @@
         const plateInput = document.getElementById('plate');
         const plateList = document.getElementById('plate-options');
         let plateData = [];
+        let selectedIndex = -1;
 
         plateInput.addEventListener('input', async () => {
             const q = plateInput.value.trim();
@@ -408,8 +409,9 @@
             try {
                 const res = await fetch(`{{ route('vehicles.search') }}?plate=${encodeURIComponent(q)}`, {headers:{'Accept':'application/json'}});
                 if(res.ok){
-                    plateData = await res.json();
+                    plateData = (await res.json()).slice(0,10);
                     plateList.innerHTML = '';
+                    selectedIndex = -1;
                     if(plateData.length === 0){
                         plateList.classList.add('hidden');
                         return;
@@ -425,6 +427,32 @@
                 }
             } catch(e) {}
         });
+
+        plateInput.addEventListener('keydown', e => {
+            const items = plateList.querySelectorAll('li');
+            if(plateList.classList.contains('hidden') || items.length === 0) return;
+            if(e.key === 'ArrowDown'){
+                e.preventDefault();
+                selectedIndex = (selectedIndex + 1) % items.length;
+                updateActive(items);
+            } else if(e.key === 'ArrowUp'){
+                e.preventDefault();
+                selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+                updateActive(items);
+            } else if(e.key === 'Enter' && selectedIndex >= 0){
+                e.preventDefault();
+                const li = items[selectedIndex];
+                plateInput.value = li.dataset.plate;
+                fillVehicleFields(li.dataset.plate);
+                plateList.classList.add('hidden');
+            }
+        });
+
+        function updateActive(items){
+            items.forEach((li,i)=>{
+                li.classList.toggle('bg-gray-200', i===selectedIndex);
+            });
+        }
 
         plateList.addEventListener('mousedown', e => {
             const li = e.target.closest('li[data-plate]');

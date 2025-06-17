@@ -19,7 +19,7 @@ class VehicleController extends Controller
         if ($query) {
             $vehicles = Vehicle::with('vehicleType')
                 ->where('plate', 'like', $query.'%')
-                ->limit(5)
+                ->limit(10)
                 ->get()
                 ->map(function($v){
                     return [
