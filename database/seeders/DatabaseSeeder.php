@@ -2,15 +2,11 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Database\Seeders\BankAccountSeeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run()
     {
         $this->call([
@@ -20,10 +16,15 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             WasherSeeder::class,
             VehicleSeeder::class,
+            ExtraVehicleSeeder::class,
             DrinkSeeder::class,
-            DiscountSeeder::class,
             BankAccountSeeder::class,
+            UserSeeder::class,
+            DiscountSeeder::class,
+            InventoryMovementSeeder::class,
+            PettyCashExpenseSeeder::class,
+            TicketSeeder::class,
+            WasherPaymentSeeder::class,
         ]);
     }
-
 }
