@@ -12,13 +12,44 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
-                <input type="text" name="customer_name" required class="form-input w-full mt-1">
+                <input type="text" name="customer_name" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" required class="form-input w-full mt-1">
             </div>
 
             <!-- Servicios -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Servicios</label>
                 <div id="wash-fields" style="display:none" class="space-y-4">
+                    <!-- Placa -->
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700">Placa</label>
+                        <input type="text" name="plate" id="plate" autocomplete="off" pattern="[A-Za-z0-9]+" class="form-input w-full mt-1">
+                        <ul id="plate-options" class="absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden"></ul>
+                    </div>
+
+                    <!-- Marca -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Marca</label>
+                        <input type="text" name="brand" pattern="[A-Za-z0-9\s]+" class="form-input w-full mt-1">
+                    </div>
+
+                    <!-- Modelo -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Modelo</label>
+                        <input type="text" name="model" pattern="[A-Za-z0-9\s]+" class="form-input w-full mt-1">
+                    </div>
+
+                    <!-- Color -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Color</label>
+                        <input type="text" name="color" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" class="form-input w-full mt-1">
+                    </div>
+
+                    <!-- Año -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Año</label>
+                        <input type="number" name="year" min="1890" max="{{ date('Y') }}" class="form-input w-full mt-1">
+                    </div>
+
                     <!-- Tipo de Vehículo -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Tipo de Vehículo</label>
@@ -365,6 +396,136 @@
             const field = document.getElementById('bank-field');
             const method = document.getElementById('payment_method').value;
             field.style.display = method === 'transferencia' ? '' : 'none';
+        }
+
+        const plateInput = document.getElementById('plate');
+        const nameInput = document.querySelector('input[name="customer_name"]');
+        const colorInput = document.querySelector('input[name="color"]');
+        const yearInput = document.querySelector('input[name="year"]');
+        const plateList = document.getElementById('plate-options');
+        let plateData = [];
+        let selectedIndex = -1;
+
+        function restrictInput(el, keyRegex, pasteRegex, msg){
+            el.addEventListener('keydown', e => {
+                if(e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+                if(!keyRegex.test(e.key)){
+                    e.preventDefault();
+                    const list = document.getElementById('error-list');
+                    list.innerHTML = `<li>${msg}</li>`;
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+                }
+            });
+            el.addEventListener('paste', e => {
+                const text = (e.clipboardData || window.clipboardData).getData('text');
+                if(!pasteRegex.test(text)){
+                    e.preventDefault();
+                    const list = document.getElementById('error-list');
+                    list.innerHTML = `<li>${msg}</li>`;
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+                }
+            });
+        }
+
+        restrictInput(nameInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/, 'El nombre solo puede contener letras');
+        restrictInput(plateInput, /^[A-Za-z0-9]$/, /^[A-Za-z0-9]+$/, 'La placa solo puede contener letras y números');
+        restrictInput(colorInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/, 'El color solo puede contener letras');
+        restrictInput(yearInput, /^\d$/, /^\d+$/, 'El año solo puede contener números');
+
+        const maxYear = {{ date('Y') }};
+        const minYear = 1890;
+        yearInput.addEventListener('input', () => {
+            let val = yearInput.value.replace(/\D/g, '').slice(0, 4);
+            yearInput.value = val;
+            if (val.length === 4) {
+                const num = parseInt(val, 10);
+                if (num < minYear || num > maxYear) {
+                    yearInput.value = '';
+                    const list = document.getElementById('error-list');
+                    list.innerHTML = `<li>El año debe estar entre ${minYear} y ${maxYear}</li>`;
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+                }
+            }
+        });
+
+        plateInput.addEventListener('input', async () => {
+            const q = plateInput.value.trim();
+            if (!q) { plateList.innerHTML = ''; plateList.classList.add('hidden'); return; }
+            try {
+                const res = await fetch(`{{ route('vehicles.search') }}?plate=${encodeURIComponent(q)}`, {headers:{'Accept':'application/json'}});
+                if(res.ok){
+                    plateData = (await res.json()).slice(0,10);
+                    plateList.innerHTML = '';
+                    selectedIndex = -1;
+                    if(plateData.length === 0){
+                        plateList.classList.add('hidden');
+                        return;
+                    }
+                    plateList.classList.remove('hidden');
+                    plateData.forEach(v => {
+                        const li = document.createElement('li');
+                        li.textContent = `${v.brand} | ${v.model} | ${v.color} | ${v.year ?? ''} | ${v.plate} | ${v.type}`;
+                        li.dataset.plate = v.plate;
+                        li.className = 'px-2 py-1 cursor-pointer hover:bg-gray-200';
+                        plateList.appendChild(li);
+                    });
+                }
+            } catch(e) {}
+        });
+
+        plateInput.addEventListener('keydown', e => {
+            const items = plateList.querySelectorAll('li');
+            if(plateList.classList.contains('hidden') || items.length === 0) return;
+            if(e.key === 'ArrowDown'){
+                e.preventDefault();
+                selectedIndex = (selectedIndex + 1) % items.length;
+                updateActive(items);
+            } else if(e.key === 'ArrowUp'){
+                e.preventDefault();
+                selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+                updateActive(items);
+            } else if(e.key === 'Enter' && selectedIndex >= 0){
+                e.preventDefault();
+                const li = items[selectedIndex];
+                plateInput.value = li.dataset.plate;
+                fillVehicleFields(li.dataset.plate);
+                plateList.classList.add('hidden');
+            }
+        });
+
+        function updateActive(items){
+            items.forEach((li,i)=>{
+                li.classList.toggle('bg-gray-200', i===selectedIndex);
+            });
+        }
+
+        plateList.addEventListener('mousedown', e => {
+            const li = e.target.closest('li[data-plate]');
+            if(!li) return;
+            e.preventDefault();
+            plateInput.value = li.dataset.plate;
+            fillVehicleFields(li.dataset.plate);
+            plateList.classList.add('hidden');
+        });
+
+        plateInput.addEventListener('blur', () => {
+            setTimeout(() => plateList.classList.add('hidden'), 200);
+        });
+
+        plateInput.addEventListener('change', () => {
+            fillVehicleFields(plateInput.value);
+        });
+
+        function fillVehicleFields(plate){
+            const found = plateData.find(v => v.plate === plate);
+            if(found){
+                document.querySelector('input[name="brand"]').value = found.brand;
+                document.querySelector('input[name="model"]').value = found.model;
+                document.querySelector('input[name="color"]').value = found.color;
+                document.querySelector('input[name="year"]').value = found.year || '';
+                document.querySelector('select[name="vehicle_type_id"]').value = found.vehicle_type_id;
+                updateTotal();
+            }
         }
 
 

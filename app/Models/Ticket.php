@@ -10,7 +10,7 @@ class Ticket extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'washer_id', 'vehicle_type_id',
+        'user_id', 'washer_id', 'vehicle_type_id', 'vehicle_id',
         'customer_name', 'customer_cedula',
         'total_amount', 'paid_amount', 'change', 'discount_total',
         'payment_method', 'bank_account_id', 'canceled', 'pending', 'paid_at'
@@ -35,6 +35,11 @@ class Ticket extends Model
     public function vehicleType()
     {
         return $this->belongsTo(VehicleType::class);
+    }
+
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class);
     }
 
     public function details()
