@@ -400,6 +400,8 @@
 
         const plateInput = document.getElementById('plate');
         const nameInput = document.querySelector('input[name="customer_name"]');
+        const colorInput = document.querySelector('input[name="color"]');
+        const yearInput = document.querySelector('input[name="year"]');
         const plateList = document.getElementById('plate-options');
         let plateData = [];
         let selectedIndex = -1;
@@ -427,6 +429,23 @@
 
         restrictInput(nameInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/, 'El nombre solo puede contener letras');
         restrictInput(plateInput, /^[A-Za-z0-9]$/, /^[A-Za-z0-9]+$/, 'La placa solo puede contener letras y números');
+        restrictInput(colorInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/, 'El color solo puede contener letras');
+        restrictInput(yearInput, /^\d$/, /^\d+$/, 'El año solo puede contener números');
+
+        const maxYear = {{ date('Y') }};
+        let lastYear = '';
+        yearInput.addEventListener('input', () => {
+            const val = yearInput.value;
+            if(val === '') { lastYear = ''; return; }
+            if(!/^\d+$/.test(val) || parseInt(val) < 1890 || parseInt(val) > maxYear){
+                yearInput.value = lastYear;
+                const list = document.getElementById('error-list');
+                list.innerHTML = `<li>El año debe estar entre 1890 y ${maxYear}</li>`;
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+            } else {
+                lastYear = val;
+            }
+        });
 
         plateInput.addEventListener('input', async () => {
             const q = plateInput.value.trim();
