@@ -12,15 +12,15 @@
         </thead>
         <tbody>
             @foreach ($tickets as $ticket)
-                <tr class="border-t cursor-pointer {{ $ticket->pending ? 'bg-red-100' : '' }}"
+                <tr class="border-t cursor-pointer {{ $ticket->pending ? 'bg-red-100' : (!$ticket->washer_id && $ticket->details->where('type','service')->count() ? 'bg-orange-100' : '') }}"
                     x-on:click="
                         if (selected === {{ $ticket->id }}) {
-                            selected = null; selectedPending = false;
+                            selected = null; selectedPending = false; selectedNoWasher = false;
                         } else {
-                            selected = {{ $ticket->id }}; selectedPending = {{ $ticket->pending ? 'true' : 'false' }};
+                            selected = {{ $ticket->id }}; selectedPending = {{ $ticket->pending ? 'true' : 'false' }}; selectedNoWasher = {{ (!$ticket->washer_id && $ticket->details->where('type','service')->count()) ? 'true' : 'false' }};
                         }
                     "
-                    :class="selected === {{ $ticket->id }} ? (selectedPending ? 'bg-red-300' : 'bg-blue-100') : ''">
+                    :class="selected === {{ $ticket->id }} ? (selectedPending ? 'bg-red-300' : (selectedNoWasher ? 'bg-orange-300' : 'bg-blue-100')) : ''">
                     <td class="px-4 py-2">{{ $ticket->customer_name }}</td>
                     <td class="px-4 py-2">
                         {{ $ticket->details->pluck('type')->unique()->map(fn($t) => match($t){
@@ -41,8 +41,8 @@
 <div class="mt-4">
     {{ $tickets->withQueryString()->links() }}
 </div>
-@foreach ($tickets as $ticket)
-    <x-modal name="cancel-{{ $ticket->id }}" focusable>
+    @foreach ($tickets as $ticket)
+        <x-modal name="cancel-{{ $ticket->id }}" focusable>
         <form method="POST" action="{{ route('tickets.cancel', $ticket) }}" class="p-6">
             @csrf
             <h2 class="text-lg font-medium text-gray-900">¿Cancelar este ticket?</h2>
@@ -89,4 +89,71 @@
         </form>
     </x-modal>
     @endif
+    <x-modal name="view-{{ $ticket->id }}" focusable>
+        <form method="POST" action="{{ route('tickets.update', $ticket) }}" class="p-6 space-y-4">
+            @csrf
+            @method('PUT')
+            <div class="text-sm space-y-1">
+                <p><strong>Cliente:</strong> {{ $ticket->customer_name }}</p>
+                <p><strong>Fecha:</strong> {{ $ticket->created_at->format('d/m/Y H:i') }}</p>
+                @if($ticket->vehicle)
+                    <p><strong>Placa:</strong> {{ $ticket->vehicle->plate }}</p>
+                @endif
+                @if($ticket->vehicleType)
+                    <p><strong>Tipo de Vehículo:</strong> {{ $ticket->vehicleType->name }}</p>
+                @endif
+            </div>
+            <div>
+                <h3 class="font-semibold text-sm mb-1">Detalles</h3>
+                <ul class="text-sm list-disc ps-5 space-y-1">
+                    @foreach($ticket->details as $d)
+                        <li>
+                            {{ match($d->type){
+                                'service' => $d->service->name ?? 'Servicio',
+                                'product' => $d->product->name ?? 'Producto',
+                                'drink' => $d->drink->name ?? 'Trago'
+                            } }} x{{ $d->quantity }} - RD$ {{ number_format($d->unit_price,2) }}
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            <div class="text-sm space-y-1">
+                <p><strong>Descuento:</strong> RD$ {{ number_format($ticket->discount_total, 2) }}</p>
+                <p><strong>Total:</strong> RD$ {{ number_format($ticket->total_amount, 2) }}</p>
+            </div>
+            @if($ticket->details->where('type','service')->count())
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Lavador</label>
+                    <select name="washer_id" class="form-select w-full">
+                        <option value="">-- Seleccionar --</option>
+                        @foreach($washers as $w)
+                            <option value="{{ $w->id }}" {{ $w->id == $ticket->washer_id ? 'selected' : '' }}>{{ $w->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+            <div x-data="{method: '{{ $ticket->payment_method }}'}">
+                <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
+                <select name="payment_method" x-model="method" class="form-select w-full">
+                    <option value="efectivo">Efectivo</option>
+                    <option value="tarjeta">Tarjeta</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="mixto">Mixto</option>
+                </select>
+                <div x-show="method === 'transferencia'" class="mt-2">
+                    <label class="block text-sm font-medium text-gray-700">Cuenta Bancaria</label>
+                    <select name="bank_account_id" class="form-select w-full">
+                        <option value="">-- Seleccionar --</option>
+                        @foreach($bankAccounts as $acc)
+                            <option value="{{ $acc->id }}" {{ $acc->id == $ticket->bank_account_id ? 'selected' : '' }}>{{ $acc->bank }} - {{ $acc->account }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <x-secondary-button x-on:click="$dispatch('close')">Cerrar</x-secondary-button>
+                <x-primary-button class="ms-3">Guardar</x-primary-button>
+            </div>
+        </form>
+    </x-modal>
 @endforeach
