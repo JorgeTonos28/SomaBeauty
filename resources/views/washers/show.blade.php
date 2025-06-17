@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-4 max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div x-data="filterTable('{{ route('washers.show', $washer) }}')" class="py-4 max-w-4xl mx-auto sm:px-6 lg:px-8">
         @if (session('success'))
             <div class="mb-4 font-medium text-sm text-green-600">{{ session('success') }}</div>
         @endif
@@ -29,28 +29,29 @@
 
         <div class="bg-white p-4 rounded shadow">
             <p class="mb-2"><strong>Saldo pendiente:</strong> RD$ {{ number_format($washer->pending_amount, 2) }}</p>
-            @if($fromDate)
-                <p class="mb-4 text-sm text-gray-600">Saldo desde {{ \Carbon\Carbon::parse($fromDate)->format('d/m/Y') }}</p>
+            @if($defaultFrom)
+                <p class="mb-4 text-sm text-gray-600">Saldo desde {{ \Carbon\Carbon::parse($defaultFrom)->format('d/m/Y') }}</p>
             @endif
-            <h3 class="font-semibold mb-2">Lavados recientes</h3>
-            <table class="min-w-full table-auto border">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="px-4 py-2">Fecha</th>
-                        <th class="px-4 py-2">Vehículo</th>
-                        <th class="px-4 py-2">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($tickets as $ticket)
-                        <tr class="border-b">
-                            <td class="px-4 py-2">{{ $ticket->created_at->format('d/m/Y') }}</td>
-                            <td class="px-4 py-2">{{ $ticket->vehicleType->name }}</td>
-                            <td class="px-4 py-2">RD$ {{ number_format($ticket->total_amount, 2) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <form method="GET" x-ref="form" class="flex items-end gap-2 mb-4">
+                <div>
+                    <label class="block text-sm">Desde</label>
+                    <input type="date" name="start" value="{{ $filters['start'] ?? '' }}" class="form-input" @change="fetchTable()">
+                </div>
+                <div>
+                    <label class="block text-sm">Hasta</label>
+                    <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" @change="fetchTable()">
+                </div>
+                <div class="flex items-end">
+                    <button type="button" class="px-3 py-2 bg-gray-200 rounded" @click="
+                        $refs.form.start.value = '{{ $defaultFrom }}';
+                        $refs.form.end.value = new Date().toISOString().slice(0,10);
+                        fetchTable();
+                    ">Ahora</button>
+                </div>
+            </form>
+            <div x-html="tableHtml">
+                @include('washers.partials.ledger', ['events' => $events])
+            </div>
         </div>
     </div>
 </x-app-layout>

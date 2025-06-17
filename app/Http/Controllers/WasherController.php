@@ -70,18 +70,61 @@ class WasherController extends Controller
             ->with('success', 'Lavador eliminado correctamente.');
     }
 
-    public function show(Washer $washer)
+    public function show(Request $request, Washer $washer)
     {
         $lastPayment = $washer->payments()->latest('payment_date')->first();
-        $fromDate = $lastPayment ? $lastPayment->payment_date : null;
+        $defaultFrom = $lastPayment ? $lastPayment->payment_date : null;
 
-        $ticketsQuery = $washer->tickets()->with('vehicleType')->orderByDesc('created_at');
-        if ($fromDate) {
-            $ticketsQuery->whereDate('created_at', '>', $fromDate);
+        $start = $request->input('start', $defaultFrom);
+        $end = $request->input('end');
+
+        $ticketsQuery = $washer->tickets()->with('vehicleType');
+        if ($start) {
+            $ticketsQuery->whereDate('created_at', '>=', $start);
+        }
+        if ($end) {
+            $ticketsQuery->whereDate('created_at', '<=', $end);
         }
         $tickets = $ticketsQuery->get();
 
-        return view('washers.show', compact('washer', 'tickets', 'fromDate'));
+        $paymentsQuery = $washer->payments();
+        if ($start) {
+            $paymentsQuery->whereDate('payment_date', '>=', $start);
+        }
+        if ($end) {
+            $paymentsQuery->whereDate('payment_date', '<=', $end);
+        }
+        $payments = $paymentsQuery->get();
+
+        $events = [];
+        foreach ($tickets as $t) {
+            $events[] = [
+                'date' => $t->created_at,
+                'description' => optional($t->vehicleType)->name,
+                'gain' => 100,
+                'payment' => null,
+            ];
+        }
+        foreach ($payments as $p) {
+            $events[] = [
+                'date' => \Carbon\Carbon::parse($p->payment_date),
+                'description' => 'Pago',
+                'gain' => null,
+                'payment' => $p->amount_paid,
+            ];
+        }
+        usort($events, fn($a, $b) => $b['date']->timestamp <=> $a['date']->timestamp);
+
+        if ($request->ajax()) {
+            return view('washers.partials.ledger', ['events' => $events]);
+        }
+
+        return view('washers.show', [
+            'washer' => $washer,
+            'events' => $events,
+            'filters' => ['start' => $start, 'end' => $end],
+            'defaultFrom' => $defaultFrom,
+        ]);
     }
 
     public function pay(Washer $washer)
