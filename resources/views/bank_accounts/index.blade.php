@@ -11,6 +11,7 @@
                 <a href="{{ route('bank-accounts.create') }}" class="btn-primary">
                     Nueva Cuenta
                 </a>
+            </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg max-h-96 overflow-y-auto">
                 <table class="min-w-full table-auto border">
@@ -44,4 +45,7 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
 </x-app-layout>

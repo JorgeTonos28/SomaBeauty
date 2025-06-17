@@ -25,10 +25,8 @@
             </div>
 
             <div class="flex items-center gap-4">
-                <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                    Guardar
-                </button>
-                <a href="{{ route('products.index') }}" class="text-gray-600 hover:underline">Cancelar</a>
+                <x-primary-button>Guardar</x-primary-button>
+                <x-secondary-button type="button" onclick="window.location='{{ route('products.index') }}'">Cancelar</x-secondary-button>
             </div>
         </form>
     </div>
