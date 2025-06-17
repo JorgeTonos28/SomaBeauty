@@ -29,7 +29,6 @@
                 'cashTotal' => $cashTotal,
                 'transferTotal' => $transferTotal,
                 'bankAccountTotals' => $bankAccountTotals,
-                'generalCash' => $generalCash,
                 'washerPayDue' => $washerPayDue,
                 'serviceTotal' => $serviceTotal,
                 'productTotal' => $productTotal,

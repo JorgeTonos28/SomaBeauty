@@ -31,7 +31,8 @@ class DashboardController extends Controller
         $serviceTotal = 0;
         $productTotal = 0;
         $drinkTotal = 0;
-        $washersCount = 0;
+
+        $washCount = 0;
 
         foreach ($tickets as $ticket) {
             foreach ($ticket->details as $detail) {
@@ -48,9 +49,9 @@ class DashboardController extends Controller
                         break;
                 }
             }
-            if ($ticket->washer_id) {
-                $washersCount++;
-            }
+            $washCount += $ticket->details
+                ->where('type', 'service')
+                ->sum('quantity');
         }
 
         $cashTotal = Ticket::where('canceled', false)
@@ -79,7 +80,7 @@ class DashboardController extends Controller
 
         $totalFacturado = $cashTotal + $transferTotal;
 
-        $washerPayTotal = $washersCount * 100;
+        $washerPayTotal = $washCount * 100;
 
         $pettyCashExpenses = PettyCashExpense::whereDate('created_at', '>=', $start)
             ->whereDate('created_at', '<=', $end)
@@ -127,11 +128,9 @@ class DashboardController extends Controller
             ->whereDate('payment_date', '<=', $end)
             ->sum('amount_paid');
 
-        $generalCash = 3200 + $serviceTotal + $productTotal + $drinkTotal - $pettyCashTotal - $washerPayments;
+        $washerPayDue = max(0, $washerPayTotal - $washerPayments);
 
-        $washerPayDue = $washerPayTotal - $washerPayments;
-
-        $grossProfit = $generalCash - 3200 - $washerPayDue;
+        $grossProfit = $totalFacturado - $pettyCashTotal - ($washCount * 100);
 
         if ($request->ajax()) {
             return view('dashboard.partials.summary', compact(
@@ -139,7 +138,6 @@ class DashboardController extends Controller
                 'cashTotal',
                 'transferTotal',
                 'bankAccountTotals',
-                'generalCash',
                 'washerPayDue',
                 'serviceTotal',
                 'productTotal',
@@ -159,7 +157,6 @@ class DashboardController extends Controller
             'cashTotal' => $cashTotal,
             'transferTotal' => $transferTotal,
             'bankAccountTotals' => $bankAccountTotals,
-            'generalCash' => $generalCash,
             'washerPayDue' => $washerPayDue,
             'serviceTotal' => $serviceTotal,
             'productTotal' => $productTotal,
