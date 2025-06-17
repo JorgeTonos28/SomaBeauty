@@ -28,10 +28,7 @@
         </div>
 
         <div class="bg-white p-4 rounded shadow">
-            <p class="mb-2"><strong>Saldo pendiente:</strong> RD$ {{ number_format($washer->pending_amount, 2) }}</p>
-            @if($defaultFrom)
-                <p class="mb-4 text-sm text-gray-600">Saldo desde {{ \Carbon\Carbon::parse($defaultFrom)->format('d/m/Y') }}</p>
-            @endif
+            <p class="mb-4"><strong>Saldo pendiente:</strong> RD$ {{ number_format($washer->pending_amount, 2) }}</p>
             <form method="GET" x-ref="form" class="flex items-end gap-2 mb-4">
                 <div>
                     <label class="block text-sm">Desde</label>
@@ -43,8 +40,9 @@
                 </div>
                 <div class="flex items-end">
                     <button type="button" class="px-3 py-2 bg-gray-200 rounded" @click="
-                        $refs.form.start.value = '{{ $defaultFrom }}';
-                        $refs.form.end.value = new Date().toISOString().slice(0,10);
+                        const today = new Date().toISOString().slice(0,10);
+                        $refs.form.start.value = today;
+                        $refs.form.end.value = today;
                         fetchTable();
                     ">Ahora</button>
                 </div>

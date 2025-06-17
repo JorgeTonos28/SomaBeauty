@@ -72,13 +72,12 @@ class WasherController extends Controller
 
     public function show(Request $request, Washer $washer)
     {
-        $lastPayment = $washer->payments()->latest('payment_date')->first();
-        $defaultFrom = $lastPayment ? $lastPayment->payment_date : null;
+        $today = now()->toDateString();
 
-        $start = $request->input('start', $defaultFrom);
-        $end = $request->input('end');
+        $start = $request->input('start', $today);
+        $end = $request->input('end', $today);
 
-        $ticketsQuery = $washer->tickets()->with('vehicleType');
+        $ticketsQuery = $washer->tickets()->with(['vehicleType', 'vehicle']);
         if ($start) {
             $ticketsQuery->whereDate('created_at', '>=', $start);
         }
@@ -98,9 +97,20 @@ class WasherController extends Controller
 
         $events = [];
         foreach ($tickets as $t) {
+            $vehicle = $t->vehicle;
+            $detailParts = [];
+            if ($vehicle) {
+                $detailParts[] = $vehicle->brand;
+                $detailParts[] = $vehicle->model;
+                $detailParts[] = $vehicle->color;
+                $detailParts[] = $vehicle->year;
+            }
+            $detailParts[] = optional($t->vehicleType)->name;
+
             $events[] = [
                 'date' => $t->created_at,
-                'description' => optional($t->vehicleType)->name,
+                'customer' => $t->customer_name,
+                'description' => implode(' | ', array_filter($detailParts)),
                 'gain' => 100,
                 'payment' => null,
             ];
@@ -108,6 +118,7 @@ class WasherController extends Controller
         foreach ($payments as $p) {
             $events[] = [
                 'date' => \Carbon\Carbon::parse($p->payment_date),
+                'customer' => null,
                 'description' => 'Pago',
                 'gain' => null,
                 'payment' => $p->amount_paid,
@@ -123,7 +134,6 @@ class WasherController extends Controller
             'washer' => $washer,
             'events' => $events,
             'filters' => ['start' => $start, 'end' => $end],
-            'defaultFrom' => $defaultFrom,
         ]);
     }
 
