@@ -121,15 +121,17 @@
                 <p><strong>Descuento:</strong> RD$ {{ number_format($ticket->discount_total, 2) }}</p>
                 <p><strong>Total:</strong> RD$ {{ number_format($ticket->total_amount, 2) }}</p>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Lavador</label>
-                <select name="washer_id" class="form-select w-full">
-                    <option value="">-- Seleccionar --</option>
-                    @foreach($washers as $w)
-                        <option value="{{ $w->id }}" {{ $w->id == $ticket->washer_id ? 'selected' : '' }}>{{ $w->name }}</option>
-                    @endforeach
-                </select>
-            </div>
+            @if($ticket->details->where('type','service')->count())
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Lavador</label>
+                    <select name="washer_id" class="form-select w-full">
+                        <option value="">-- Seleccionar --</option>
+                        @foreach($washers as $w)
+                            <option value="{{ $w->id }}" {{ $w->id == $ticket->washer_id ? 'selected' : '' }}>{{ $w->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
             <div x-data="{method: '{{ $ticket->payment_method }}'}">
                 <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
                 <select name="payment_method" x-model="method" class="form-select w-full">
