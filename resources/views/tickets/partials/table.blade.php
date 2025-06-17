@@ -96,6 +96,30 @@
             <div class="text-sm space-y-1">
                 <p><strong>Cliente:</strong> {{ $ticket->customer_name }}</p>
                 <p><strong>Fecha:</strong> {{ $ticket->created_at->format('d/m/Y H:i') }}</p>
+                @if($ticket->vehicle)
+                    <p><strong>Placa:</strong> {{ $ticket->vehicle->plate }}</p>
+                @endif
+                @if($ticket->vehicleType)
+                    <p><strong>Tipo de Vehículo:</strong> {{ $ticket->vehicleType->name }}</p>
+                @endif
+            </div>
+            <div>
+                <h3 class="font-semibold text-sm mb-1">Detalles</h3>
+                <ul class="text-sm list-disc ps-5 space-y-1">
+                    @foreach($ticket->details as $d)
+                        <li>
+                            {{ match($d->type){
+                                'service' => $d->service->name ?? 'Servicio',
+                                'product' => $d->product->name ?? 'Producto',
+                                'drink' => $d->drink->name ?? 'Trago'
+                            } }} x{{ $d->quantity }} - RD$ {{ number_format($d->unit_price,2) }}
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            <div class="text-sm space-y-1">
+                <p><strong>Descuento:</strong> RD$ {{ number_format($ticket->discount_total, 2) }}</p>
+                <p><strong>Total:</strong> RD$ {{ number_format($ticket->total_amount, 2) }}</p>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Lavador</label>
