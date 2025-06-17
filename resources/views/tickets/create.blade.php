@@ -433,17 +433,18 @@
         restrictInput(yearInput, /^\d$/, /^\d+$/, 'El año solo puede contener números');
 
         const maxYear = {{ date('Y') }};
-        let lastYear = '';
+        const minYear = 1890;
         yearInput.addEventListener('input', () => {
-            const val = yearInput.value;
-            if(val === '') { lastYear = ''; return; }
-            if(!/^\d+$/.test(val) || parseInt(val) < 1890 || parseInt(val) > maxYear){
-                yearInput.value = lastYear;
-                const list = document.getElementById('error-list');
-                list.innerHTML = `<li>El año debe estar entre 1890 y ${maxYear}</li>`;
-                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
-            } else {
-                lastYear = val;
+            let val = yearInput.value.replace(/\D/g, '').slice(0, 4);
+            yearInput.value = val;
+            if (val.length === 4) {
+                const num = parseInt(val, 10);
+                if (num < minYear || num > maxYear) {
+                    yearInput.value = '';
+                    const list = document.getElementById('error-list');
+                    list.innerHTML = `<li>El año debe estar entre ${minYear} y ${maxYear}</li>`;
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+                }
             }
         });
 
