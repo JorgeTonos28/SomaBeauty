@@ -78,7 +78,8 @@ class DashboardController extends Controller
             ->groupBy('bank_account_id')
             ->get();
 
-        $totalFacturado = $cashTotal + $transferTotal;
+        $pettyCashInitial = 3200;
+        $totalFacturado = $cashTotal + $transferTotal + $pettyCashInitial;
 
         $washerPayTotal = $washCount * 100;
 
@@ -130,7 +131,7 @@ class DashboardController extends Controller
 
         $washerPayDue = max(0, $washerPayTotal - $washerPayments);
 
-        $grossProfit = $totalFacturado - $pettyCashTotal - ($washCount * 100);
+        $grossProfit = $totalFacturado - $pettyCashInitial - $pettyCashTotal - $washerPayDue;
 
         if ($request->ajax()) {
             return view('dashboard.partials.summary', compact(
