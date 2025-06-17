@@ -21,8 +21,8 @@
                         })->implode(', ') }}
                     </td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->discount_total, 2) }}</td>
-                    <td class="px-4 py-2">{{ $ticket->cancel_reason }}</td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->total_amount, 2) }}</td>
+                    <td class="px-4 py-2">{{ $ticket->cancel_reason }}</td>
                     <td class="px-4 py-2">
                         {{ optional($ticket->bankAccount)->bank ? $ticket->bankAccount->bank.' - '.$ticket->bankAccount->account : '' }}
                     </td>
