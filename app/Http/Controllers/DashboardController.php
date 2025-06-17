@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Ticket;
 use App\Models\PettyCashExpense;
 use App\Models\WasherPayment;
+use App\Models\BankAccount;
 
 class DashboardController extends Controller
 {
@@ -30,7 +31,8 @@ class DashboardController extends Controller
         $serviceTotal = 0;
         $productTotal = 0;
         $drinkTotal = 0;
-        $washersCount = 0;
+
+        $washCount = 0;
 
         foreach ($tickets as $ticket) {
             foreach ($ticket->details as $detail) {
@@ -47,12 +49,39 @@ class DashboardController extends Controller
                         break;
                 }
             }
-            if ($ticket->washer_id) {
-                $washersCount++;
-            }
+            $washCount += $ticket->details
+                ->where('type', 'service')
+                ->sum('quantity');
         }
 
-        $washerPayTotal = $washersCount * 100;
+        $cashTotal = Ticket::where('canceled', false)
+            ->where('pending', false)
+            ->whereDate('paid_at', '>=', $start)
+            ->whereDate('paid_at', '<=', $end)
+            ->where('payment_method', '!=', 'transferencia')
+            ->sum('total_amount');
+
+        $transferTotal = Ticket::where('canceled', false)
+            ->where('pending', false)
+            ->whereDate('paid_at', '>=', $start)
+            ->whereDate('paid_at', '<=', $end)
+            ->where('payment_method', 'transferencia')
+            ->sum('total_amount');
+
+        $bankAccountTotals = Ticket::selectRaw('bank_account_id, SUM(total_amount) as total')
+            ->with('bankAccount')
+            ->where('canceled', false)
+            ->where('pending', false)
+            ->whereDate('paid_at', '>=', $start)
+            ->whereDate('paid_at', '<=', $end)
+            ->where('payment_method', 'transferencia')
+            ->groupBy('bank_account_id')
+            ->get();
+
+        $pettyCashInitial = 3200;
+        $totalFacturado = $cashTotal + $transferTotal + $pettyCashInitial;
+
+        $washerPayTotal = $washCount * 100;
 
         $pettyCashExpenses = PettyCashExpense::whereDate('created_at', '>=', $start)
             ->whereDate('created_at', '<=', $end)
@@ -100,15 +129,16 @@ class DashboardController extends Controller
             ->whereDate('payment_date', '<=', $end)
             ->sum('amount_paid');
 
-        $generalCash = 3200 + $serviceTotal + $productTotal + $drinkTotal - $pettyCashTotal - $washerPayments;
+        $washerPayDue = max(0, $washerPayTotal - $washerPayments);
 
-        $washerPayDue = $washerPayTotal - $washerPayments;
-
-        $grossProfit = $generalCash - 3200 - $washerPayDue;
+        $grossProfit = $totalFacturado - $pettyCashInitial - $pettyCashTotal - $washerPayDue;
 
         if ($request->ajax()) {
             return view('dashboard.partials.summary', compact(
-                'generalCash',
+                'totalFacturado',
+                'cashTotal',
+                'transferTotal',
+                'bankAccountTotals',
                 'washerPayDue',
                 'serviceTotal',
                 'productTotal',
@@ -124,7 +154,10 @@ class DashboardController extends Controller
 
         return view('dashboard', [
             'filters' => ['start' => $start, 'end' => $end],
-            'generalCash' => $generalCash,
+            'totalFacturado' => $totalFacturado,
+            'cashTotal' => $cashTotal,
+            'transferTotal' => $transferTotal,
+            'bankAccountTotals' => $bankAccountTotals,
             'washerPayDue' => $washerPayDue,
             'serviceTotal' => $serviceTotal,
             'productTotal' => $productTotal,
