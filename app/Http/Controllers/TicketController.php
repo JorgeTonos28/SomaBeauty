@@ -39,7 +39,7 @@ class TicketController extends Controller
             $query->whereDate('created_at', '<=', $request->end);
         }
 
-        $tickets = $query->latest()->paginate(20);
+        $tickets = $query->latest()->get();
 
         $bankAccounts = BankAccount::all();
         $washers = Washer::where('active', true)->get();
@@ -72,7 +72,7 @@ class TicketController extends Controller
             $query->whereDate('created_at', '<=', $request->end);
         }
 
-        $tickets = $query->latest()->paginate(20);
+        $tickets = $query->latest()->get();
 
         if ($request->ajax()) {
             return view('tickets.partials.canceled-table', [
@@ -100,7 +100,7 @@ class TicketController extends Controller
             $query->whereDate('created_at', '<=', $request->end);
         }
 
-        $tickets = $query->latest()->paginate(20);
+        $tickets = $query->latest()->get();
         $bankAccounts = BankAccount::all();
         $washers = Washer::where('active', true)->get();
 

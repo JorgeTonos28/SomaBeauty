@@ -31,7 +31,7 @@ class InventoryMovementController extends Controller
             });
         }
 
-        $movements = $query->latest()->paginate(20);
+        $movements = $query->latest()->get();
 
         if ($request->ajax()) {
             return view('inventory.partials.table', [

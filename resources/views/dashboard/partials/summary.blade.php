@@ -13,7 +13,7 @@
     </div>
 
     <div class="grid md:grid-cols-2 gap-4">
-        <div class="bg-white p-4 shadow sm:rounded-lg">
+        <div class="bg-white p-4 shadow sm:rounded-lg max-h-96 overflow-y-auto">
             <h3 class="text-lg font-semibold mb-2">Cuentas por cobrar</h3>
             <p>Total: <strong>RD$ {{ number_format($accountsReceivable, 2) }}</strong></p>
             <table class="min-w-full mt-2 table-auto text-sm border">
