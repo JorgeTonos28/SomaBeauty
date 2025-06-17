@@ -113,6 +113,7 @@ class WasherController extends Controller
                 'description' => implode(' | ', array_filter($detailParts)),
                 'gain' => 100,
                 'payment' => null,
+                'ticket_id' => $t->id,
             ];
         }
         foreach ($payments as $p) {
@@ -122,9 +123,10 @@ class WasherController extends Controller
                 'description' => 'Pago',
                 'gain' => null,
                 'payment' => $p->amount_paid,
+                'ticket_id' => null,
             ];
         }
-        usort($events, fn($a, $b) => $b['date']->timestamp <=> $a['date']->timestamp);
+        usort($events, fn($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
 
         if ($request->ajax()) {
             return view('washers.partials.ledger', ['events' => $events]);
@@ -145,7 +147,7 @@ class WasherController extends Controller
 
         WasherPayment::create([
             'washer_id' => $washer->id,
-            'payment_date' => now()->toDateString(),
+            'payment_date' => now(),
             'total_washes' => intval($washer->pending_amount / 100),
             'amount_paid' => $washer->pending_amount,
         ]);
@@ -162,7 +164,7 @@ class WasherController extends Controller
         foreach ($washers as $washer) {
             WasherPayment::create([
                 'washer_id' => $washer->id,
-                'payment_date' => now()->toDateString(),
+                'payment_date' => now(),
                 'total_washes' => intval($washer->pending_amount / 100),
                 'amount_paid' => $washer->pending_amount,
             ]);

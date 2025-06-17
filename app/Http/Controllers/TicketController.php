@@ -563,6 +563,10 @@ class TicketController extends Controller
             return redirect()->route('tickets.index');
         }
 
+        if ($ticket->created_at->lt(now()->subHours(6))) {
+            return back()->with('error', 'No se puede cancelar un ticket con más de 6 horas de creado.');
+        }
+
         $request->validate([
             'cancel_reason' => 'required|string|max:255',
         ]);

@@ -24,6 +24,16 @@ Alpine.data('filterTable', (url, extra = {}) => ({
     },
     init() {
         this.fetchTable();
+    },
+    openCancelModal() {
+        if (!this.selectedCreated) return;
+        const created = new Date(this.selectedCreated);
+        const diffHours = (Date.now() - created.getTime()) / 3600000;
+        if (diffHours > 6) {
+            this.$dispatch('open-modal', 'cancel-error');
+        } else {
+            this.$dispatch('open-modal', 'cancel-' + this.selected);
+        }
     }
 }));
 

@@ -2,6 +2,7 @@
     <table class="min-w-full table-auto border">
         <thead class="bg-gray-200">
             <tr>
+                <th class="border px-4 py-2">ID</th>
                 <th class="border px-4 py-2">Cliente</th>
                 <th class="border px-4 py-2">Facturaciones</th>
                 <th class="border px-4 py-2">Descuento</th>
@@ -15,12 +16,13 @@
                 <tr class="border-t cursor-pointer {{ $ticket->pending ? 'bg-red-100' : (!$ticket->washer_id && $ticket->details->where('type','service')->count() ? 'bg-orange-100' : '') }}"
                     x-on:click="
                         if (selected === {{ $ticket->id }}) {
-                            selected = null; selectedPending = false; selectedNoWasher = false;
+                            selected = null; selectedPending = false; selectedNoWasher = false; selectedCreated = null;
                         } else {
-                            selected = {{ $ticket->id }}; selectedPending = {{ $ticket->pending ? 'true' : 'false' }}; selectedNoWasher = {{ (!$ticket->washer_id && $ticket->details->where('type','service')->count()) ? 'true' : 'false' }};
+                            selected = {{ $ticket->id }}; selectedPending = {{ $ticket->pending ? 'true' : 'false' }}; selectedNoWasher = {{ (!$ticket->washer_id && $ticket->details->where('type','service')->count()) ? 'true' : 'false' }}; selectedCreated = '{{ $ticket->created_at }}';
                         }
                     "
                     :class="selected === {{ $ticket->id }} ? (selectedPending ? 'bg-red-300' : (selectedNoWasher ? 'bg-orange-300' : 'bg-blue-100')) : ''">
+                    <td class="px-4 py-2">{{ $ticket->id }}</td>
                     <td class="px-4 py-2">{{ $ticket->customer_name }}</td>
                     <td class="px-4 py-2">
                         {{ $ticket->details->pluck('type')->unique()->map(fn($t) => match($t){
