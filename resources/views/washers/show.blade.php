@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div x-data="filterTable('{{ route('washers.show', $washer) }}')" class="py-4 max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div x-data="filterTable('{{ route('washers.show', $washer) }}')" class="py-4 max-w-6xl mx-auto sm:px-6 lg:px-8">
         @if (session('success'))
             <div class="mb-4 font-medium text-sm text-green-600">{{ session('success') }}</div>
         @endif

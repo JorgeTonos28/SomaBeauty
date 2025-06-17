@@ -195,13 +195,18 @@ class TicketController extends Controller
     {
         $pending = $request->input('ticket_action') === 'pending';
 
+        $serviceIds = $request->input('service_ids', []);
+        $hasWash = Service::whereIn('id', $serviceIds)
+            ->where('name', 'like', 'Lavado%')
+            ->exists();
+
         $rules = [
             'customer_name' => ['required', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/', 'max:255'],
-            'vehicle_type_id' => 'nullable|exists:vehicle_types,id',
-            'plate' => ['required_with:service_ids', 'alpha_num', 'max:20'],
-            'brand' => ['required_with:service_ids', 'regex:/^[A-Za-z0-9\s]+$/', 'max:50'],
-            'model' => ['required_with:service_ids', 'regex:/^[A-Za-z0-9\s]+$/', 'max:50'],
-            'color' => ['required_with:service_ids', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/', 'max:50'],
+            'vehicle_type_id' => [$hasWash ? 'required' : 'nullable', 'exists:vehicle_types,id'],
+            'plate' => [$hasWash ? 'required' : 'nullable', 'alpha_num', 'max:20'],
+            'brand' => [$hasWash ? 'required' : 'nullable', 'regex:/^[A-Za-z0-9\s]+$/', 'max:50'],
+            'model' => [$hasWash ? 'required' : 'nullable', 'regex:/^[A-Za-z0-9\s]+$/', 'max:50'],
+            'color' => [$hasWash ? 'required' : 'nullable', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/', 'max:50'],
             'year' => 'nullable|integer|between:1890,' . date('Y'),
             'washer_id' => 'nullable|exists:washers,id',
             'service_ids' => 'nullable|array',
@@ -224,14 +229,15 @@ class TicketController extends Controller
         $request->validate($rules, [
             'customer_name.required' => 'El nombre del cliente es obligatorio.',
             'customer_name.max' => 'El nombre del cliente es demasiado largo.',
+            'vehicle_type_id.required' => 'El tipo de vehículo es obligatorio.',
             'vehicle_type_id.exists' => 'El tipo de vehículo seleccionado no es válido.',
-            'plate.required_with' => 'La placa es obligatoria.',
+            'plate.required' => 'La placa es obligatoria.',
             'plate.alpha_num' => 'La placa solo puede contener letras y numeros.',
-            'brand.required_with' => 'La marca es obligatoria.',
+            'brand.required' => 'La marca es obligatoria.',
             'brand.regex' => 'La marca solo puede contener letras y numeros.',
-            'model.required_with' => 'El modelo es obligatorio.',
+            'model.required' => 'El modelo es obligatorio.',
             'model.regex' => 'El modelo solo puede contener letras y numeros.',
-            'color.required_with' => 'El color es obligatorio.',
+            'color.required' => 'El color es obligatorio.',
             'color.regex' => 'El color solo puede contener letras.',
             'customer_name.regex' => 'El nombre solo puede contener letras.',
             'year.between' => 'El año debe estar entre 1890 y '.date('Y').'.',
