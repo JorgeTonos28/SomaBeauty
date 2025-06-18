@@ -90,6 +90,12 @@
                         </svg>
                         Cuentas Bancarias
                     </a>
+                    <a href="{{ route('appearance.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('appearance.*') ? 'border-b-2 border-gray-500' : '' }}">
+                        <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h18v18H3V3zm3 12l4-4 3 3 5-6 4 7H6z" />
+                        </svg>
+                        Apariencia
+                    </a>
                     <a href="{{ route('users.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('users.*') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-4.215A3 3 0 0 0 15.101 10.8L12 10.2l-3.101.6a3 3 0 0 0-3.494 1.985L4 17h5m6 0v2.25a3 3 0 1 1-6 0V17m6 0h-6" />

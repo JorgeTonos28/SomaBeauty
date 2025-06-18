@@ -9,6 +9,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\PettyCashExpenseController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\InventoryMovementController;
+use App\Http\Controllers\AppearanceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,6 +45,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('discounts/{discount}/deactivate', [\App\Http\Controllers\DiscountController::class, 'deactivate'])->name('discounts.deactivate');
     Route::resource('discounts', \App\Http\Controllers\DiscountController::class);
     Route::resource('bank-accounts', \App\Http\Controllers\BankAccountController::class);
+    Route::get('appearance', [AppearanceController::class, 'index'])->name('appearance.index');
+    Route::post('appearance', [AppearanceController::class, 'store'])->name('appearance.store');
 });
 Route::middleware(['auth', 'role:admin,cajero'])->group(function () {
     Route::resource('products', ProductController::class);
