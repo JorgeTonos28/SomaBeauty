@@ -1,7 +1,7 @@
 <div class="space-y-4">
     <div class="bg-white p-4 shadow sm:rounded-lg flex justify-around items-center">
         <div class="text-center">
-            <p class="text-lg">Total facturado</p>
+            <p class="text-lg">Total en caja</p>
             <p class="text-3xl font-bold">RD$ {{ number_format($totalFacturado, 2) }}</p>
         </div>
         @if(Auth::user()->role === 'admin')
