@@ -13,7 +13,6 @@ class DatabaseSeeder extends Seeder
             VehicleTypeSeeder::class,
             ServiceSeeder::class,
             ServicePriceSeeder::class,
-            ProductSeeder::class,
             WasherSeeder::class,
             VehicleSeeder::class,
             ExtraVehicleSeeder::class,
