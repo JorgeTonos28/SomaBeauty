@@ -131,7 +131,7 @@ class DashboardController extends Controller
 
         $washerPayDue = max(0, $washerPayTotal - $washerPayments);
 
-        $grossProfit = $totalFacturado - $pettyCashInitial - $pettyCashTotal - $washerPayDue;
+        $grossProfit = $totalFacturado - $pettyCashInitial - $pettyCashTotal - $washerPayTotal;
 
         if ($request->ajax()) {
             return view('dashboard.partials.summary', compact(
