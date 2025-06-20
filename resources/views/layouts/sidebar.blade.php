@@ -5,7 +5,7 @@
                 <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
                 </svg>
-                Panel de Control
+                Panel
             </a>
             <a href="{{ route('petty-cash.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('petty-cash.*') ? 'bg-gray-200' : '' }}">
                 <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -89,6 +89,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l9.72-9.72a.75.75 0 0 1 1.06 0l9.72 9.72m-19.5 0h19.5M4.5 12v8.25a.75.75 0 0 0 .75.75h13.5a.75.75 0 0 0 .75-.75V12" />
                         </svg>
                         Cuentas Bancarias
+                    </a>
+                    <a href="{{ route('appearance.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('appearance.*') ? 'border-b-2 border-gray-500' : '' }}">
+                        <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h18v18H3V3zm3 12l4-4 3 3 5-6 4 7H6z" />
+                        </svg>
+                        Apariencia
                     </a>
                     <a href="{{ route('users.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('users.*') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
