@@ -13,7 +13,7 @@
         <tbody>
             @foreach($events as $e)
                 <tr class="border-b">
-                    <td class="px-4 py-2">{{ \Carbon\Carbon::parse($e['date'])->format('d/m/Y H:i') }}</td>
+                    <td class="px-4 py-2">{{ \Carbon\Carbon::parse($e['date'])->format('d/m/Y h:i A') }}</td>
                     <td class="px-4 py-2">{{ $e['ticket_id'] ?? '' }}</td>
                     <td class="px-4 py-2">{{ $e['customer'] ?? '' }}</td>
                     <td class="px-4 py-2">{{ $e['description'] }}</td>

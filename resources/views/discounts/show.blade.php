@@ -41,8 +41,8 @@
             @if(isset($final))
                 <div><strong>Precio con descuento:</strong> RD${{ number_format($final,2) }}</div>
             @endif
-            <div><strong>Inicio:</strong> {{ optional($discount->start_at)->format('d/m/Y H:i') }}</div>
-            <div><strong>Fin:</strong> {{ optional($discount->end_at)->format('d/m/Y H:i') }}</div>
+            <div><strong>Inicio:</strong> {{ optional($discount->start_at)->format('d/m/Y h:i A') }}</div>
+            <div><strong>Fin:</strong> {{ optional($discount->end_at)->format('d/m/Y h:i A') }}</div>
             <div><strong>Estado:</strong> {{ $discount->active ? 'Activo' : 'Inactivo' }}</div>
         </div>
 
@@ -51,7 +51,7 @@
             <ul class="list-disc pl-4">
                 @foreach($discount->logs as $log)
                     <li>
-                        {{ $log->created_at->format('d/m/Y H:i') }} - {{ $log->user->name }} ({{ $log->action }})
+                        {{ $log->created_at->format('d/m/Y h:i A') }} - {{ $log->user->name }} ({{ $log->action }})
                         @if($log->amount)
                             - {{ $log->amount_type === 'fixed' ? 'RD$'.number_format($log->amount,2) : $log->amount.'%' }}
                         @endif

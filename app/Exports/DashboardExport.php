@@ -39,17 +39,17 @@ class DashboardExport implements WithMultipleSheets, Responsable
                         ->whereDate('created_at','<=',$this->end)->get();
                     $rows = [];
                     foreach($tickets as $t){
-                        $rows[] = ['Ticket '.$t->id, $t->created_at->format('d/m/Y H:i'), $t->total_amount];
+                        $rows[] = ['Ticket '.$t->id, $t->created_at->format('d/m/Y h:i A'), $t->total_amount];
                     }
                     $expenses = PettyCashExpense::whereDate('created_at','>=',$this->start)
                         ->whereDate('created_at','<=',$this->end)->get();
                     foreach($expenses as $e){
-                        $rows[] = ['Gasto', $e->created_at->format('d/m/Y H:i'), -$e->amount];
+                        $rows[] = ['Gasto', $e->created_at->format('d/m/Y h:i A'), -$e->amount];
                     }
                     $payments = WasherPayment::whereDate('payment_date','>=',$this->start)
                         ->whereDate('payment_date','<=',$this->end)->get();
                     foreach($payments as $p){
-                        $rows[] = ['Pago Lavador '.$p->washer->name, $p->payment_date, -$p->amount_paid];
+                        $rows[] = ['Pago Lavador '.$p->washer->name, $p->payment_date->format('d/m/Y h:i A'), -$p->amount_paid];
                     }
                     return collect($rows);
                 }
@@ -95,7 +95,7 @@ class DashboardExport implements WithMultipleSheets, Responsable
                         ->whereDate('payment_date','<=',$this->end)
                         ->get()->map(fn($p)=>[
                             $p->washer->name,
-                            $p->payment_date,
+                            $p->payment_date->format('d/m/Y h:i A'),
                             $p->amount_paid
                         ]);
                 }
