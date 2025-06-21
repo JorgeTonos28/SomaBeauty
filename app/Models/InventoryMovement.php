@@ -8,7 +8,7 @@ class InventoryMovement extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['product_id', 'user_id', 'movement_type', 'quantity', 'concept'];
+    protected $fillable = ['product_id', 'user_id', 'ticket_id', 'movement_type', 'quantity', 'concept'];
 
     public function product()
     {
@@ -18,5 +18,10 @@ class InventoryMovement extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function ticket()
+    {
+        return $this->belongsTo(Ticket::class);
     }
 }

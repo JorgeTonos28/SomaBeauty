@@ -53,4 +53,9 @@ class Ticket extends Model
     {
         return $this->belongsTo(BankAccount::class);
     }
+
+    public function inventoryMovements()
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
 }
