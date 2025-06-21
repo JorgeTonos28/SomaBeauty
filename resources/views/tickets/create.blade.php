@@ -561,6 +561,15 @@
                         }
                     }
 
+                    const hasService = form.querySelectorAll('input[name="service_ids[]"]:checked').length > 0;
+                    const hasProduct = Array.from(form.querySelectorAll('#product-list select[name="product_ids[]"]')).some(s => s.value);
+                    const hasDrink = Array.from(form.querySelectorAll('#drink-list select[name="drink_ids[]"]')).some(s => s.value);
+                    if (!hasService && !hasProduct && !hasDrink) {
+                        this.errors.push('Debe agregar al menos un servicio, producto o trago');
+                        this.showErrors();
+                        return;
+                    }
+
                     try {
                         const res = await fetch(form.action, {
                             method: 'POST',
