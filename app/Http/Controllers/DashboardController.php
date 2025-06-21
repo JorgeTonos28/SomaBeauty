@@ -54,7 +54,7 @@ class DashboardController extends Controller
                 ->sum('quantity');
         }
 
-        $cashTotal = Ticket::where('canceled', false)
+        $cashPayments = Ticket::where('canceled', false)
             ->where('pending', false)
             ->whereDate('paid_at', '>=', $start)
             ->whereDate('paid_at', '<=', $end)
@@ -68,6 +68,15 @@ class DashboardController extends Controller
             ->where('payment_method', 'transferencia')
             ->sum('total_amount');
 
+        $pettyCashInitial = 3200;
+        $totalFacturado = $cashPayments + $transferTotal + $pettyCashInitial;
+
+        $washerPayments = WasherPayment::whereDate('payment_date', '>=', $start)
+            ->whereDate('payment_date', '<=', $end)
+            ->sum('amount_paid');
+
+        $cashTotal = $cashPayments - $washerPayments;
+
         $bankAccountTotals = Ticket::selectRaw('bank_account_id, SUM(total_amount) as total')
             ->with('bankAccount')
             ->where('canceled', false)
@@ -77,9 +86,6 @@ class DashboardController extends Controller
             ->where('payment_method', 'transferencia')
             ->groupBy('bank_account_id')
             ->get();
-
-        $pettyCashInitial = 3200;
-        $totalFacturado = $cashTotal + $transferTotal + $pettyCashInitial;
 
         $washerPayTotal = $washCount * 100;
 
@@ -124,10 +130,6 @@ class DashboardController extends Controller
             ];
         }
         usort($movements, fn($a,$b)=>strcmp($b['date'],$a['date']));
-
-        $washerPayments = WasherPayment::whereDate('payment_date', '>=', $start)
-            ->whereDate('payment_date', '<=', $end)
-            ->sum('amount_paid');
 
         $washerPayDue = max(0, $washerPayTotal - $washerPayments);
 
