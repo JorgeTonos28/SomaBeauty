@@ -40,6 +40,14 @@
                             <td class="border px-2 py-1 text-right">RD$ {{ number_format($t->total_amount,2) }}</td>
                         </tr>
                     @endforeach
+                    @foreach($washerDebts as $w)
+                        <tr>
+                            <td class="border px-2 py-1">-</td>
+                            <td class="border px-2 py-1">{{ $w->name }}</td>
+                            <td class="border px-2 py-1">Cuenta por cobrar</td>
+                            <td class="border px-2 py-1 text-right">RD$ {{ number_format(abs($w->pending_amount),2) }}</td>
+                        </tr>
+                    @endforeach
                 </tbody>
             </table>
         </div>

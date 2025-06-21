@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Models\PettyCashExpense;
 use App\Models\WasherPayment;
 use App\Models\BankAccount;
+use App\Models\Washer;
 
 class DashboardController extends Controller
 {
@@ -105,6 +106,9 @@ class DashboardController extends Controller
 
         $accountsReceivable = $pendingTickets->sum('total_amount');
 
+        $washerDebts = Washer::where('pending_amount', '<', 0)->get();
+        $accountsReceivable += $washerDebts->sum(fn($w) => abs($w->pending_amount));
+
         $lastExpenses = $pettyCashExpenses->take(5);
 
         $movements = [];
@@ -150,7 +154,8 @@ class DashboardController extends Controller
                 'lastExpenses',
                 'movements',
                 'accountsReceivable',
-                'pendingTickets'
+                'pendingTickets',
+                'washerDebts'
             ));
         }
 
@@ -170,6 +175,7 @@ class DashboardController extends Controller
             'pettyCashTotal' => $pettyCashTotal,
             'accountsReceivable' => $accountsReceivable,
             'pendingTickets' => $pendingTickets,
+            'washerDebts' => $washerDebts,
         ]);
     }
 

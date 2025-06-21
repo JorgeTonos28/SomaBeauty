@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Washer;
 use App\Models\WasherPayment;
+use App\Models\WasherMovement;
 use Illuminate\Http\Request;
 
 class WasherController extends Controller
@@ -95,6 +96,15 @@ class WasherController extends Controller
         }
         $payments = $paymentsQuery->get();
 
+        $movementsQuery = $washer->movements();
+        if ($start) {
+            $movementsQuery->whereDate('created_at', '>=', $start);
+        }
+        if ($end) {
+            $movementsQuery->whereDate('created_at', '<=', $end);
+        }
+        $movements = $movementsQuery->get();
+
         $events = [];
         foreach ($tickets as $t) {
             $vehicle = $t->vehicle;
@@ -124,6 +134,17 @@ class WasherController extends Controller
                 'gain' => null,
                 'payment' => $p->amount_paid,
                 'ticket_id' => null,
+            ];
+        }
+
+        foreach ($movements as $m) {
+            $events[] = [
+                'date' => $m->created_at,
+                'customer' => null,
+                'description' => $m->description,
+                'gain' => $m->amount,
+                'payment' => null,
+                'ticket_id' => $m->ticket_id,
             ];
         }
         usort($events, fn($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
