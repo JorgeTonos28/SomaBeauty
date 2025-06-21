@@ -538,6 +538,9 @@ class TicketController extends Controller
         $ticketServices = $ticket->details->where('type','service')->pluck('service_id')->toArray();
         $ticketProducts = $ticket->details->where('type','product')->map(fn($d)=>['id'=>$d->product_id,'qty'=>$d->quantity]);
         $ticketDrinks = $ticket->details->where('type','drink')->map(fn($d)=>['id'=>$d->drink_id,'qty'=>$d->quantity]);
+        $hasWash = Service::whereIn('id', $ticketServices)
+            ->where('name', 'like', 'Lavado%')
+            ->exists();
 
         return view('tickets.edit', [
             'ticket' => $ticket,
@@ -557,6 +560,7 @@ class TicketController extends Controller
             'ticketServices' => $ticketServices,
             'ticketProducts' => $ticketProducts,
             'ticketDrinks' => $ticketDrinks,
+            'hasWash' => $hasWash,
         ]);
     }
 
