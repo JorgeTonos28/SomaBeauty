@@ -28,7 +28,7 @@
                 <tbody>
                     @foreach($pendingTickets as $t)
                         <tr>
-                            <td class="border px-2 py-1">{{ $t->created_at->format('d/m H:i') }}</td>
+                            <td class="border px-2 py-1">{{ $t->created_at->format('d/m h:i A') }}</td>
                             <td class="border px-2 py-1">{{ $t->customer_name }}</td>
                             <td class="border px-2 py-1">
                                 {{ $t->details->pluck('type')->unique()->map(fn($tt) => match($tt){
@@ -63,7 +63,7 @@
             <h3 class="text-lg font-semibold mb-2">Últimos gastos de caja chica</h3>
             <ul class="list-disc ms-6">
                 @foreach($lastExpenses as $expense)
-                    <li>{{ $expense->created_at->format('d/m H:i') }} - {{ $expense->description }} (RD$ {{ number_format($expense->amount,2) }})</li>
+                    <li>{{ $expense->created_at->format('d/m h:i A') }} - {{ $expense->description }} (RD$ {{ number_format($expense->amount,2) }})</li>
                 @endforeach
             </ul>
         </div>

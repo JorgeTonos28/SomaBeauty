@@ -34,7 +34,7 @@
                     <td class="px-4 py-2">
                         {{ optional($ticket->bankAccount)->bank ? $ticket->bankAccount->bank.' - '.$ticket->bankAccount->account : '' }}
                     </td>
-                    <td class="px-4 py-2">{{ $ticket->created_at->format('d/m/Y H:i') }}</td>
+                    <td class="px-4 py-2">{{ $ticket->created_at->format('d/m/Y h:i A') }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -98,7 +98,7 @@
             @method('PUT')
             <div class="text-sm space-y-1">
                 <p><strong>Cliente:</strong> {{ $ticket->customer_name }}</p>
-                <p><strong>Fecha:</strong> {{ $ticket->created_at->format('d/m/Y H:i') }}</p>
+                <p><strong>Fecha:</strong> {{ $ticket->created_at->format('d/m/Y h:i A') }}</p>
                 @if($ticket->vehicle)
                     <p><strong>Placa:</strong> {{ $ticket->vehicle->plate }}</p>
                     <p><strong>Marca:</strong> {{ $ticket->vehicle->brand }}</p>

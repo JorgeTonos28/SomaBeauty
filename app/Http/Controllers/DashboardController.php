@@ -111,21 +111,21 @@ class DashboardController extends Controller
         foreach ($tickets as $t) {
             $movements[] = [
                 'description' => 'Ticket '.$t->id,
-                'date' => $t->paid_at->format('d/m/Y H:i'),
+                'date' => $t->paid_at->format('d/m/Y h:i A'),
                 'amount' => $t->total_amount,
             ];
         }
         foreach ($pettyCashExpenses as $e) {
             $movements[] = [
                 'description' => 'Gasto: '.$e->description,
-                'date' => $e->created_at->format('d/m/Y H:i'),
+                'date' => $e->created_at->format('d/m/Y h:i A'),
                 'amount' => -$e->amount,
             ];
         }
         foreach (WasherPayment::whereDate('payment_date', '>=', $start)->whereDate('payment_date', '<=', $end)->get() as $p) {
             $movements[] = [
                 'description' => 'Pago Lavador '.$p->washer->name,
-                'date' => $p->payment_date,
+                'date' => $p->payment_date->format('d/m/Y h:i A'),
                 'amount' => -$p->amount_paid,
             ];
         }

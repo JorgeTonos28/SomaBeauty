@@ -46,7 +46,7 @@
                                 }
                             @endphp
                             <td class="px-3 py-2">{{ isset($final) ? 'RD$'.number_format($final,2) : '-' }}</td>
-                            <td class="px-3 py-2">{{ optional($d->end_at)->format('d/m/Y H:i') }}</td>
+                            <td class="px-3 py-2">{{ optional($d->end_at)->format('d/m/Y h:i A') }}</td>
                             <td class="px-3 py-2">{{ $d->active ? 'Activo' : 'Inactivo' }}</td>
                             <td class="px-3 py-2 text-right">
                                 <a href="{{ route('discounts.edit', $d) }}" class="text-blue-600">Editar</a>

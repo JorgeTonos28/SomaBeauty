@@ -11,7 +11,7 @@
         <tbody>
             @foreach ($expenses as $expense)
                 <tr class="border-t">
-                    <td class="px-4 py-2">{{ $expense->created_at->format('d/m/Y H:i') }}</td>
+                    <td class="px-4 py-2">{{ $expense->created_at->format('d/m/Y h:i A') }}</td>
                     <td class="px-4 py-2">{{ $expense->description }}</td>
                     <td class="px-4 py-2">RD$ {{ number_format($expense->amount, 2) }}</td>
                     <td class="px-4 py-2">
