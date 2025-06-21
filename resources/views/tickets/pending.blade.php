@@ -25,7 +25,7 @@
             <button x-show="selected" x-on:click="openCancelModal()" class="text-red-600" title="Cancelar">
                 <i class="fa-solid fa-xmark fa-lg"></i>
             </button>
-            <button x-show="selected" x-on:click="$dispatch('open-modal', 'view-' + selected)" class="text-gray-600" title="Ver">
+            <button x-show="selected" x-on:click="window.location='{{ url('tickets') }}/'+selected+'/edit'" class="text-gray-600" title="Editar">
                 <i class="fa-solid fa-eye fa-lg"></i>
             </button>
             <button x-show="selected && selectedPending" x-on:click="$dispatch('open-modal', 'pay-' + selected)" class="text-green-600" title="Pagar">

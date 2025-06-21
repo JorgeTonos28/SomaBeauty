@@ -1,53 +1,54 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-xl font-semibold leading-tight text-gray-800">
-            {{ __('Nuevo Ticket de Facturación') }}
+            {{ __('Editar Ticket') }}
         </h2>
     </x-slot>
 
     <div x-data="ticketForm()" class="py-6 max-w-4xl mx-auto sm:px-6 lg:px-8">
 
-        <form x-ref="form" action="{{ route('tickets.store') }}" method="POST" @submit.prevent="submitForm($event)" class="space-y-6 pb-32">
+        <form x-ref="form" action="{{ route('tickets.update', $ticket) }}" method="POST" @submit.prevent="submitForm($event)" class="space-y-6 pb-32">
             @csrf
+            @method('PUT')
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
-                <input type="text" name="customer_name" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" required class="form-input w-full mt-1">
+                <input type="text" name="customer_name" value="{{ $ticket->customer_name }}" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" required class="form-input w-full mt-1">
             </div>
 
             <!-- Servicios -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Servicios</label>
-                <div id="wash-fields" style="display:none" class="space-y-4">
+                <div id="wash-fields" style="{{ $hasWash ? '' : 'display:none' }}" class="space-y-4">
                     <!-- Placa -->
                     <div class="relative">
                         <label class="block text-sm font-medium text-gray-700">Placa</label>
-                        <input type="text" name="plate" id="plate" autocomplete="off" pattern="[A-Za-z0-9]+" class="form-input w-full mt-1">
+                        <input type="text" name="plate" id="plate" autocomplete="off" pattern="[A-Za-z0-9]+" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->plate }}">
                         <ul id="plate-options" class="absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden"></ul>
                     </div>
 
                     <!-- Marca -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Marca</label>
-                        <input type="text" name="brand" pattern="[A-Za-z0-9\s]+" class="form-input w-full mt-1">
+                        <input type="text" name="brand" pattern="[A-Za-z0-9\s]+" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->brand }}">
                     </div>
 
                     <!-- Modelo -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Modelo</label>
-                        <input type="text" name="model" pattern="[A-Za-z0-9\s]+" class="form-input w-full mt-1">
+                        <input type="text" name="model" pattern="[A-Za-z0-9\s]+" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->model }}">
                     </div>
 
                     <!-- Color -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Color</label>
-                        <input type="text" name="color" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" class="form-input w-full mt-1">
+                        <input type="text" name="color" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->color }}">
                     </div>
 
                     <!-- Año -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Año</label>
-                        <input type="number" name="year" min="1890" max="{{ date('Y') }}" class="form-input w-full mt-1">
+                        <input type="number" name="year" min="1890" max="{{ date('Y') }}" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->year }}">
                     </div>
 
                     <!-- Tipo de Vehículo -->
@@ -56,7 +57,7 @@
                         <select name="vehicle_type_id" class="form-select w-full mt-1">
                             <option value="">-- Seleccionar --</option>
                             @foreach ($vehicleTypes as $type)
-                                <option value="{{ $type->id }}" data-name="{{ $type->name }}">{{ $type->name }}</option>
+                                <option value="{{ $type->id }}" data-name="{{ $type->name }}" {{ $type->id == optional($ticket->vehicle)->vehicle_type_id ? 'selected' : '' }}>{{ $type->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -67,7 +68,7 @@
                         <select name="washer_id" class="form-select w-full mt-1">
                             <option value="">-- Seleccionar --</option>
                             @foreach ($washers as $washer)
-                                <option value="{{ $washer->id }}">{{ $washer->name }}</option>
+                                <option value="{{ $washer->id }}" {{ $washer->id == $ticket->washer_id ? 'selected' : '' }}>{{ $washer->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -78,7 +79,7 @@
                         <div id="service-list">
                         @foreach ($services as $service)
                             <div class="flex items-center space-x-2 mt-1">
-                                <input type="checkbox" name="service_ids[]" value="{{ $service->id }}">
+                                <input type="checkbox" name="service_ids[]" value="{{ $service->id }}" {{ in_array($service->id, $ticketServices) ? 'checked' : '' }}>
                                 <label data-service-id="{{ $service->id }}" data-name="{{ $service->name }}">{{ $service->name }}</label>
                             </div>
                         @endforeach
@@ -92,12 +93,31 @@
 
                 <div id="drink-fields" class="mt-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tragos Vendidos</label>
-                    <div id="drink-list"></div>
+                    <div id="drink-list">
+                        @foreach ($ticketDrinks as $td)
+                        <div class="flex gap-4 mb-2 items-center">
+                            <select name="drink_ids[]" class="form-select w-full" onchange="updateTotal()">
+                                <option value="">-- Seleccionar trago --</option>
+                                @foreach ($drinks as $drink)
+                                    @php $disc = $drinkDiscounts->get($drink->id); $new = null; if($disc){ $new = $disc['type'] === 'fixed' ? max(0,$drink->price-$disc['amount']) : max(0,$drink->price-$drink->price*$disc['amount']/100); } @endphp
+                                    <option value="{{ $drink->id }}" {{ $drink->id == $td['id'] ? 'selected' : '' }}>
+                                        {{ $drink->name }} (RD$ {{ number_format($drink->price,2) }})
+                                        @if($new !== null)
+                                            <span class="text-red-600"> -> ({{ number_format($new,2) }})</span>
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                            <input type="number" name="drink_quantities[]" placeholder="Cantidad" min="1" class="form-input w-24" oninput="updateTotal()" value="{{ $td['qty'] }}">
+                            <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
+                        </div>
+                        @endforeach
+                    </div>
                     <button type="button" onclick="addDrinkRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar trago</button>
                 </div>
 
                 <div class="mt-2 space-x-4">
-                    <button type="button" id="wash-toggle" onclick="toggleWash()" class="text-sm text-blue-600 hover:underline">Agregar Lavado</button>
+                    <button type="button" id="wash-toggle" onclick="toggleWash()" class="text-sm text-blue-600 hover:underline">{{ $hasWash ? 'Quitar lavado' : 'Agregar Lavado' }}</button>
                 </div>
             </div>
 
@@ -105,7 +125,26 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Productos Vendidos</label>
 
-                <div id="product-list"></div>
+                <div id="product-list">
+                    @foreach ($ticketProducts as $tp)
+                    <div class="flex gap-4 mb-2 items-center">
+                        <select name="product_ids[]" class="form-select w-full" onchange="updateTotal(); checkStock(this.parentElement)">
+                            <option value="">-- Seleccionar producto --</option>
+                            @foreach ($products as $product)
+                                @php $disc = $productDiscounts->get($product->id); $new = null; if($disc){ $new = $disc['type'] === 'fixed' ? max(0,$product->price-$disc['amount']) : max(0,$product->price-$product->price*$disc['amount']/100); } @endphp
+                                <option value="{{ $product->id }}" {{ $product->id == $tp['id'] ? 'selected' : '' }}>
+                                    {{ $product->name }} (RD$ {{ number_format($product->price,2) }})
+                                    @if($new !== null)
+                                        <span class="text-red-600"> -> ({{ number_format($new,2) }})</span>
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <input type="number" name="quantities[]" placeholder="Cantidad" min="1" class="form-input w-24" oninput="checkStock(this.parentElement); updateTotal()" value="{{ $tp['qty'] }}">
+                        <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
+                    </div>
+                    @endforeach
+                </div>
 
                 <button type="button" onclick="addProductRow()" class="mt-2 text-sm text-blue-600 hover:underline">
                     + Agregar otro producto
@@ -123,19 +162,19 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
                 <select name="payment_method" id="payment_method" class="form-select w-full mt-1" onchange="toggleBank()">
-                    <option value="efectivo">Efectivo</option>
-                    <option value="tarjeta">Tarjeta</option>
-                    <option value="transferencia">Transferencia</option>
-                    <option value="mixto">Mixto</option>
+                    <option value="efectivo" {{ $ticket->payment_method === 'efectivo' ? 'selected' : '' }}>Efectivo</option>
+                    <option value="tarjeta" {{ $ticket->payment_method === 'tarjeta' ? 'selected' : '' }}>Tarjeta</option>
+                    <option value="transferencia" {{ $ticket->payment_method === 'transferencia' ? 'selected' : '' }}>Transferencia</option>
+                    <option value="mixto" {{ $ticket->payment_method === 'mixto' ? 'selected' : '' }}>Mixto</option>
                 </select>
             </div>
 
-            <div id="bank-field" style="display:none">
+            <div id="bank-field" style="{{ $ticket->payment_method === 'transferencia' ? '' : 'display:none' }}">
                 <label class="block text-sm font-medium text-gray-700">Cuenta Bancaria</label>
                 <select name="bank_account_id" class="form-select w-full mt-1">
                     <option value="">-- Seleccionar --</option>
                     @foreach($bankAccounts as $acc)
-                        <option value="{{ $acc->id }}">{{ $acc->bank }} - {{ $acc->account }}</option>
+                        <option value="{{ $acc->id }}" {{ $acc->id == $ticket->bank_account_id ? 'selected' : '' }}>{{ $acc->bank }} - {{ $acc->account }}</option>
                     @endforeach
                 </select>
             </div>
@@ -148,7 +187,7 @@
                     <span>Cambio: RD$ <span id="change_display">0.00</span></span>
                 </div>
                 <button type="submit" name="ticket_action" value="pending" class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
-                    Crear
+                    Guardar
                 </button>
                 <button type="submit" name="ticket_action" value="pay" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
                     Pagar
