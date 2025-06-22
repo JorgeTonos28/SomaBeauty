@@ -114,6 +114,13 @@ class DashboardController extends Controller
             ->where('washer_pending_amount', '>', 0)
             ->sum('washer_pending_amount');
 
+        $assignedPendingCommission = Ticket::with('details')
+            ->where('pending', true)
+            ->where('canceled', false)
+            ->whereNotNull('washer_id')
+            ->get()
+            ->sum(fn($t) => $t->details->where('type', 'service')->sum('quantity') * 100);
+
         $lastExpenses = $pettyCashExpenses->take(5);
 
         $movements = [];
@@ -146,7 +153,7 @@ class DashboardController extends Controller
         $washerDebtAmount = $washerDebts->sum(fn($w) => abs($w->pending_amount));
 
         $grossProfit = $totalFacturado - $pettyCashInitial - $pettyCashTotal - $washerPayTotal;
-        $grossProfit -= $washerDebtAmount + $unassignedCommission;
+        $grossProfit -= $washerDebtAmount + $assignedPendingCommission;
 
         if ($request->ajax()) {
             return view('dashboard.partials.summary', compact(
