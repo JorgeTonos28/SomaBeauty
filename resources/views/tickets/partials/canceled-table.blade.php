@@ -38,6 +38,9 @@
     <x-modal name="view-{{ $ticket->id }}" focusable>
         <div class="p-6 space-y-4 text-sm">
             <p><strong>Cliente:</strong> {{ $ticket->customer_name }}</p>
+            @if($ticket->customer_phone)
+                <p><strong>Teléfono:</strong> {{ $ticket->customer_phone }}</p>
+            @endif
             <p><strong>Fecha:</strong> {{ $ticket->created_at->format('d/m/Y h:i A') }}</p>
             @if($ticket->vehicle)
                 <p><strong>Placa:</strong> {{ $ticket->vehicle->plate }}</p>

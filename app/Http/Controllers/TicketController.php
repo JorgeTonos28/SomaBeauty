@@ -26,38 +26,53 @@ class TicketController extends Controller
 
     public function index(Request $request)
     {
+        $filters = $request->only(['start', 'end', 'pending']);
+        $filters['start'] = $filters['start'] ?? now()->toDateString();
+        $filters['end'] = $filters['end'] ?? now()->toDateString();
+
         $query = Ticket::with(['details', 'bankAccount'])->where('canceled', false);
 
         if ($request->boolean('pending')) {
             $query->where('pending', true);
         }
 
-        if ($request->filled('start')) {
-            $query->whereDate('created_at', '>=', $request->start);
+        if ($filters['start']) {
+            $query->whereDate('created_at', '>=', $filters['start']);
         }
 
-        if ($request->filled('end')) {
-            $query->whereDate('created_at', '<=', $request->end);
+        if ($filters['end']) {
+            $query->whereDate('created_at', '<=', $filters['end']);
         }
 
         $tickets = $query->latest()->get();
 
+        $invQuery = Ticket::where('canceled', false)->where('pending', false);
+        if ($filters['start']) {
+            $invQuery->whereDate('paid_at', '>=', $filters['start']);
+        }
+        if ($filters['end']) {
+            $invQuery->whereDate('paid_at', '<=', $filters['end']);
+        }
+        $invoicedTotal = $invQuery->sum('total_amount');
+
         $bankAccounts = BankAccount::all();
-        $washers = Washer::where('active', true)->get();
+        $washers = Washer::where('active', true)->orderBy('name')->get();
 
         if ($request->ajax()) {
             return view('tickets.partials.table', [
                 'tickets' => $tickets,
                 'bankAccounts' => $bankAccounts,
                 'washers' => $washers,
+                'invoicedTotal' => $invoicedTotal,
             ]);
         }
 
         return view('tickets.index', [
             'tickets' => $tickets,
-            'filters' => $request->only(['start', 'end', 'pending']),
+            'filters' => $filters,
             'bankAccounts' => $bankAccounts,
             'washers' => $washers,
+            'invoicedTotal' => $invoicedTotal,
         ]);
     }
 
@@ -89,35 +104,50 @@ class TicketController extends Controller
 
     public function pending(Request $request)
     {
+        $filters = $request->only(['start', 'end']);
+        $filters['start'] = $filters['start'] ?? now()->toDateString();
+        $filters['end'] = $filters['end'] ?? now()->toDateString();
+
         $query = Ticket::with(['details', 'bankAccount'])
             ->where('canceled', false)
             ->where('pending', true);
 
-        if ($request->filled('start')) {
-            $query->whereDate('created_at', '>=', $request->start);
+        if ($filters['start']) {
+            $query->whereDate('created_at', '>=', $filters['start']);
         }
 
-        if ($request->filled('end')) {
-            $query->whereDate('created_at', '<=', $request->end);
+        if ($filters['end']) {
+            $query->whereDate('created_at', '<=', $filters['end']);
         }
 
         $tickets = $query->latest()->get();
         $bankAccounts = BankAccount::all();
-        $washers = Washer::where('active', true)->get();
+        $washers = Washer::where('active', true)->orderBy('name')->get();
+
+        $invQuery = Ticket::where('canceled', false)->where('pending', false);
+        if ($filters['start']) {
+            $invQuery->whereDate('paid_at', '>=', $filters['start']);
+        }
+        if ($filters['end']) {
+            $invQuery->whereDate('paid_at', '<=', $filters['end']);
+        }
+        $invoicedTotal = $invQuery->sum('total_amount');
 
         if ($request->ajax()) {
             return view('tickets.partials.table', [
                 'tickets' => $tickets,
                 'bankAccounts' => $bankAccounts,
                 'washers' => $washers,
+                'invoicedTotal' => $invoicedTotal,
             ]);
         }
 
         return view('tickets.pending', [
             'tickets' => $tickets,
-            'filters' => $request->only(['start', 'end']),
+            'filters' => $filters,
             'bankAccounts' => $bankAccounts,
             'washers' => $washers,
+            'invoicedTotal' => $invoicedTotal,
         ]);
     }
 
@@ -132,11 +162,11 @@ class TicketController extends Controller
             }
         }
 
-        $products = Product::where('stock', '>', 0)->get();
+        $products = Product::where('stock', '>', 0)->orderBy('name')->get();
         $productPrices = $products->pluck('price', 'id');
         $productStocks = $products->pluck('stock', 'id');
 
-        $drinks = Drink::where('active', true)->get();
+        $drinks = Drink::where('active', true)->orderBy('name')->get();
         $drinkPrices = $drinks->pluck('price', 'id');
 
         $serviceDiscounts = Discount::where('discountable_type', Service::class)
@@ -179,7 +209,7 @@ class TicketController extends Controller
             'services' => $services,
             'vehicleTypes' => VehicleType::all(),
             'products' => $products,
-            'washers' => Washer::where('active', true)->get(),
+            'washers' => Washer::where('active', true)->orderBy('name')->get(),
             'bankAccounts' => BankAccount::all(),
             'servicePrices' => $servicePrices,
             'productPrices' => $productPrices,
@@ -204,6 +234,7 @@ class TicketController extends Controller
         $rules = [
             'customer_name' => ['required', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/', 'max:255'],
             'vehicle_type_id' => [$hasWash ? 'required' : 'nullable', 'exists:vehicle_types,id'],
+            'customer_phone' => ['nullable','regex:/^[0-9+()\s-]+$/','max:20'],
             'plate' => [$hasWash ? 'required' : 'nullable', 'alpha_num', 'max:20'],
             'brand' => [$hasWash ? 'required' : 'nullable', 'regex:/^[A-Za-z0-9\s]+$/', 'max:50'],
             'model' => [$hasWash ? 'required' : 'nullable', 'regex:/^[A-Za-z0-9\s]+$/', 'max:50'],
@@ -241,6 +272,7 @@ class TicketController extends Controller
             'color.required' => 'El color es obligatorio.',
             'color.regex' => 'El color solo puede contener letras.',
             'customer_name.regex' => 'El nombre solo puede contener letras.',
+            'customer_phone.regex' => 'El teléfono solo puede contener números y caracteres + - ()',
             'year.between' => 'El año debe estar entre 1890 y '.date('Y').'.',
             'washer_id.exists' => 'El lavador seleccionado no es válido.',
             'service_ids.*.exists' => 'Alguno de los servicios seleccionados es inválido.',
@@ -455,6 +487,7 @@ class TicketController extends Controller
                 'vehicle_type_id' => $request->vehicle_type_id,
                 'vehicle_id' => optional($vehicle)->id,
                 'customer_name' => $request->customer_name,
+                'customer_phone' => $request->customer_phone,
                 'total_amount' => $total,
                 'paid_amount' => $pending ? 0 : $request->paid_amount,
                 'change' => $pending ? 0 : ($request->paid_amount - $total),
@@ -505,11 +538,11 @@ class TicketController extends Controller
             }
         }
 
-        $products = Product::where('stock', '>', 0)->get();
+        $products = Product::where('stock', '>', 0)->orderBy('name')->get();
         $productPrices = $products->pluck('price', 'id');
         $productStocks = $products->pluck('stock', 'id');
 
-        $drinks = Drink::where('active', true)->get();
+        $drinks = Drink::where('active', true)->orderBy('name')->get();
         $drinkPrices = $drinks->pluck('price', 'id');
 
         $serviceDiscounts = Discount::where('discountable_type', Service::class)
@@ -548,7 +581,7 @@ class TicketController extends Controller
             'services' => $services,
             'vehicleTypes' => VehicleType::all(),
             'products' => $products,
-            'washers' => Washer::where('active', true)->get(),
+            'washers' => Washer::where('active', true)->orderBy('name')->get(),
             'bankAccounts' => BankAccount::all(),
             'servicePrices' => $servicePrices,
             'productPrices' => $productPrices,
@@ -577,6 +610,7 @@ class TicketController extends Controller
             $rules = [
                 'customer_name' => ['required','regex:/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/','max:255'],
                 'vehicle_type_id' => [$hasWash ? 'required' : 'nullable','exists:vehicle_types,id'],
+                'customer_phone' => ['nullable','regex:/^[0-9+()\s-]+$/','max:20'],
                 'plate' => [$hasWash ? 'required' : 'nullable','alpha_num','max:20'],
                 'brand' => [$hasWash ? 'required' : 'nullable','regex:/^[A-Za-z0-9\s]+$/','max:50'],
                 'model' => [$hasWash ? 'required' : 'nullable','regex:/^[A-Za-z0-9\s]+$/','max:50'],
@@ -778,6 +812,7 @@ class TicketController extends Controller
                     'vehicle_type_id' => $request->vehicle_type_id,
                     'vehicle_id' => optional($vehicle)->id,
                     'customer_name' => $request->customer_name,
+                    'customer_phone' => $request->customer_phone,
                     'total_amount' => $total,
                     'paid_amount' => $pending ? 0 : $request->paid_amount,
                     'change' => $pending ? 0 : ($request->paid_amount - $total),

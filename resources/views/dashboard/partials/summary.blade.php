@@ -55,6 +55,7 @@
             <h3 class="text-lg font-semibold mb-2">Resumen</h3>
             <p>Efectivo: <strong>RD$ {{ number_format($cashTotal, 2) }}</strong></p>
             <p>Transferencias: <strong>RD$ {{ number_format($transferTotal, 2) }}</strong></p>
+            <p>Total facturado: <strong>RD$ {{ number_format($invoicedTotal, 2) }}</strong></p>
             <p>Caja chica: <strong>RD$ 3,200.00</strong></p>
             <p>Gastos de caja chica: <strong>RD$ {{ number_format($pettyCashTotal, 2) }}</strong></p>
             <p>Para lavadores: <strong>RD$ {{ number_format($washerPayDue, 2) }}</strong></p>

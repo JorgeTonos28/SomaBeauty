@@ -11,7 +11,7 @@ class Ticket extends Model
 
     protected $fillable = [
         'user_id', 'washer_id', 'vehicle_type_id', 'vehicle_id',
-        'customer_name', 'customer_cedula',
+        'customer_name', 'customer_cedula', 'customer_phone',
         'total_amount', 'paid_amount', 'change', 'discount_total',
         'payment_method', 'bank_account_id',
         'washer_pending_amount', 'canceled', 'cancel_reason',

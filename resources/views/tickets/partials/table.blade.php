@@ -1,3 +1,6 @@
+<div class="mb-4 bg-white p-4 shadow sm:rounded-lg">
+    Total facturado: <strong>RD$ {{ number_format($invoicedTotal,2) }}</strong>
+</div>
 <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden max-h-96 overflow-y-auto">
     <table class="min-w-full table-auto border">
         <thead class="bg-gray-200">
@@ -98,6 +101,9 @@
             @method('PUT')
             <div class="text-sm space-y-1">
                 <p><strong>Cliente:</strong> {{ $ticket->customer_name }}</p>
+                @if($ticket->customer_phone)
+                    <p><strong>Teléfono:</strong> {{ $ticket->customer_phone }}</p>
+                @endif
                 <p><strong>Fecha:</strong> {{ $ticket->created_at->format('d/m/Y h:i A') }}</p>
                 @if($ticket->vehicle)
                     <p><strong>Placa:</strong> {{ $ticket->vehicle->plate }}</p>
