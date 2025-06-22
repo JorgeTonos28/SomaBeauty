@@ -19,6 +19,13 @@
                     <label class="block text-sm">Hasta</label>
                     <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" @change="fetchTable()">
                 </div>
+                <div class="flex items-end">
+                    <button type="button" class="px-3 py-2 bg-gray-200 rounded" @click="
+                        $refs.form.start.value = new Date().toISOString().slice(0,10);
+                        $refs.form.end.value = new Date().toISOString().slice(0,10);
+                        fetchTable();
+                    ">Hoy</button>
+                </div>
             </form>
             <button type="button" class="px-4 py-2 text-white bg-red-500 rounded hover:bg-red-600" @click="pending = 1; fetchTable()">Pendientes</button>
             <button type="button" class="px-4 py-2 bg-gray-200 rounded" @click="pending = null; fetchTable()">Todos</button>

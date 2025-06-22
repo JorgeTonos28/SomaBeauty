@@ -18,6 +18,13 @@
                     <label class="block text-sm">Hasta</label>
                     <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" @change="fetchTable()">
                 </div>
+                <div class="flex items-end">
+                    <button type="button" class="px-3 py-2 bg-gray-200 rounded" @click="
+                        $refs.form.start.value = new Date().toISOString().slice(0,10);
+                        $refs.form.end.value = new Date().toISOString().slice(0,10);
+                        fetchTable();
+                    ">Hoy</button>
+                </div>
             </form>
             <a href="{{ route('tickets.index') }}" class="text-blue-600 hover:underline">&laquo; Volver a tickets</a>
         </div>

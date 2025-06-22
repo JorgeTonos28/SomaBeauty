@@ -463,6 +463,7 @@
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'form-input w-full mt-1';
+            input.value = select.options[select.selectedIndex]?.text || '';
             wrapper.appendChild(input);
             const list = document.createElement('ul');
             list.className = 'absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden';

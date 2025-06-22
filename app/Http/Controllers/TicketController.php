@@ -26,28 +26,32 @@ class TicketController extends Controller
 
     public function index(Request $request)
     {
+        $filters = $request->only(['start', 'end', 'pending']);
+        $filters['start'] = $filters['start'] ?? now()->toDateString();
+        $filters['end'] = $filters['end'] ?? now()->toDateString();
+
         $query = Ticket::with(['details', 'bankAccount'])->where('canceled', false);
 
         if ($request->boolean('pending')) {
             $query->where('pending', true);
         }
 
-        if ($request->filled('start')) {
-            $query->whereDate('created_at', '>=', $request->start);
+        if ($filters['start']) {
+            $query->whereDate('created_at', '>=', $filters['start']);
         }
 
-        if ($request->filled('end')) {
-            $query->whereDate('created_at', '<=', $request->end);
+        if ($filters['end']) {
+            $query->whereDate('created_at', '<=', $filters['end']);
         }
 
         $tickets = $query->latest()->get();
 
         $invQuery = Ticket::where('canceled', false)->where('pending', false);
-        if ($request->filled('start')) {
-            $invQuery->whereDate('paid_at', '>=', $request->start);
+        if ($filters['start']) {
+            $invQuery->whereDate('paid_at', '>=', $filters['start']);
         }
-        if ($request->filled('end')) {
-            $invQuery->whereDate('paid_at', '<=', $request->end);
+        if ($filters['end']) {
+            $invQuery->whereDate('paid_at', '<=', $filters['end']);
         }
         $invoicedTotal = $invQuery->sum('total_amount');
 
@@ -65,7 +69,7 @@ class TicketController extends Controller
 
         return view('tickets.index', [
             'tickets' => $tickets,
-            'filters' => $request->only(['start', 'end', 'pending']),
+            'filters' => $filters,
             'bankAccounts' => $bankAccounts,
             'washers' => $washers,
             'invoicedTotal' => $invoicedTotal,
@@ -100,16 +104,20 @@ class TicketController extends Controller
 
     public function pending(Request $request)
     {
+        $filters = $request->only(['start', 'end']);
+        $filters['start'] = $filters['start'] ?? now()->toDateString();
+        $filters['end'] = $filters['end'] ?? now()->toDateString();
+
         $query = Ticket::with(['details', 'bankAccount'])
             ->where('canceled', false)
             ->where('pending', true);
 
-        if ($request->filled('start')) {
-            $query->whereDate('created_at', '>=', $request->start);
+        if ($filters['start']) {
+            $query->whereDate('created_at', '>=', $filters['start']);
         }
 
-        if ($request->filled('end')) {
-            $query->whereDate('created_at', '<=', $request->end);
+        if ($filters['end']) {
+            $query->whereDate('created_at', '<=', $filters['end']);
         }
 
         $tickets = $query->latest()->get();
@@ -117,11 +125,11 @@ class TicketController extends Controller
         $washers = Washer::where('active', true)->orderBy('name')->get();
 
         $invQuery = Ticket::where('canceled', false)->where('pending', false);
-        if ($request->filled('start')) {
-            $invQuery->whereDate('paid_at', '>=', $request->start);
+        if ($filters['start']) {
+            $invQuery->whereDate('paid_at', '>=', $filters['start']);
         }
-        if ($request->filled('end')) {
-            $invQuery->whereDate('paid_at', '<=', $request->end);
+        if ($filters['end']) {
+            $invQuery->whereDate('paid_at', '<=', $filters['end']);
         }
         $invoicedTotal = $invQuery->sum('total_amount');
 
@@ -136,7 +144,7 @@ class TicketController extends Controller
 
         return view('tickets.pending', [
             'tickets' => $tickets,
-            'filters' => $request->only(['start', 'end']),
+            'filters' => $filters,
             'bankAccounts' => $bankAccounts,
             'washers' => $washers,
             'invoicedTotal' => $invoicedTotal,
