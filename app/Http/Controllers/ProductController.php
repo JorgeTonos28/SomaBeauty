@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\InventoryMovement;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -48,7 +49,17 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0'
         ]);
 
-        Product::create($request->only('name', 'price', 'stock'));
+        $product = Product::create($request->only('name', 'price', 'stock'));
+
+        if ($product->stock > 0) {
+            InventoryMovement::create([
+                'product_id' => $product->id,
+                'user_id' => auth()->id(),
+                'movement_type' => 'entrada',
+                'quantity' => $product->stock,
+                'concept' => 'Registro inicial',
+            ]);
+        }
 
         return redirect()->route('products.index')
             ->with('success', 'Producto creado exitosamente.');

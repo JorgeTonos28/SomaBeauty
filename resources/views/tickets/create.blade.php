@@ -14,6 +14,10 @@
                 <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
                 <input type="text" name="customer_name" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" required class="form-input w-full mt-1">
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                <input type="text" name="customer_phone" pattern="[0-9+()\s-]*" class="form-input w-full mt-1">
+            </div>
 
             <!-- Servicios -->
             <div>
@@ -64,7 +68,7 @@
                     <!-- Lavador -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Lavador</label>
-                        <select name="washer_id" class="form-select w-full mt-1">
+                        <select name="washer_id" class="form-select w-full mt-1" data-searchable>
                             <option value="">-- Seleccionar --</option>
                             @foreach ($washers as $washer)
                                 <option value="{{ $washer->id }}">{{ $washer->name }}</option>
@@ -115,7 +119,10 @@
             <!-- Monto Pagado -->
             <div>
                 <label class="block text-sm font-medium text-gray-700">Monto Pagado (RD$)</label>
-                <input type="number" name="paid_amount" id="paid_amount" step="0.01" class="form-input w-full mt-1" oninput="updateChange()">
+                <div class="flex gap-2 items-center">
+                    <input type="number" name="paid_amount" id="paid_amount" step="0.01" class="form-input w-full mt-1" oninput="updateChange()">
+                    <button type="button" id="fill-paid" class="text-sm text-blue-600" onclick="setPaidFull()">Total</button>
+                </div>
                 <p id="paid_warning" class="text-sm text-red-600"></p>
             </div>
 
@@ -304,12 +311,17 @@
             }
         }
 
+        function setPaidFull(){
+            document.getElementById('paid_amount').value = currentTotal.toFixed(2);
+            updateChange();
+        }
+
         function addProductRow() {
             const container = document.getElementById('product-list');
             const row = document.createElement('div');
             row.classList.add('flex', 'gap-4', 'mb-2', 'items-center');
             row.innerHTML = `
-                <select name="product_ids[]" class="form-select w-full" onchange="updateTotal(); checkStock(this.parentElement)">
+                <select name="product_ids[]" class="form-select w-full" data-searchable onchange="updateTotal(); checkStock(this.parentElement)">
                     <option value="">-- Seleccionar producto --</option>
                     @foreach ($products as $product)
                         @php
@@ -333,6 +345,7 @@
                 <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
             `;
             container.appendChild(row);
+            convertSelectToSearchable(row.querySelector('select'));
             checkStock(row);
         }
 
@@ -356,7 +369,7 @@
             const row = document.createElement('div');
             row.classList.add('flex', 'gap-4', 'mb-2', 'items-center');
             row.innerHTML = `
-                <select name="drink_ids[]" class="form-select w-full" onchange="updateTotal()">
+                <select name="drink_ids[]" class="form-select w-full" data-searchable onchange="updateTotal()">
                     <option value="">-- Seleccionar trago --</option>
                     @foreach ($drinks as $drink)
                         @php
@@ -380,6 +393,7 @@
                 <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
             `;
             container.appendChild(row);
+            convertSelectToSearchable(row.querySelector('select'));
         }
 
         function toggleWash() {
@@ -408,6 +422,7 @@
 
         const plateInput = document.getElementById('plate');
         const nameInput = document.querySelector('input[name="customer_name"]');
+        const phoneInput = document.querySelector('input[name="customer_phone"]');
         const colorInput = document.querySelector('input[name="color"]');
         const yearInput = document.querySelector('input[name="year"]');
         const plateList = document.getElementById('plate-options');
@@ -439,6 +454,28 @@
         restrictInput(plateInput, /^[A-Za-z0-9]$/, /^[A-Za-z0-9]+$/, 'La placa solo puede contener letras y números');
         restrictInput(colorInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/, 'El color solo puede contener letras');
         restrictInput(yearInput, /^\d$/, /^\d+$/, 'El año solo puede contener números');
+        restrictInput(phoneInput, /^[0-9+()\s-]$/, /^[0-9+()\s-]+$/, 'El teléfono solo puede contener números');
+
+        function convertSelectToSearchable(select){
+            select.classList.add('hidden');
+            const wrapper = document.createElement('div');
+            wrapper.className = 'relative';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'form-input w-full mt-1';
+            wrapper.appendChild(input);
+            const list = document.createElement('ul');
+            list.className = 'absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden';
+            wrapper.appendChild(list);
+            select.parentNode.insertBefore(wrapper, select);
+
+            const options = Array.from(select.options);
+            function show(filter=''){list.innerHTML=''; const f=filter.toLowerCase(); options.forEach(o=>{if(!o.value) return; if(o.text.toLowerCase().includes(f)){const li=document.createElement('li');li.textContent=o.text; li.dataset.val=o.value; li.className='px-2 py-1 cursor-pointer hover:bg-gray-200'; list.appendChild(li);}}); list.classList.toggle('hidden', list.children.length===0);}            
+            input.addEventListener('focus', ()=>show());
+            input.addEventListener('input', ()=>show(input.value));
+            list.addEventListener('mousedown', e=>{const li=e.target.closest('li'); if(!li) return; e.preventDefault(); input.value=li.textContent; select.value=li.dataset.val; select.dispatchEvent(new Event('change')); list.classList.add('hidden');});
+            input.addEventListener('blur', ()=>setTimeout(()=>list.classList.add('hidden'),200));
+        }
 
         const maxYear = {{ date('Y') }};
         const minYear = 1890;
@@ -536,6 +573,8 @@
             }
         }
 
+
+        document.querySelectorAll('select[data-searchable]').forEach(convertSelectToSearchable);
 
         document.querySelectorAll('input[name="service_ids[]"], select[name="vehicle_type_id"]').forEach(el => {
             el.addEventListener('change', updateTotal);

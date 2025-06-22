@@ -71,6 +71,7 @@ class DashboardController extends Controller
 
         $pettyCashInitial = 3200;
         $totalFacturado = $cashPayments + $transferTotal + $pettyCashInitial;
+        $invoicedTotal = $cashPayments + $transferTotal;
 
         $washerPayments = WasherPayment::whereDate('payment_date', '>=', $start)
             ->whereDate('payment_date', '<=', $end)
@@ -158,6 +159,7 @@ class DashboardController extends Controller
         if ($request->ajax()) {
             return view('dashboard.partials.summary', compact(
                 'totalFacturado',
+                'invoicedTotal',
                 'cashTotal',
                 'transferTotal',
                 'bankAccountTotals',
@@ -178,6 +180,7 @@ class DashboardController extends Controller
         return view('dashboard', [
             'filters' => ['start' => $start, 'end' => $end],
             'totalFacturado' => $totalFacturado,
+            'invoicedTotal' => $invoicedTotal,
             'cashTotal' => $cashTotal,
             'transferTotal' => $transferTotal,
             'bankAccountTotals' => $bankAccountTotals,

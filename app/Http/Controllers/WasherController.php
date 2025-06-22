@@ -11,13 +11,14 @@ class WasherController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'role:admin']);
+        $this->middleware(['auth', 'role:admin,cajero']);
     }
 
     public function index()
     {
         $washers = Washer::orderBy('name')->get();
-        return view('washers.index', compact('washers'));
+        $pendingTotal = Washer::where('pending_amount', '>', 0)->sum('pending_amount');
+        return view('washers.index', compact('washers','pendingTotal'));
     }
 
     public function create()

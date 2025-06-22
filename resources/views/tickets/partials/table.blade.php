@@ -40,6 +40,7 @@
         </tbody>
     </table>
 </div>
+<div class="mt-2">Total facturado: <strong>RD$ {{ number_format($invoicedTotal,2) }}</strong></div>
     @foreach ($tickets as $ticket)
         <x-modal name="cancel-{{ $ticket->id }}" focusable>
         <form method="POST" action="{{ route('tickets.cancel', $ticket) }}" class="p-6 space-y-4">
