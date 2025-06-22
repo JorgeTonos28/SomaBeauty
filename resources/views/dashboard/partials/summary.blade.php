@@ -20,7 +20,7 @@
                 <thead class="bg-gray-200">
                     <tr>
                         <th class="border px-2 py-1">Fecha</th>
-                        <th class="border px-2 py-1">Cliente</th>
+                        <th class="border px-2 py-1">Nombre</th>
                         <th class="border px-2 py-1">Tipo</th>
                         <th class="border px-2 py-1">Total</th>
                     </tr>
@@ -43,7 +43,7 @@
                     @foreach($washerDebts as $w)
                         <tr>
                             <td class="border px-2 py-1">-</td>
-                            <td class="border px-2 py-1">{{ $w->name }}</td>
+                            <td class="border px-2 py-1">Lavador - {{ $w->name }}</td>
                             <td class="border px-2 py-1">Cuenta por cobrar</td>
                             <td class="border px-2 py-1 text-right">RD$ {{ number_format(abs($w->pending_amount),2) }}</td>
                         </tr>

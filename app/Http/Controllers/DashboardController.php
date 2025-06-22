@@ -109,6 +109,11 @@ class DashboardController extends Controller
         $washerDebts = Washer::where('pending_amount', '<', 0)->get();
         $accountsReceivable += $washerDebts->sum(fn($w) => abs($w->pending_amount));
 
+        $unassignedCommission = Ticket::where('pending', true)
+            ->where('canceled', false)
+            ->where('washer_pending_amount', '>', 0)
+            ->sum('washer_pending_amount');
+
         $lastExpenses = $pettyCashExpenses->take(5);
 
         $movements = [];
@@ -135,9 +140,13 @@ class DashboardController extends Controller
         }
         usort($movements, fn($a,$b)=>strcmp($b['date'],$a['date']));
 
-        $washerPayDue = max(0, $washerPayTotal - $washerPayments);
+        $washerPayDue = Washer::where('pending_amount', '>', 0)->sum('pending_amount');
+        $washerPayDue += $unassignedCommission;
+
+        $washerDebtAmount = $washerDebts->sum(fn($w) => abs($w->pending_amount));
 
         $grossProfit = $totalFacturado - $pettyCashInitial - $pettyCashTotal - $washerPayTotal;
+        $grossProfit -= $washerDebtAmount + $unassignedCommission;
 
         if ($request->ajax()) {
             return view('dashboard.partials.summary', compact(
