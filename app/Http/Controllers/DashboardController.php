@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Models\PettyCashExpense;
 use App\Models\WasherPayment;
 use App\Models\BankAccount;
+use App\Models\Washer;
 
 class DashboardController extends Controller
 {
@@ -105,6 +106,21 @@ class DashboardController extends Controller
 
         $accountsReceivable = $pendingTickets->sum('total_amount');
 
+        $washerDebts = Washer::where('pending_amount', '<', 0)->get();
+        $accountsReceivable += $washerDebts->sum(fn($w) => abs($w->pending_amount));
+
+        $unassignedCommission = Ticket::where('pending', true)
+            ->where('canceled', false)
+            ->where('washer_pending_amount', '>', 0)
+            ->sum('washer_pending_amount');
+
+        $assignedPendingCommission = Ticket::with('details')
+            ->where('pending', true)
+            ->where('canceled', false)
+            ->whereNotNull('washer_id')
+            ->get()
+            ->sum(fn($t) => $t->details->where('type', 'service')->sum('quantity') * 100);
+
         $lastExpenses = $pettyCashExpenses->take(5);
 
         $movements = [];
@@ -131,9 +147,13 @@ class DashboardController extends Controller
         }
         usort($movements, fn($a,$b)=>strcmp($b['date'],$a['date']));
 
-        $washerPayDue = max(0, $washerPayTotal - $washerPayments);
+        $washerPayDue = Washer::where('pending_amount', '>', 0)->sum('pending_amount');
+        $washerPayDue += $unassignedCommission;
+
+        $washerDebtAmount = $washerDebts->sum(fn($w) => abs($w->pending_amount));
 
         $grossProfit = $totalFacturado - $pettyCashInitial - $pettyCashTotal - $washerPayTotal;
+        $grossProfit -= $washerDebtAmount + $assignedPendingCommission;
 
         if ($request->ajax()) {
             return view('dashboard.partials.summary', compact(
@@ -150,7 +170,8 @@ class DashboardController extends Controller
                 'lastExpenses',
                 'movements',
                 'accountsReceivable',
-                'pendingTickets'
+                'pendingTickets',
+                'washerDebts'
             ));
         }
 
@@ -170,6 +191,7 @@ class DashboardController extends Controller
             'pettyCashTotal' => $pettyCashTotal,
             'accountsReceivable' => $accountsReceivable,
             'pendingTickets' => $pendingTickets,
+            'washerDebts' => $washerDebts,
         ]);
     }
 

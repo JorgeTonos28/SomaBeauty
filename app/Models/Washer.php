@@ -24,5 +24,10 @@ class Washer extends Model
     {
         return $this->hasMany(WasherPayment::class);
     }
+
+    public function movements()
+    {
+        return $this->hasMany(WasherMovement::class);
+    }
 }
 

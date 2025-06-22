@@ -87,5 +87,102 @@ class GrossProfitTest extends TestCase
 
         $this->assertEquals(100, $response->viewData('grossProfit'));
     }
+
+    public function test_pending_ticket_with_assigned_washer_reduces_gross_profit(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+
+        $washer = Washer::create([
+            'name' => 'Lavador',
+            'pending_amount' => 0,
+            'active' => true,
+        ]);
+
+        $vehicleType = VehicleType::create(['name' => 'Car']);
+        $service = Service::create(['name' => 'Lavado', 'description' => 'Lavado', 'active' => true]);
+
+        $ticket = Ticket::create([
+            'user_id' => $user->id,
+            'washer_id' => $washer->id,
+            'vehicle_type_id' => $vehicleType->id,
+            'vehicle_id' => null,
+            'customer_name' => 'Cliente',
+            'customer_cedula' => null,
+            'total_amount' => 200,
+            'paid_amount' => 0,
+            'change' => 0,
+            'discount_total' => 0,
+            'payment_method' => 'efectivo',
+            'bank_account_id' => null,
+            'washer_pending_amount' => 0,
+            'canceled' => false,
+            'cancel_reason' => null,
+            'pending' => true,
+            'paid_at' => null,
+        ]);
+
+        TicketDetail::create([
+            'ticket_id' => $ticket->id,
+            'type' => 'service',
+            'service_id' => $service->id,
+            'product_id' => null,
+            'drink_id' => null,
+            'quantity' => 1,
+            'unit_price' => 200,
+            'discount_amount' => 0,
+            'subtotal' => 200,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/dashboard?start=' . now()->toDateString() . '&end=' . now()->toDateString());
+
+        $this->assertEquals(-100, $response->viewData('grossProfit'));
+    }
+
+    public function test_pending_ticket_without_washer_does_not_affect_gross_profit(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+
+        $vehicleType = VehicleType::create(['name' => 'Car']);
+        $service = Service::create(['name' => 'Lavado', 'description' => 'Lavado', 'active' => true]);
+
+        $ticket = Ticket::create([
+            'user_id' => $user->id,
+            'washer_id' => null,
+            'vehicle_type_id' => $vehicleType->id,
+            'vehicle_id' => null,
+            'customer_name' => 'Cliente',
+            'customer_cedula' => null,
+            'total_amount' => 200,
+            'paid_amount' => 0,
+            'change' => 0,
+            'discount_total' => 0,
+            'payment_method' => 'efectivo',
+            'bank_account_id' => null,
+            'washer_pending_amount' => 100,
+            'canceled' => false,
+            'cancel_reason' => null,
+            'pending' => true,
+            'paid_at' => null,
+        ]);
+
+        TicketDetail::create([
+            'ticket_id' => $ticket->id,
+            'type' => 'service',
+            'service_id' => $service->id,
+            'product_id' => null,
+            'drink_id' => null,
+            'quantity' => 1,
+            'unit_price' => 200,
+            'discount_amount' => 0,
+            'subtotal' => 200,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/dashboard?start=' . now()->toDateString() . '&end=' . now()->toDateString());
+
+        $this->assertEquals(0, $response->viewData('grossProfit'));
+        $this->assertEquals(100, $response->viewData('washerPayDue'));
+    }
 }
 

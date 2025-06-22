@@ -10,6 +10,7 @@ use App\Models\InventoryMovement;
 use App\Models\VehicleType;
 use App\Models\Vehicle;
 use App\Models\Washer;
+use App\Models\WasherMovement;
 use App\Models\Drink;
 use App\Models\Discount;
 use App\Models\BankAccount;
@@ -913,7 +914,18 @@ class TicketController extends Controller
             }
 
             if ($ticket->washer_id) {
-                Washer::whereId($ticket->washer_id)->decrement('pending_amount', 100);
+                $washer = Washer::find($ticket->washer_id);
+                $alreadyPaid = $washer->pending_amount <= 0;
+                $washer->decrement('pending_amount', 100);
+
+                WasherMovement::create([
+                    'washer_id' => $washer->id,
+                    'ticket_id' => $ticket->id,
+                    'amount' => -100,
+                    'description' => $alreadyPaid
+                        ? 'Cuenta por cobrar - Ganancia de ticket cancelado'
+                        : 'Ticket Cancelado',
+                ]);
             } elseif ($ticket->washer_pending_amount > 0) {
                 $ticket->washer_pending_amount = 0;
             }
