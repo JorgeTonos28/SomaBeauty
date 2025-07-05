@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div x-data="filterTable('{{ route('tickets.index') }}', {selected: null, selectedPending: false, selectedNoWasher: false, selectedCreated: null, pending: {{ $filters['pending'] ?? 'null' }}})" x-on:click.away="selected = null; selectedPending=false; selectedNoWasher=false" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div x-data="filterTable('{{ route('tickets.index') }}', {selected: null, selectedPending: false, selectedNoWasher: false, selectedCreated: null, pending: {{ $filters['pending'] ?? 'null' }}, role: '{{ Auth::user()->role }}', editBase: '{{ url('tickets') }}'})" x-on:click.away="selected = null; selectedPending=false; selectedNoWasher=false" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
 
         <div class="mb-4 flex flex-wrap items-end gap-4">
@@ -34,7 +34,7 @@
             <button x-show="selected" x-on:click="openCancelModal()" class="text-red-600" title="Cancelar">
                 <i class="fa-solid fa-xmark fa-lg"></i>
             </button>
-            <button x-show="selected" x-on:click="selectedPending ? window.location='{{ url('tickets') }}/'+selected+'/edit' : $dispatch('open-modal', 'view-' + selected)" class="text-gray-600" title="Ver/Editar">
+            <button x-show="selected" x-on:click="selectedPending ? openEdit() : $dispatch('open-modal', 'view-' + selected)" class="text-gray-600" title="Ver/Editar">
                 <i class="fa-solid fa-eye fa-lg"></i>
             </button>
             <button x-show="selected && selectedPending" x-on:click="$dispatch('open-modal', 'pay-' + selected)" class="text-green-600" title="Pagar">

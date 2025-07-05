@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div x-data="filterTable('{{ route('tickets.pending') }}', {selected: null, selectedPending: false, selectedNoWasher: false, selectedCreated: null})" x-on:click.away="selected = null; selectedPending=false; selectedNoWasher=false" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div x-data="filterTable('{{ route('tickets.pending') }}', {selected: null, selectedPending: false, selectedNoWasher: false, selectedCreated: null, role: '{{ Auth::user()->role }}', editBase: '{{ url('tickets') }}'})" x-on:click.away="selected = null; selectedPending=false; selectedNoWasher=false" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
 
         <div class="mb-4 flex flex-wrap items-end gap-4">
@@ -32,7 +32,7 @@
             <button x-show="selected" x-on:click="openCancelModal()" class="text-red-600" title="Cancelar">
                 <i class="fa-solid fa-xmark fa-lg"></i>
             </button>
-            <button x-show="selected" x-on:click="window.location='{{ url('tickets') }}/'+selected+'/edit'" class="text-gray-600" title="Editar">
+            <button x-show="selected" x-on:click="openEdit()" class="text-gray-600" title="Editar">
                 <i class="fa-solid fa-eye fa-lg"></i>
             </button>
             <button x-show="selected && selectedPending" x-on:click="$dispatch('open-modal', 'pay-' + selected)" class="text-green-600" title="Pagar">
