@@ -530,6 +530,10 @@ class TicketController extends Controller
             abort(403);
         }
 
+        if ($ticket->created_at->lt(now()->subHours(6)) && auth()->user()->role === 'cajero') {
+            return redirect()->route('tickets.index')->with('error', 'No se puede editar un ticket con más de 6 horas de creado.');
+        }
+
         $services = Service::where('active', true)->with('prices')->get();
         $servicePrices = [];
         foreach ($services as $service) {
@@ -600,6 +604,9 @@ class TicketController extends Controller
 
     public function update(Request $request, Ticket $ticket)
     {
+        if ($ticket->created_at->lt(now()->subHours(6)) && auth()->user()->role === 'cajero') {
+            return back()->with('error', 'No se puede editar un ticket con más de 6 horas de creado.');
+        }
         if ($ticket->pending && $request->has('ticket_action')) {
             $pending = $request->input('ticket_action') === 'pending';
 
@@ -925,7 +932,7 @@ class TicketController extends Controller
             return redirect()->route('tickets.index');
         }
 
-        if ($ticket->created_at->lt(now()->subHours(6))) {
+        if ($ticket->created_at->lt(now()->subHours(6)) && auth()->user()->role === 'cajero') {
             return back()->with('error', 'No se puede cancelar un ticket con más de 6 horas de creado.');
         }
 

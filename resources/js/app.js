@@ -34,6 +34,22 @@ Alpine.data('filterTable', (url, extra = {}) => ({
         } else {
             this.$dispatch('open-modal', 'cancel-' + this.selected);
         }
+    },
+    openEdit() {
+        if (!this.selectedCreated || !this.selected) return;
+        const created = new Date(this.selectedCreated);
+        const diffHours = (Date.now() - created.getTime()) / 3600000;
+        if (diffHours > 6) {
+            if (this.role === 'admin') {
+                if (!confirm('Este ticket tiene más de 6 horas de creado. ¿Seguro que desea editarlo?')) {
+                    return;
+                }
+            } else {
+                alert('No se puede editar un ticket con más de 6 horas de creado.');
+                return;
+            }
+        }
+        window.location = `${this.editBase}/${this.selected}/edit`;
     }
 }));
 
