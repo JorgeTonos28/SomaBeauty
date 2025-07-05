@@ -30,13 +30,7 @@ Alpine.data('filterTable', (url, extra = {}) => ({
         const created = new Date(this.selectedCreated);
         const diffHours = (Date.now() - created.getTime()) / 3600000;
         if (diffHours > 6) {
-            if (this.role === 'admin') {
-                if (confirm('Este ticket tiene más de 6 horas de creado. ¿Seguro que desea cancelarlo?')) {
-                    this.$dispatch('open-modal', 'cancel-' + this.selected);
-                }
-            } else {
-                this.$dispatch('open-modal', 'cancel-error');
-            }
+            this.$dispatch('open-modal', 'cancel-error');
         } else {
             this.$dispatch('open-modal', 'cancel-' + this.selected);
         }

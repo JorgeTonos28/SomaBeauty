@@ -47,6 +47,11 @@
                 <p>Este ticket tiene más de 6 horas de creado.</p>
                 <div class="mt-6 flex justify-end">
                     <x-secondary-button x-on:click="$dispatch('close')">Cerrar</x-secondary-button>
+                    @if(Auth::user()->role === 'admin')
+                        <x-danger-button class="ms-3" x-on:click="$dispatch('close'); $dispatch('open-modal', 'cancel-' + selected)">
+                            Continuar
+                        </x-danger-button>
+                    @endif
                 </div>
             </div>
         </x-modal>
