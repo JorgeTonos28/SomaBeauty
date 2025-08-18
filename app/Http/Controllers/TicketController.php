@@ -16,6 +16,7 @@ use App\Models\Discount;
 use App\Models\BankAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class TicketController extends Controller
 {
@@ -251,6 +252,7 @@ class TicketController extends Controller
             'drink_ids.*' => 'exists:drinks,id',
             'drink_quantities' => 'nullable|array',
             'drink_quantities.*' => 'integer|min:1',
+            'ticket_date' => 'required|date',
         ];
         if (!$pending) {
             $rules['payment_method'] = 'required|in:efectivo,tarjeta,transferencia,mixto';
@@ -284,12 +286,15 @@ class TicketController extends Controller
             'bank_account_id.required_if' => 'Debe seleccionar una cuenta bancaria.',
             'paid_amount.required' => 'Debe ingresar el monto pagado.',
             'paid_amount.numeric' => 'El monto pagado debe ser un número válido.',
-            'paid_amount.min' => 'El monto pagado no puede ser negativo.'
+            'paid_amount.min' => 'El monto pagado no puede ser negativo.',
+            'ticket_date.required' => 'La fecha del ticket es obligatoria.',
+            'ticket_date.date' => 'La fecha del ticket no es válida.'
         ]);
 
         DB::beginTransaction();
 
         try {
+            $ticketDate = Carbon::parse($request->ticket_date)->setTimeFrom(now());
             $vehicleType = $request->vehicle_type_id ? VehicleType::findOrFail($request->vehicle_type_id) : null;
             $total = 0;
             $discountTotal = 0;
@@ -496,7 +501,8 @@ class TicketController extends Controller
                 'bank_account_id' => $pending ? null : $request->bank_account_id,
                 'washer_pending_amount' => $hasService && !$request->washer_id ? 100 : 0,
                 'pending' => $pending,
-                'paid_at' => $pending ? null : now(),
+                'paid_at' => $pending ? null : $ticketDate,
+                'created_at' => $ticketDate,
             ]);
 
             foreach ($details as $detail) {
@@ -634,6 +640,7 @@ class TicketController extends Controller
                 'drink_ids.*' => 'exists:drinks,id',
                 'drink_quantities' => 'nullable|array',
                 'drink_quantities.*' => 'integer|min:1',
+                'ticket_date' => 'required|date',
             ];
 
             if (!$pending) {
@@ -646,6 +653,7 @@ class TicketController extends Controller
 
             DB::beginTransaction();
             try {
+                $ticketDate = Carbon::parse($request->ticket_date)->setTimeFrom($ticket->created_at);
                 $oldService = $ticket->details()->where('type','service')->exists();
                 if ($oldService) {
                     if ($ticket->washer_id) {
@@ -828,7 +836,8 @@ class TicketController extends Controller
                     'bank_account_id' => $pending ? null : $request->bank_account_id,
                     'washer_pending_amount' => $hasWash && !$request->washer_id ? 100 : 0,
                     'pending' => $pending,
-                    'paid_at' => $pending ? null : now(),
+                    'paid_at' => $pending ? null : $ticketDate,
+                    'created_at' => $ticketDate,
                 ]);
 
                 foreach ($details as $detail) {
@@ -920,7 +929,7 @@ class TicketController extends Controller
             'paid_amount' => $request->paid_amount,
             'change' => $request->paid_amount - $ticket->total_amount,
             'pending' => false,
-            'paid_at' => now(),
+            'paid_at' => $ticket->created_at,
         ]);
 
         return redirect()->route('tickets.index')->with('success', 'Ticket pagado correctamente.');

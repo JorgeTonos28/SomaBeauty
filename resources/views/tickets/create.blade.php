@@ -19,6 +19,11 @@
                 <input type="text" name="customer_phone" pattern="[0-9+()\s-]*" class="form-input w-full mt-1">
             </div>
 
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Fecha del Ticket</label>
+                <input type="date" name="ticket_date" value="{{ date('Y-m-d') }}" class="form-input w-full mt-1">
+            </div>
+
             <!-- Servicios -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Servicios</label>
