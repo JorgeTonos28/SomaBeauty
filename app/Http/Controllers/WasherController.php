@@ -6,6 +6,7 @@ use App\Models\Washer;
 use App\Models\WasherPayment;
 use App\Models\WasherMovement;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class WasherController extends Controller
 {
@@ -161,17 +162,28 @@ class WasherController extends Controller
         ]);
     }
 
-    public function pay(Washer $washer)
+    public function pay(Request $request, Washer $washer)
     {
         if ($washer->pending_amount <= 0) {
             return back()->with('success', 'No hay monto pendiente.');
         }
 
+        $request->validate([
+            'payment_date' => 'required|date|before_or_equal:today',
+        ], [
+            'payment_date.required' => 'La fecha del pago es obligatoria.',
+            'payment_date.date' => 'La fecha del pago no es válida.',
+            'payment_date.before_or_equal' => 'La fecha del pago no puede ser futura.',
+        ]);
+
+        $paymentDate = Carbon::parse($request->payment_date)->setTimeFrom(now());
+
         WasherPayment::create([
             'washer_id' => $washer->id,
-            'payment_date' => now(),
+            'payment_date' => $paymentDate,
             'total_washes' => intval($washer->pending_amount / 100),
             'amount_paid' => $washer->pending_amount,
+            'created_at' => $paymentDate,
         ]);
 
         $washer->update(['pending_amount' => 0]);
@@ -179,16 +191,27 @@ class WasherController extends Controller
         return back()->with('success', 'Pago registrado correctamente.');
     }
 
-    public function payAll()
+    public function payAll(Request $request)
     {
+        $request->validate([
+            'payment_date' => 'required|date|before_or_equal:today',
+        ], [
+            'payment_date.required' => 'La fecha del pago es obligatoria.',
+            'payment_date.date' => 'La fecha del pago no es válida.',
+            'payment_date.before_or_equal' => 'La fecha del pago no puede ser futura.',
+        ]);
+
+        $paymentDate = Carbon::parse($request->payment_date)->setTimeFrom(now());
+
         $washers = Washer::where('pending_amount', '>', 0)->get();
 
         foreach ($washers as $washer) {
             WasherPayment::create([
                 'washer_id' => $washer->id,
-                'payment_date' => now(),
+                'payment_date' => $paymentDate,
                 'total_washes' => intval($washer->pending_amount / 100),
                 'amount_paid' => $washer->pending_amount,
+                'created_at' => $paymentDate,
             ]);
 
             $washer->update(['pending_amount' => 0]);

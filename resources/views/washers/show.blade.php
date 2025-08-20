@@ -19,10 +19,7 @@
                 @method('DELETE')
                 <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Eliminar</button>
             </form>
-            <form action="{{ route('washers.pay', $washer) }}" method="POST">
-                @csrf
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Marcar Pago</button>
-            </form>
+            <button type="button" x-on:click="$dispatch('open-modal', 'pay-washer-{{ $washer->id }}')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Marcar Pago</button>
         </div>
 
         <div class="bg-white p-4 rounded shadow">
@@ -49,5 +46,20 @@
                 @include('washers.partials.ledger', ['events' => $events])
             </div>
         </div>
+    <x-modal name="pay-washer-{{ $washer->id }}" focusable>
+        <form method="POST" action="{{ route('washers.pay', $washer) }}" class="p-6 space-y-4" x-data="{ paymentDate: '{{ now()->toDateString() }}' }">
+            @csrf
+            <h2 class="text-lg font-medium text-gray-900">Confirmar pago</h2>
+            <p class="text-sm text-gray-600">Se pagará a <strong>{{ $washer->name }}</strong> RD$ {{ number_format($washer->pending_amount, 2) }} en la fecha <span x-text="paymentDate"></span>.</p>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mt-2">Fecha del pago</label>
+                <input type="date" name="payment_date" x-model="paymentDate" class="form-input w-full" max="{{ now()->toDateString() }}" required>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>
+                <x-primary-button class="ml-3">Confirmar</x-primary-button>
+            </div>
+        </form>
+    </x-modal>
     </div>
 </x-app-layout>

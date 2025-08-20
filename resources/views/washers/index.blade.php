@@ -13,10 +13,7 @@
                 <a href="{{ route('washers.create') }}" class="btn-primary">
                     Nuevo Lavador
                 </a>
-                <form action="{{ route('washers.payAll') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Pagar Todos</button>
-                </form>
+                <button type="button" x-on:click="$dispatch('open-modal', 'pay-all')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Pagar Todos</button>
             </div>
 
             <div class="mb-4 bg-white p-4 shadow sm:rounded-lg">
@@ -45,4 +42,19 @@
             </div>
         </div>
     </div>
+    <x-modal name="pay-all" focusable>
+        <form method="POST" action="{{ route('washers.payAll') }}" class="p-6 space-y-4" x-data="{ paymentDate: '{{ now()->toDateString() }}' }">
+            @csrf
+            <h2 class="text-lg font-medium text-gray-900">Confirmar pago</h2>
+            <p class="text-sm text-gray-600">Se pagarán RD$ {{ number_format($pendingTotal, 2) }} a todos los lavadores en la fecha <span x-text="paymentDate"></span>.</p>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mt-2">Fecha del pago</label>
+                <input type="date" name="payment_date" x-model="paymentDate" class="form-input w-full" max="{{ now()->toDateString() }}" required>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>
+                <x-primary-button class="ml-3">Confirmar</x-primary-button>
+            </div>
+        </form>
+    </x-modal>
 </x-app-layout>
