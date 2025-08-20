@@ -21,7 +21,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha del Ticket</label>
-                <input type="date" name="ticket_date" value="{{ date('Y-m-d') }}" class="form-input w-full mt-1">
+                <input type="date" name="ticket_date" value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}" class="form-input w-full mt-1" onclick="this.showPicker()" onfocus="this.showPicker()">
             </div>
 
             <!-- Servicios -->

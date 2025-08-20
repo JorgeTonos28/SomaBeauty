@@ -252,7 +252,7 @@ class TicketController extends Controller
             'drink_ids.*' => 'exists:drinks,id',
             'drink_quantities' => 'nullable|array',
             'drink_quantities.*' => 'integer|min:1',
-            'ticket_date' => 'required|date',
+            'ticket_date' => 'required|date|before_or_equal:today',
         ];
         if (!$pending) {
             $rules['payment_method'] = 'required|in:efectivo,tarjeta,transferencia,mixto';
@@ -288,7 +288,8 @@ class TicketController extends Controller
             'paid_amount.numeric' => 'El monto pagado debe ser un número válido.',
             'paid_amount.min' => 'El monto pagado no puede ser negativo.',
             'ticket_date.required' => 'La fecha del ticket es obligatoria.',
-            'ticket_date.date' => 'La fecha del ticket no es válida.'
+            'ticket_date.date' => 'La fecha del ticket no es válida.',
+            'ticket_date.before_or_equal' => 'La fecha del ticket no puede ser futura.'
         ]);
 
         DB::beginTransaction();
@@ -640,7 +641,7 @@ class TicketController extends Controller
                 'drink_ids.*' => 'exists:drinks,id',
                 'drink_quantities' => 'nullable|array',
                 'drink_quantities.*' => 'integer|min:1',
-                'ticket_date' => 'required|date',
+                'ticket_date' => 'required|date|before_or_equal:today',
             ];
 
             if (!$pending) {
@@ -649,7 +650,9 @@ class TicketController extends Controller
                 $rules['paid_amount'] = 'required|numeric|min:0';
             }
 
-            $request->validate($rules);
+            $request->validate($rules, [
+                'ticket_date.before_or_equal' => 'La fecha del ticket no puede ser futura.'
+            ]);
 
             DB::beginTransaction();
             try {
