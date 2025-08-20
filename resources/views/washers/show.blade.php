@@ -19,11 +19,11 @@
                 @method('DELETE')
                 <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Eliminar</button>
             </form>
-            <button type="button" x-on:click="$dispatch('open-modal', 'pay-washer-{{ $washer->id }}')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Marcar Pago</button>
+            <button type="button" onclick="preparePayment({{ $washer->id }})" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Marcar Pago</button>
         </div>
 
         <div class="bg-white p-4 rounded shadow">
-            <p class="mb-4"><strong>Saldo pendiente:</strong> RD$ {{ number_format($washer->pending_amount, 2) }}</p>
+            <p class="mb-4"><strong>Saldo pendiente:</strong> RD$ {{ number_format($pending, 2) }}</p>
             <form method="GET" x-ref="form" class="flex items-end gap-2 mb-4">
                 <div>
                     <label class="block text-sm">Desde</label>
@@ -49,8 +49,10 @@
     <x-modal name="pay-washer-{{ $washer->id }}" focusable>
         <form method="POST" action="{{ route('washers.pay', $washer) }}" class="p-6 space-y-4" x-data="{ paymentDate: '{{ now()->toDateString() }}' }">
             @csrf
+            <input type="hidden" name="amount" value="0">
+            <input type="hidden" name="total_washes" value="0">
             <h2 class="text-lg font-medium text-gray-900">Confirmar pago</h2>
-            <p class="text-sm text-gray-600">Se pagará a <strong>{{ $washer->name }}</strong> RD$ {{ number_format($washer->pending_amount, 2) }} en la fecha <span x-text="paymentDate"></span>.</p>
+            <p class="text-sm text-gray-600">Se pagará a <strong>{{ $washer->name }}</strong> RD$ <span class="selected-amount">0.00</span> en la fecha <span x-text="paymentDate"></span>.</p>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mt-2">Fecha del pago</label>
                 <input type="date" name="payment_date" x-model="paymentDate" class="form-input w-full" max="{{ now()->toDateString() }}" required>
@@ -63,3 +65,21 @@
     </x-modal>
     </div>
 </x-app-layout>
+
+<script>
+function preparePayment(id) {
+    const checks = document.querySelectorAll('.gain-check:checked');
+    if (checks.length === 0) {
+        alert('Seleccione al menos un registro para pagar.');
+        return;
+    }
+    let total = 0;
+    checks.forEach(c => total += parseFloat(c.dataset.amount));
+    const modal = document.getElementById(`pay-washer-${id}`);
+    const form = modal.querySelector('form');
+    form.querySelector('input[name="amount"]').value = total.toFixed(2);
+    form.querySelector('input[name="total_washes"]').value = checks.length;
+    form.querySelector('.selected-amount').textContent = total.toFixed(2);
+    window.dispatchEvent(new CustomEvent('open-modal', { detail: `pay-washer-${id}` }));
+}
+</script>

@@ -29,6 +29,8 @@ class WasherPaymentBackdateTest extends TestCase
         $response = $this->actingAs($user)
             ->post(route('washers.pay', $washer), [
                 'payment_date' => $date,
+                'amount' => 200,
+                'total_washes' => 2,
             ]);
 
         $response->assertRedirect();

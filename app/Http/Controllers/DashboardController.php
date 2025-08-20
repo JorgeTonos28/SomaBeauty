@@ -113,12 +113,16 @@ class DashboardController extends Controller
         $unassignedCommission = Ticket::where('pending', true)
             ->where('canceled', false)
             ->where('washer_pending_amount', '>', 0)
+            ->whereDate('created_at', '>=', $start)
+            ->whereDate('created_at', '<=', $end)
             ->sum('washer_pending_amount');
 
         $assignedPendingCommission = Ticket::with('details')
             ->where('pending', true)
             ->where('canceled', false)
             ->whereNotNull('washer_id')
+            ->whereDate('created_at', '>=', $start)
+            ->whereDate('created_at', '<=', $end)
             ->get()
             ->sum(fn($t) => $t->details->where('type', 'service')->sum('quantity') * 100);
 
@@ -148,7 +152,22 @@ class DashboardController extends Controller
         }
         usort($movements, fn($a,$b)=>strcmp($b['date'],$a['date']));
 
-        $washerPayDue = Washer::where('pending_amount', '>', 0)->sum('pending_amount');
+        $washerPayDue = 0;
+        foreach (Washer::all() as $w) {
+            $tq = $w->tickets();
+            $tq->whereDate('created_at', '>=', $start)->whereDate('created_at', '<=', $end);
+            $ticketsTotal = $tq->count() * 100;
+
+            $mq = $w->movements();
+            $mq->whereDate('created_at', '>=', $start)->whereDate('created_at', '<=', $end);
+            $movementTotal = $mq->sum('amount');
+
+            $pq = $w->payments();
+            $pq->whereDate('payment_date', '>=', $start)->whereDate('payment_date', '<=', $end);
+            $paymentTotal = $pq->sum('amount_paid');
+
+            $washerPayDue += $ticketsTotal + $movementTotal - $paymentTotal;
+        }
         $washerPayDue += $unassignedCommission;
 
         $washerDebtAmount = $washerDebts->sum(fn($w) => abs($w->pending_amount));
