@@ -47,10 +47,11 @@
             </div>
         </div>
     <x-modal name="pay-washer-{{ $washer->id }}" focusable>
-        <form method="POST" action="{{ route('washers.pay', $washer) }}" class="p-6 space-y-4" x-data="{ paymentDate: '{{ now()->toDateString() }}' }">
+        <form id="pay-washer-form-{{ $washer->id }}" method="POST" action="{{ route('washers.pay', $washer) }}" class="p-6 space-y-4" x-data="{ paymentDate: '{{ now()->toDateString() }}' }">
             @csrf
             <input type="hidden" name="amount" value="0">
             <input type="hidden" name="total_washes" value="0">
+            <input type="hidden" name="ticket_ids" value="">
             <h2 class="text-lg font-medium text-gray-900">Confirmar pago</h2>
             <p class="text-sm text-gray-600">Se pagará a <strong>{{ $washer->name }}</strong> RD$ <span class="selected-amount">0.00</span> en la fecha <span x-text="paymentDate"></span>.</p>
             <div>
@@ -63,6 +64,16 @@
             </div>
         </form>
     </x-modal>
+
+    <x-modal name="washer-pay-error">
+        <div class="p-6">
+            <h2 class="text-lg font-medium text-gray-900">Error</h2>
+            <p class="mt-2 text-sm text-gray-600">Debe seleccionar al menos un registro para pagar.</p>
+            <div class="mt-6 flex justify-end">
+                <x-primary-button x-on:click="$dispatch('close')">Cerrar</x-primary-button>
+            </div>
+        </div>
+    </x-modal>
     </div>
 </x-app-layout>
 
@@ -70,15 +81,19 @@
 function preparePayment(id) {
     const checks = document.querySelectorAll('.gain-check:checked');
     if (checks.length === 0) {
-        alert('Seleccione al menos un registro para pagar.');
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'washer-pay-error' }));
         return;
     }
     let total = 0;
-    checks.forEach(c => total += parseFloat(c.dataset.amount));
-    const modal = document.getElementById(`pay-washer-${id}`);
-    const form = modal.querySelector('form');
+    const ids = [];
+    checks.forEach(c => {
+        total += parseFloat(c.dataset.amount);
+        ids.push(c.dataset.ticket);
+    });
+    const form = document.getElementById(`pay-washer-form-${id}`);
     form.querySelector('input[name="amount"]').value = total.toFixed(2);
     form.querySelector('input[name="total_washes"]').value = checks.length;
+    form.querySelector('input[name="ticket_ids"]').value = ids.join(',');
     form.querySelector('.selected-amount').textContent = total.toFixed(2);
     window.dispatchEvent(new CustomEvent('open-modal', { detail: `pay-washer-${id}` }));
 }

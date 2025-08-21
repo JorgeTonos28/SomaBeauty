@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Washer;
 use App\Models\WasherPayment;
 use App\Models\WasherMovement;
+use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -174,6 +175,7 @@ class WasherController extends Controller
                 'gain' => 100,
                 'payment' => null,
                 'ticket_id' => $t->id,
+                'paid_to_washer' => $t->washer_pending_amount <= 0,
             ];
         }
         foreach ($payments as $p) {
@@ -184,6 +186,7 @@ class WasherController extends Controller
                 'gain' => null,
                 'payment' => $p->amount_paid,
                 'ticket_id' => null,
+                'paid_to_washer' => false,
             ];
         }
 
@@ -195,6 +198,7 @@ class WasherController extends Controller
                 'gain' => $m->amount,
                 'payment' => null,
                 'ticket_id' => $m->ticket_id,
+                'paid_to_washer' => false,
             ];
         }
         usort($events, fn($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
@@ -219,31 +223,41 @@ class WasherController extends Controller
     {
         $request->validate([
             'payment_date' => 'required|date|before_or_equal:today',
-            'amount' => 'required|numeric|min:0.01',
-            'total_washes' => 'required|integer|min:1',
+            'ticket_ids' => 'required|string',
         ], [
             'payment_date.required' => 'La fecha del pago es obligatoria.',
             'payment_date.date' => 'La fecha del pago no es válida.',
             'payment_date.before_or_equal' => 'La fecha del pago no puede ser futura.',
-            'amount.required' => 'Debe seleccionar al menos un registro a pagar.',
+            'ticket_ids.required' => 'Debe seleccionar al menos un registro a pagar.',
         ]);
 
-        $amount = min($request->amount, $washer->pending_amount);
-        if ($amount <= 0) {
+        $ids = array_filter(explode(',', $request->ticket_ids));
+        $validIds = Ticket::where('washer_id', $washer->id)
+            ->whereIn('id', $ids)
+            ->where('washer_pending_amount', '>', 0)
+            ->pluck('id')
+            ->all();
+
+        $count = count($validIds);
+        if ($count === 0) {
             return back()->with('success', 'No hay monto pendiente.');
         }
+
+        $amount = min($count * 100, $washer->pending_amount);
 
         $paymentDate = Carbon::parse($request->payment_date)->setTimeFrom(now());
 
         WasherPayment::create([
             'washer_id' => $washer->id,
             'payment_date' => $paymentDate,
-            'total_washes' => $request->total_washes,
+            'total_washes' => $count,
             'amount_paid' => $amount,
             'created_at' => $paymentDate,
         ]);
 
         $washer->decrement('pending_amount', $amount);
+
+        Ticket::whereIn('id', $validIds)->update(['washer_pending_amount' => 0]);
 
         return back()->with('success', 'Pago registrado correctamente.');
     }
@@ -270,6 +284,10 @@ class WasherController extends Controller
                 'amount_paid' => $washer->pending_amount,
                 'created_at' => $paymentDate,
             ]);
+
+            Ticket::where('washer_id', $washer->id)
+                ->where('washer_pending_amount', '>', 0)
+                ->update(['washer_pending_amount' => 0]);
 
             $washer->update(['pending_amount' => 0]);
         }

@@ -24,13 +24,26 @@ class WasherPaymentBackdateTest extends TestCase
             'active' => true,
         ]);
 
+        $tickets = [];
+        for ($i = 0; $i < 2; $i++) {
+            $tickets[] = \App\Models\Ticket::create([
+                'user_id' => $user->id,
+                'washer_id' => $washer->id,
+                'vehicle_type_id' => null,
+                'total_amount' => 0,
+                'paid_amount' => 0,
+                'payment_method' => 'efectivo',
+                'washer_pending_amount' => 100,
+                'customer_name' => 'Cliente',
+            ]);
+        }
+
         $date = Carbon::yesterday()->toDateString();
 
         $response = $this->actingAs($user)
             ->post(route('washers.pay', $washer), [
                 'payment_date' => $date,
-                'amount' => 200,
-                'total_washes' => 2,
+                'ticket_ids' => collect($tickets)->pluck('id')->implode(','),
             ]);
 
         $response->assertRedirect();
@@ -44,6 +57,15 @@ class WasherPaymentBackdateTest extends TestCase
         $this->assertDatabaseHas('washers', [
             'id' => $washer->id,
             'pending_amount' => 0,
+        ]);
+
+        $this->assertDatabaseHas('tickets', [
+            'id' => $tickets[0]->id,
+            'washer_pending_amount' => 0,
+        ]);
+        $this->assertDatabaseHas('tickets', [
+            'id' => $tickets[1]->id,
+            'washer_pending_amount' => 0,
         ]);
 
         Carbon::setTestNow();

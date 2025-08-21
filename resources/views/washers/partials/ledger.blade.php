@@ -15,8 +15,8 @@
             @foreach($events as $e)
                 <tr class="border-b">
                     <td class="px-4 py-2 text-center">
-                        @if(!is_null($e['gain']) && $e['gain'] > 0)
-                            <input type="checkbox" class="gain-check" data-amount="{{ $e['gain'] }}">
+                        @if(!is_null($e['gain']) && $e['gain'] > 0 && ($e['ticket_id'] ?? false) && !($e['paid_to_washer'] ?? false))
+                            <input type="checkbox" class="gain-check" data-amount="{{ $e['gain'] }}" data-ticket="{{ $e['ticket_id'] }}">
                         @endif
                     </td>
                     <td class="px-4 py-2">{{ \Carbon\Carbon::parse($e['date'])->format('d/m/Y h:i A') }}</td>
