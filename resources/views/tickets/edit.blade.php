@@ -11,24 +11,25 @@
             @csrf
             @method('PUT')
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
-                <input type="text" name="customer_name" value="{{ $ticket->customer_name }}" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" required class="form-input w-full mt-1">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-                <input type="text" name="customer_phone" value="{{ $ticket->customer_phone }}" pattern="[0-9+()\s-]*" class="form-input w-full mt-1">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Fecha del Ticket</label>
-                <input type="date" name="ticket_date" value="{{ $ticket->created_at->format('Y-m-d') }}" max="{{ date('Y-m-d') }}" class="form-input w-full mt-1" onclick="this.showPicker()" onfocus="this.showPicker()">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
+                    <input type="text" name="customer_name" value="{{ $ticket->customer_name }}" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" required class="form-input w-full mt-1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <input type="text" name="customer_phone" value="{{ $ticket->customer_phone }}" pattern="[0-9+()\s-]*" class="form-input w-full mt-1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha del Ticket</label>
+                    <input type="date" name="ticket_date" value="{{ $ticket->created_at->format('Y-m-d') }}" max="{{ date('Y-m-d') }}" class="form-input w-full mt-1" onclick="this.showPicker()" onfocus="this.showPicker()">
+                </div>
             </div>
 
             <!-- Servicios -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Servicios</label>
-                <div id="wash-fields" style="{{ $hasWash ? '' : 'display:none' }}" class="space-y-4">
+            <details class="border rounded p-4" id="wash-section">
+                <summary class="cursor-pointer font-medium text-gray-700">Servicios</summary>
+                <div id="wash-fields" style="{{ $hasWash ? '' : 'display:none' }}" class="space-y-4 mt-4">
                     <!-- Placa -->
                     <div class="relative">
                         <label class="block text-sm font-medium text-gray-700">Placa</label>
@@ -100,8 +101,16 @@
                     </div>
                 </div>
 
-                <div id="drink-fields" class="mt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tragos Vendidos</label>
+                </div>
+
+                <div class="mt-2 space-x-4">
+                    <button type="button" id="wash-toggle" onclick="toggleWash()" class="text-sm text-blue-600 hover:underline">{{ $hasWash ? 'Quitar lavado' : 'Agregar Lavado' }}</button>
+                </div>
+            </details>
+
+            <details class="border rounded p-4" id="drink-section">
+                <summary class="cursor-pointer font-medium text-gray-700">Tragos Vendidos</summary>
+                <div class="mt-4">
                     <div id="drink-list">
                         @foreach ($ticketDrinks as $td)
                         <div class="flex gap-4 mb-2 items-center">
@@ -124,17 +133,13 @@
                     </div>
                     <button type="button" onclick="addDrinkRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar trago</button>
                 </div>
-
-                <div class="mt-2 space-x-4">
-                    <button type="button" id="wash-toggle" onclick="toggleWash()" class="text-sm text-blue-600 hover:underline">{{ $hasWash ? 'Quitar lavado' : 'Agregar Lavado' }}</button>
-                </div>
-            </div>
+            </details>
 
             <!-- Productos -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Productos Vendidos</label>
-
-                <div id="product-list">
+            <details class="border rounded p-4" id="product-section">
+                <summary class="cursor-pointer font-medium text-gray-700">Productos Vendidos</summary>
+                <div class="mt-4">
+                    <div id="product-list">
                     @foreach ($ticketProducts as $tp)
                     <div class="flex gap-4 mb-2 items-center">
                         <select name="product_ids[]" class="form-select w-full" data-searchable onchange="updateTotal(); checkStock(this.parentElement)">
@@ -153,12 +158,11 @@
                         <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
                     </div>
                     @endforeach
-                </div>
+                    </div>
 
-                <button type="button" onclick="addProductRow()" class="mt-2 text-sm text-blue-600 hover:underline">
-                    + Agregar otro producto
-                </button>
-            </div>
+                    <button type="button" onclick="addProductRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar otro producto</button>
+                </div>
+            </details>
 
             <!-- Monto Pagado -->
             <div>
