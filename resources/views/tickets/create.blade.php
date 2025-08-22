@@ -30,7 +30,7 @@
                 <summary class="cursor-pointer font-medium text-gray-700">Servicios</summary>
                 <div id="wash-list" class="space-y-4 mt-4"></div>
 
-                <div id="wash-form" class="space-y-4 mt-4">
+                <div id="wash-form" class="space-y-4 mt-4 hidden">
                     <!-- Placa -->
                     <div class="relative">
                         <label class="block text-sm font-medium text-gray-700">Placa</label>
@@ -96,10 +96,14 @@
                         @endforeach
                         </div>
                     </div>
+                    <div class="mt-2 space-x-4">
+                        <button type="button" id="save-wash-btn" class="text-sm text-blue-600" onclick="saveWash()">Agregar lavado</button>
+                        <button type="button" id="cancel-wash-btn" class="text-sm text-gray-600 hidden" onclick="cancelWashForm()">Cancelar</button>
+                    </div>
                 </div>
 
-                <div class="mt-2 space-x-4">
-                    <button type="button" id="add-wash-btn" class="text-sm text-blue-600" onclick="addWash()">Agregar lavado</button>
+                <div class="mt-2">
+                    <button type="button" id="show-wash-form-btn" class="text-sm text-blue-600" onclick="showWashForm()">Agregar lavado</button>
                 </div>
             </details>
 
@@ -343,9 +347,30 @@
             convertSelectToSearchable(row.querySelector('select'));
         }
 
-        function addWash() {
+        function showWashForm() {
             const form = document.getElementById('wash-form');
-            const index = document.querySelectorAll('.wash-item').length;
+            document.getElementById('show-wash-form-btn').classList.add('hidden');
+            document.getElementById('cancel-wash-btn').classList.remove('hidden');
+            form.classList.remove('hidden');
+            form.dataset.editIndex = '';
+        }
+
+        function cancelWashForm() {
+            const form = document.getElementById('wash-form');
+            form.classList.add('hidden');
+            document.getElementById('show-wash-form-btn').classList.remove('hidden');
+            document.getElementById('cancel-wash-btn').classList.add('hidden');
+            delete form.dataset.editIndex;
+            form.querySelectorAll('input[type=text], input[type=number]').forEach(el=>el.value='');
+            form.querySelectorAll('select').forEach(sel=>sel.value='');
+            form.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
+            document.querySelectorAll('.wash-item').forEach(w=>w.removeAttribute('open'));
+        }
+
+        function saveWash() {
+            const form = document.getElementById('wash-form');
+            const editing = form.dataset.editIndex !== undefined && form.dataset.editIndex !== '';
+            const index = editing ? parseInt(form.dataset.editIndex) : document.querySelectorAll('.wash-item').length;
             const plate = form.querySelector('input[name="temp_plate"]').value.trim();
             const brand = form.querySelector('input[name="temp_brand"]').value.trim();
             const model = form.querySelector('input[name="temp_model"]').value.trim();
@@ -373,13 +398,21 @@
             });
 
             const summary = `${brand} | ${model} | ${color} | ${year} | ${vehicleTypeName}`;
-            const wrapper = document.createElement('details');
-            wrapper.className = 'border rounded p-2 wash-item';
+            let wrapper;
+            if (editing) {
+                wrapper = document.querySelectorAll('.wash-item')[index];
+                wrapper.innerHTML = '';
+            } else {
+                wrapper = document.createElement('details');
+                wrapper.className = 'border rounded p-2 wash-item';
+                wrapper.addEventListener('toggle', function(){ if(this.open) editWash(this); });
+                document.getElementById('wash-list').appendChild(wrapper);
+            }
             wrapper.dataset.total = washTotal;
             wrapper.dataset.discount = washDiscount;
             const servicesText = services.map(s=>s.name).join(', ');
-            wrapper.innerHTML = `<summary class="cursor-pointer font-medium text-gray-700">${summary}<button type="button" class="ml-2 text-red-600" onclick="removeWash(this)">Eliminar</button></summary>` +
-                `<div class="mt-2 space-y-1 text-sm"><p>Placa: ${plate}</p><p>Lavador: ${washerName || 'N/A'}</p><p>Servicios: ${servicesText}</p></div>` +
+            wrapper.innerHTML = `<summary class="cursor-pointer font-medium text-gray-700">${summary}<button type="button" class="ml-2 text-red-600" onclick="removeWash(this); event.stopPropagation();">Eliminar</button></summary>` +
+                services.map(s=>`<input type="hidden" name="washes[${index}][service_ids][]" value="${s.id}">`).join('') +
                 `<input type="hidden" name="washes[${index}][plate]" value="${plate}">` +
                 `<input type="hidden" name="washes[${index}][brand]" value="${brand}">` +
                 `<input type="hidden" name="washes[${index}][model]" value="${model}">` +
@@ -387,19 +420,60 @@
                 `<input type="hidden" name="washes[${index}][year]" value="${year}">` +
                 `<input type="hidden" name="washes[${index}][vehicle_type_id]" value="${vehicleTypeId}">` +
                 `<input type="hidden" name="washes[${index}][washer_id]" value="${washerId}">` +
-                services.map(s=>`<input type="hidden" name="washes[${index}][service_ids][]" value="${s.id}">`).join('');
-            document.getElementById('wash-list').appendChild(wrapper);
+                `<div class="mt-2 space-y-1 text-sm"><p>Placa: ${plate}</p><p>Lavador: ${washerName || 'N/A'}</p><p>Servicios: ${servicesText}</p></div>`;
+
+            updateWashIndexes();
 
             form.querySelectorAll('input[type=text], input[type=number]').forEach(el=>el.value='');
             form.querySelectorAll('select').forEach(sel=>sel.value='');
             form.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
-
+            delete form.dataset.editIndex;
+            document.getElementById('wash-list').after(form);
+            wrapper.removeAttribute('open');
             updateTotal();
         }
 
+        function editWash(wrapper) {
+            const index = Array.from(document.querySelectorAll('.wash-item')).indexOf(wrapper);
+            const form = document.getElementById('wash-form');
+            form.dataset.editIndex = index;
+            document.getElementById('show-wash-form-btn').classList.add('hidden');
+            document.getElementById('cancel-wash-btn').classList.remove('hidden');
+            form.classList.remove('hidden');
+            wrapper.appendChild(form);
+            form.querySelector('input[name="temp_plate"]').value = wrapper.querySelector(`input[name="washes[${index}][plate]"]`).value;
+            form.querySelector('input[name="temp_brand"]').value = wrapper.querySelector(`input[name="washes[${index}][brand]"]`).value;
+            form.querySelector('input[name="temp_model"]').value = wrapper.querySelector(`input[name="washes[${index}][model]"]`).value;
+            form.querySelector('input[name="temp_color"]').value = wrapper.querySelector(`input[name="washes[${index}][color]"]`).value;
+            form.querySelector('input[name="temp_year"]').value = wrapper.querySelector(`input[name="washes[${index}][year]"]`).value;
+            form.querySelector('select[name="temp_vehicle_type_id"]').value = wrapper.querySelector(`input[name="washes[${index}][vehicle_type_id]"]`).value;
+            form.querySelector('select[name="temp_washer_id"]').value = wrapper.querySelector(`input[name="washes[${index}][washer_id]"]`).value;
+            form.querySelectorAll('input[name="temp_service_ids[]"]').forEach(cb=>{
+                const val = cb.value;
+                cb.checked = wrapper.querySelector(`input[name="washes[${index}][service_ids][]"][value="${val}"]`) !== null;
+            });
+
+            document.querySelectorAll('.wash-item').forEach(w=>{ if(w!==wrapper) w.removeAttribute('open'); });
+        }
+
         function removeWash(btn) {
-            btn.closest('.wash-item').remove();
+            const wrapper = btn.closest('.wash-item');
+            wrapper.remove();
+            updateWashIndexes();
             updateTotal();
+        }
+
+        function updateWashIndexes(){
+            document.querySelectorAll('#wash-list .wash-item').forEach((item,i)=>{
+                item.querySelectorAll('input[name^="washes["]').forEach(input=>{
+                    const field = input.name.replace(/washes\[\d+\]\[(.*)\]/,'$1');
+                    if(field.startsWith('service_ids')){
+                        input.name = `washes[${i}][service_ids][]`;
+                    }else{
+                        input.name = `washes[${i}][${field}]`;
+                    }
+                });
+            });
         }
 
         function toggleBank() {
