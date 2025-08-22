@@ -35,8 +35,8 @@ class DiscountController extends Controller
             'item' => 'required|string',
             'amount' => 'nullable|numeric|min:0',
             'amount_percentage' => 'nullable|numeric|min:0',
-            'start_at' => 'nullable|date',
-            'end_at' => 'nullable|date',
+            'start_at' => 'nullable|date|before_or_equal:end_at',
+            'end_at' => 'nullable|date|after_or_equal:start_at',
         ]);
 
         [$itemType, $id] = explode('-', $request->item);
@@ -95,8 +95,8 @@ class DiscountController extends Controller
             'item' => 'required|string',
             'amount' => 'nullable|numeric|min:0',
             'amount_percentage' => 'nullable|numeric|min:0',
-            'start_at' => 'nullable|date',
-            'end_at' => 'nullable|date',
+            'start_at' => 'nullable|date|before_or_equal:end_at',
+            'end_at' => 'nullable|date|after_or_equal:start_at',
         ]);
 
         [$itemType, $id] = explode('-', $request->item);
