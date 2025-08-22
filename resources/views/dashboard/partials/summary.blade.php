@@ -42,10 +42,10 @@
                     @endforeach
                     @foreach($washerDebts as $w)
                         <tr>
-                            <td class="border px-2 py-1">-</td>
-                            <td class="border px-2 py-1">Lavador - {{ $w->name }}</td>
-                            <td class="border px-2 py-1">Cuenta por cobrar</td>
-                            <td class="border px-2 py-1 text-right">RD$ {{ number_format(abs($w->pending_amount),2) }}</td>
+                            <td class="border px-2 py-1">{{ $w->created_at->format('d/m h:i A') }}</td>
+                            <td class="border px-2 py-1">Lavador - {{ $w->washer->name }}</td>
+                            <td class="border px-2 py-1">{{ $w->description }}</td>
+                            <td class="border px-2 py-1 text-right">RD$ {{ number_format(abs($w->amount),2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>

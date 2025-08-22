@@ -11,6 +11,7 @@ use App\Models\WasherPayment;
 use App\Models\WasherMovement;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Carbon\Carbon;
 
 class WasherDebtTest extends TestCase
 {
@@ -18,6 +19,8 @@ class WasherDebtTest extends TestCase
 
     public function test_cancel_paid_ticket_creates_washer_debt(): void
     {
+        Carbon::setTestNow(Carbon::parse('2024-01-01 10:00:00'));
+
         $user = User::factory()->create(['role' => 'admin']);
 
         $washer = Washer::create([
@@ -79,5 +82,15 @@ class WasherDebtTest extends TestCase
             'amount' => -100,
             'description' => 'Cuenta por cobrar - Ganancia de ticket cancelado',
         ]);
+
+        $response = $this->actingAs($user)
+            ->get('/dashboard?start=' . now()->toDateString() . '&end=' . now()->toDateString());
+        $this->assertEquals(100, $response->viewData('accountsReceivable'));
+
+        $response = $this->actingAs($user)
+            ->get('/dashboard?start=' . now()->addDay()->toDateString() . '&end=' . now()->addDay()->toDateString());
+        $this->assertEquals(0, $response->viewData('accountsReceivable'));
+
+        Carbon::setTestNow();
     }
 }

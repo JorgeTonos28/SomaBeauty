@@ -20,6 +20,9 @@ Alpine.data('filterTable', (url, extra = {}) => ({
             .then(r => r.text())
             .then(html => {
                 this.tableHtml = html;
+                if (this.onUpdate) {
+                    this.onUpdate(html);
+                }
             });
     },
     init() {
