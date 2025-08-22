@@ -96,9 +96,9 @@
                         @endforeach
                         </div>
                     </div>
-                    <div class="mt-2 space-x-4">
-                        <button type="button" id="save-wash-btn" class="text-sm text-blue-600" onclick="saveWash()">Agregar lavado</button>
-                        <button type="button" id="cancel-wash-btn" class="text-sm text-gray-600 hidden" onclick="cancelWashForm()">Cancelar</button>
+                    <div class="mt-2 space-x-2">
+                        <button type="button" id="save-wash-btn" class="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700" onclick="saveWash()">Agregar lavado</button>
+                        <button type="button" id="cancel-wash-btn" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300 hidden" onclick="cancelWashForm()">Cancelar</button>
                     </div>
                 </div>
 
@@ -351,18 +351,21 @@
             const form = document.getElementById('wash-form');
             document.getElementById('show-wash-form-btn').classList.add('hidden');
             document.getElementById('cancel-wash-btn').classList.remove('hidden');
+            document.getElementById('save-wash-btn').textContent = 'Agregar lavado';
             form.classList.remove('hidden');
             form.dataset.editIndex = '';
         }
 
         function cancelWashForm() {
             const form = document.getElementById('wash-form');
+            document.getElementById('wash-list').after(form);
             form.classList.add('hidden');
             document.getElementById('show-wash-form-btn').classList.remove('hidden');
             document.getElementById('cancel-wash-btn').classList.add('hidden');
+            document.getElementById('save-wash-btn').textContent = 'Agregar lavado';
             delete form.dataset.editIndex;
             form.querySelectorAll('input[type=text], input[type=number]').forEach(el=>el.value='');
-            form.querySelectorAll('select').forEach(sel=>sel.value='');
+            form.querySelectorAll('select').forEach(sel=>{sel.value=''; if(sel._searchInput) sel._searchInput.value='';});
             form.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
             document.querySelectorAll('.wash-item').forEach(w=>w.removeAttribute('open'));
         }
@@ -405,7 +408,7 @@
             } else {
                 wrapper = document.createElement('details');
                 wrapper.className = 'border rounded p-2 wash-item';
-                wrapper.addEventListener('toggle', function(){ if(this.open) editWash(this); });
+                wrapper.addEventListener('toggle', function(){ if(this.open) editWash(this); else cancelWashForm(); });
                 document.getElementById('wash-list').appendChild(wrapper);
             }
             wrapper.dataset.total = washTotal;
@@ -425,10 +428,14 @@
             updateWashIndexes();
 
             form.querySelectorAll('input[type=text], input[type=number]').forEach(el=>el.value='');
-            form.querySelectorAll('select').forEach(sel=>sel.value='');
+            form.querySelectorAll('select').forEach(sel=>{sel.value=''; if(sel._searchInput) sel._searchInput.value='';});
             form.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
             delete form.dataset.editIndex;
             document.getElementById('wash-list').after(form);
+            form.classList.add('hidden');
+            document.getElementById('show-wash-form-btn').classList.remove('hidden');
+            document.getElementById('cancel-wash-btn').classList.add('hidden');
+            document.getElementById('save-wash-btn').textContent = 'Agregar lavado';
             wrapper.removeAttribute('open');
             updateTotal();
         }
@@ -438,7 +445,8 @@
             const form = document.getElementById('wash-form');
             form.dataset.editIndex = index;
             document.getElementById('show-wash-form-btn').classList.add('hidden');
-            document.getElementById('cancel-wash-btn').classList.remove('hidden');
+            document.getElementById('cancel-wash-btn').classList.add('hidden');
+            document.getElementById('save-wash-btn').textContent = 'Guardar cambios';
             form.classList.remove('hidden');
             wrapper.appendChild(form);
             form.querySelector('input[name="temp_plate"]').value = wrapper.querySelector(`input[name="washes[${index}][plate]"]`).value;
@@ -447,7 +455,9 @@
             form.querySelector('input[name="temp_color"]').value = wrapper.querySelector(`input[name="washes[${index}][color]"]`).value;
             form.querySelector('input[name="temp_year"]').value = wrapper.querySelector(`input[name="washes[${index}][year]"]`).value;
             form.querySelector('select[name="temp_vehicle_type_id"]').value = wrapper.querySelector(`input[name="washes[${index}][vehicle_type_id]"]`).value;
-            form.querySelector('select[name="temp_washer_id"]').value = wrapper.querySelector(`input[name="washes[${index}][washer_id]"]`).value;
+            const washerSelect = form.querySelector('select[name="temp_washer_id"]');
+            washerSelect.value = wrapper.querySelector(`input[name="washes[${index}][washer_id]"]`).value;
+            if(washerSelect._searchInput){ washerSelect._searchInput.value = washerSelect.options[washerSelect.selectedIndex]?.text || ''; }
             form.querySelectorAll('input[name="temp_service_ids[]"]').forEach(cb=>{
                 const val = cb.value;
                 cb.checked = wrapper.querySelector(`input[name="washes[${index}][service_ids][]"][value="${val}"]`) !== null;
@@ -526,6 +536,7 @@
             input.type = 'text';
             input.className = 'form-input w-full mt-1';
             input.value = select.options[select.selectedIndex]?.text || '';
+            select._searchInput = input;
             wrapper.appendChild(input);
             const list = document.createElement('ul');
             list.className = 'absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden';
@@ -533,7 +544,7 @@
             select.parentNode.insertBefore(wrapper, select);
 
             const options = Array.from(select.options);
-            function show(filter=''){list.innerHTML=''; const f=filter.toLowerCase(); options.forEach(o=>{if(!o.value) return; if(o.text.toLowerCase().includes(f)){const li=document.createElement('li');li.textContent=o.text; li.dataset.val=o.value; li.className='px-2 py-1 cursor-pointer hover:bg-gray-200'; list.appendChild(li);}}); list.classList.toggle('hidden', list.children.length===0);}            
+            function show(filter=''){list.innerHTML=''; const f=filter.toLowerCase(); options.forEach(o=>{if(!o.value) return; if(o.text.toLowerCase().includes(f)){const li=document.createElement('li');li.textContent=o.text; li.dataset.val=o.value; li.className='px-2 py-1 cursor-pointer hover:bg-gray-200'; list.appendChild(li);}}); list.classList.toggle('hidden', list.children.length===0);}
             input.addEventListener('focus', ()=>show());
             input.addEventListener('input', ()=>show(input.value));
             list.addEventListener('mousedown', e=>{const li=e.target.closest('li'); if(!li) return; e.preventDefault(); input.value=li.textContent; select.value=li.dataset.val; select.dispatchEvent(new Event('change')); list.classList.add('hidden');});

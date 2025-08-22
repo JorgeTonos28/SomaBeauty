@@ -515,6 +515,7 @@
             input.type = 'text';
             input.className = 'form-input w-full mt-1';
             input.value = select.options[select.selectedIndex]?.text || '';
+            select._searchInput = input;
             wrapper.appendChild(input);
             const list = document.createElement('ul');
             list.className = 'absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden';
@@ -522,7 +523,7 @@
             select.parentNode.insertBefore(wrapper, select);
 
             const options = Array.from(select.options);
-            function show(filter=''){list.innerHTML=''; const f=filter.toLowerCase(); options.forEach(o=>{if(!o.value) return; if(o.text.toLowerCase().includes(f)){const li=document.createElement('li');li.textContent=o.text; li.dataset.val=o.value; li.className='px-2 py-1 cursor-pointer hover:bg-gray-200'; list.appendChild(li);}}); list.classList.toggle('hidden', list.children.length===0);}            
+            function show(filter=''){list.innerHTML=''; const f=filter.toLowerCase(); options.forEach(o=>{if(!o.value) return; if(o.text.toLowerCase().includes(f)){const li=document.createElement('li');li.textContent=o.text; li.dataset.val=o.value; li.className='px-2 py-1 cursor-pointer hover:bg-gray-200'; list.appendChild(li);}}); list.classList.toggle('hidden', list.children.length===0);}
             input.addEventListener('focus', ()=>show());
             input.addEventListener('input', ()=>show(input.value));
             list.addEventListener('mousedown', e=>{const li=e.target.closest('li'); if(!li) return; e.preventDefault(); input.value=li.textContent; select.value=li.dataset.val; select.dispatchEvent(new Event('change')); list.classList.add('hidden');});
