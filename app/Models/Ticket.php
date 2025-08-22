@@ -44,6 +44,11 @@ class Ticket extends Model
         return $this->belongsTo(Vehicle::class);
     }
 
+    public function washes()
+    {
+        return $this->hasMany(TicketWash::class);
+    }
+
     public function details()
     {
         return $this->hasMany(TicketDetail::class);

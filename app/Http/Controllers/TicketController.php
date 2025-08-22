@@ -237,6 +237,10 @@ class TicketController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->has('washes')) {
+            return $this->storeMultiple($request);
+        }
+
         $pending = $request->input('ticket_action') === 'pending';
 
         $serviceIds = $request->input('service_ids', []);
@@ -1004,5 +1008,9 @@ class TicketController extends Controller
         });
 
         return redirect()->route('tickets.index')->with('success', 'Ticket cancelado');
+    }
+    private function storeMultiple(\Illuminate\Http\Request $request)
+    {
+        return redirect()->back()->withErrors(['washes'=>'Funcionalidad no implementada']);
     }
 }
