@@ -14,11 +14,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
-                    <input type="text" name="customer_name" value="{{ $ticket->customer_name }}" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" required class="form-input w-full mt-1">
+                    <input type="text" name="customer_name" value="{{ $ticket->customer_name }}" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ ]+" required class="form-input w-full mt-1">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-                    <input type="text" name="customer_phone" value="{{ $ticket->customer_phone }}" pattern="[0-9+()\s-]*" class="form-input w-full mt-1">
+                    <input type="text" name="customer_phone" value="{{ $ticket->customer_phone }}" pattern="[0-9+() -]*" class="form-input w-full mt-1">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Fecha del Ticket</label>
@@ -40,19 +40,19 @@
                     <!-- Marca -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Marca</label>
-                        <input type="text" name="brand" pattern="[A-Za-z0-9\s]+" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->brand }}">
+                        <input type="text" name="brand" pattern="[A-Za-z0-9 ]+" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->brand }}">
                     </div>
 
                     <!-- Modelo -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Modelo</label>
-                        <input type="text" name="model" pattern="[A-Za-z0-9\s]+" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->model }}">
+                        <input type="text" name="model" pattern="[A-Za-z0-9 ]+" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->model }}">
                     </div>
 
                     <!-- Color -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Color</label>
-                        <input type="text" name="color" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->color }}">
+                        <input type="text" name="color" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ ]+" class="form-input w-full mt-1" value="{{ optional($ticket->vehicle)->color }}">
                     </div>
 
                     <!-- Año -->
@@ -501,11 +501,11 @@
             });
         }
 
-        restrictInput(nameInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/, 'El nombre solo puede contener letras');
+        restrictInput(nameInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/, 'El nombre solo puede contener letras');
         restrictInput(plateInput, /^[A-Za-z0-9]$/, /^[A-Za-z0-9]+$/, 'La placa solo puede contener letras y números');
-        restrictInput(colorInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/, 'El color solo puede contener letras');
+        restrictInput(colorInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/, 'El color solo puede contener letras');
         restrictInput(yearInput, /^\d$/, /^\d+$/, 'El año solo puede contener números');
-        restrictInput(phoneInput, /^[0-9+()\s-]$/, /^[0-9+()\s-]+$/, 'El teléfono solo puede contener números');
+        restrictInput(phoneInput, /^[0-9+() -]$/, /^[0-9+() -]+$/, 'El teléfono solo puede contener números');
 
         function convertSelectToSearchable(select){
             select.classList.add('hidden');
@@ -529,7 +529,7 @@
             list.addEventListener('mousedown', e=>{const li=e.target.closest('li'); if(!li) return; e.preventDefault(); input.value=li.textContent; select.value=li.dataset.val; select.dispatchEvent(new Event('change')); list.classList.add('hidden');});
             input.addEventListener('blur', ()=>setTimeout(()=>list.classList.add('hidden'),200));
         }
-        restrictInput(phoneInput, /^[0-9+()\s-]$/, /^[0-9+()\s-]+$/, 'El teléfono solo puede contener números');
+        restrictInput(phoneInput, /^[0-9+() -]$/, /^[0-9+() -]+$/, 'El teléfono solo puede contener números');
 
         const maxYear = {{ date('Y') }};
         const minYear = 1890;
