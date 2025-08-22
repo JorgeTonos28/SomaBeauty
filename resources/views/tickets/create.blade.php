@@ -10,24 +10,25 @@
         <form x-ref="form" action="{{ route('tickets.store') }}" method="POST" @submit.prevent="submitForm($event)" class="space-y-6 pb-32">
             @csrf
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
-                <input type="text" name="customer_name" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" required class="form-input w-full mt-1">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-                <input type="text" name="customer_phone" pattern="[0-9+()\s-]*" class="form-input w-full mt-1">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Fecha del Ticket</label>
-                <input type="date" name="ticket_date" value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}" class="form-input w-full mt-1" onclick="this.showPicker()" onfocus="this.showPicker()">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre del Cliente</label>
+                    <input type="text" name="customer_name" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" required class="form-input w-full mt-1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <input type="text" name="customer_phone" pattern="[0-9+()\s-]*" class="form-input w-full mt-1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha del Ticket</label>
+                    <input type="date" name="ticket_date" value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}" class="form-input w-full mt-1" onclick="this.showPicker()" onfocus="this.showPicker()">
+                </div>
             </div>
 
             <!-- Servicios -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Servicios</label>
-                <div id="wash-fields" style="display:none" class="space-y-4">
+            <details class="border rounded p-4" id="wash-section">
+                <summary class="cursor-pointer font-medium text-gray-700">Servicios</summary>
+                <div id="wash-fields" style="display:none" class="space-y-4 mt-4">
                     <!-- Placa -->
                     <div class="relative">
                         <label class="block text-sm font-medium text-gray-700">Placa</label>
@@ -99,27 +100,28 @@
                     </div>
                 </div>
 
-                <div id="drink-fields" class="mt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tragos Vendidos</label>
-                    <div id="drink-list"></div>
-                    <button type="button" onclick="addDrinkRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar trago</button>
-                </div>
-
                 <div class="mt-2 space-x-4">
                     <button type="button" id="wash-toggle" onclick="toggleWash()" class="text-sm text-blue-600 hover:underline">Agregar Lavado</button>
                 </div>
-            </div>
+            </details>
+
+            <!-- Tragos -->
+            <details class="border rounded p-4" id="drink-section">
+                <summary class="cursor-pointer font-medium text-gray-700">Tragos Vendidos</summary>
+                <div class="mt-4">
+                    <div id="drink-list"></div>
+                    <button type="button" onclick="addDrinkRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar trago</button>
+                </div>
+            </details>
 
             <!-- Productos -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Productos Vendidos</label>
-
-                <div id="product-list"></div>
-
-                <button type="button" onclick="addProductRow()" class="mt-2 text-sm text-blue-600 hover:underline">
-                    + Agregar otro producto
-                </button>
-            </div>
+            <details class="border rounded p-4" id="product-section">
+                <summary class="cursor-pointer font-medium text-gray-700">Productos Vendidos</summary>
+                <div class="mt-4">
+                    <div id="product-list"></div>
+                    <button type="button" onclick="addProductRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar otro producto</button>
+                </div>
+            </details>
 
             <!-- Monto Pagado -->
             <div>
@@ -152,20 +154,22 @@
                 </select>
             </div>
 
-            <!-- Botón y Resumen -->
-            <div class="flex items-center gap-6 mt-4 sticky bottom-0 bg-white p-4 shadow z-10 sm:px-6 lg:px-8">
-                <div class="flex-1 space-x-4">
+            <!-- Resumen y Botones -->
+            <div class="mt-4 sticky bottom-0 bg-white p-4 shadow z-10 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap gap-6 text-lg font-bold">
                     <span>Descuento: RD$ <span id="discount_total">0.00</span></span>
                     <span>Total: RD$ <span id="total_amount">0.00</span></span>
                     <span>Cambio: RD$ <span id="change_display">0.00</span></span>
                 </div>
-                <button type="submit" name="ticket_action" value="pending" class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
-                    Crear
-                </button>
-                <button type="submit" name="ticket_action" value="pay" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
-                    Pagar
-                </button>
-                <a href="{{ route('tickets.index') }}" class="text-gray-600 hover:underline">Cancelar</a>
+                <div class="flex items-center gap-6 mt-4">
+                    <button type="submit" name="ticket_action" value="pending" class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
+                        Crear
+                    </button>
+                    <button type="submit" name="ticket_action" value="pay" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                        Pagar
+                    </button>
+                    <a href="{{ route('tickets.index') }}" class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">Cancelar</a>
+                </div>
             </div>
         </form>
 
@@ -297,6 +301,7 @@
             currentDiscount = discount;
             document.getElementById('total_amount').innerText = formatCurrency(total);
             document.getElementById('discount_total').innerText = formatCurrency(discount);
+            document.getElementById('paid_amount').value = currentTotal.toFixed(2);
             updateServiceLabels();
             updateVehicleOptions();
             updateChange();
