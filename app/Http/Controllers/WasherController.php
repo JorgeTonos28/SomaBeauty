@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Washer;
 use App\Models\WasherPayment;
 use App\Models\WasherMovement;
-use App\Models\Ticket;
+use App\Models\TicketWash;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -27,14 +27,15 @@ class WasherController extends Controller
         $filters['end'] = $filters['end'] ?? now()->toDateString();
 
         $washers = Washer::orderBy('name')->get()->map(function ($washer) use ($filters) {
-            $ticketQuery = $washer->tickets();
-            if ($filters['start']) {
-                $ticketQuery->whereDate('created_at', '>=', $filters['start']);
-            }
-            if ($filters['end']) {
-                $ticketQuery->whereDate('created_at', '<=', $filters['end']);
-            }
-            $ticketTotal = $ticketQuery->count() * 100;
+            $washQuery = $washer->ticketWashes()->whereHas('ticket', function($q) use ($filters) {
+                if ($filters['start']) {
+                    $q->whereDate('created_at', '>=', $filters['start']);
+                }
+                if ($filters['end']) {
+                    $q->whereDate('created_at', '<=', $filters['end']);
+                }
+            });
+            $ticketTotal = $washQuery->count() * 100;
 
             $movementQuery = $washer->movements();
             if ($filters['start']) {
@@ -137,14 +138,14 @@ class WasherController extends Controller
         $start = $request->input('start', $today);
         $end = $request->input('end', $today);
 
-        $ticketsQuery = $washer->tickets()->with(['vehicleType', 'vehicle']);
+        $washesQuery = $washer->ticketWashes()->with(['ticket', 'ticket.vehicle', 'ticket.vehicleType', 'vehicle', 'vehicleType']);
         if ($start) {
-            $ticketsQuery->whereDate('created_at', '>=', $start);
+            $washesQuery->whereHas('ticket', fn($q) => $q->whereDate('created_at', '>=', $start));
         }
         if ($end) {
-            $ticketsQuery->whereDate('created_at', '<=', $end);
+            $washesQuery->whereHas('ticket', fn($q) => $q->whereDate('created_at', '<=', $end));
         }
-        $tickets = $ticketsQuery->get();
+        $washes = $washesQuery->get();
 
         $paymentsQuery = $washer->payments();
         if ($start) {
@@ -165,8 +166,9 @@ class WasherController extends Controller
         $movements = $movementsQuery->get();
 
         $events = [];
-        foreach ($tickets as $t) {
-            $vehicle = $t->vehicle;
+        foreach ($washes as $w) {
+            $t = $w->ticket;
+            $vehicle = $w->vehicle;
             $detailParts = [];
             if ($vehicle) {
                 $detailParts[] = $vehicle->brand;
@@ -174,7 +176,7 @@ class WasherController extends Controller
                 $detailParts[] = $vehicle->color;
                 $detailParts[] = $vehicle->year;
             }
-            $detailParts[] = optional($t->vehicleType)->name;
+            $detailParts[] = optional($w->vehicleType)->name;
 
             $events[] = [
                 'date' => $t->created_at,
@@ -182,8 +184,9 @@ class WasherController extends Controller
                 'description' => implode(' | ', array_filter($detailParts)),
                 'gain' => 100,
                 'payment' => null,
+                'wash_id' => $w->id,
                 'ticket_id' => $t->id,
-                'paid_to_washer' => $t->washer_pending_amount <= 0,
+                'paid_to_washer' => $w->washer_paid,
             ];
         }
         foreach ($payments as $p) {
@@ -211,7 +214,7 @@ class WasherController extends Controller
         }
         usort($events, fn($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
 
-        $totalGain = $tickets->count() * 100 + $movements->sum('amount');
+        $totalGain = $washes->count() * 100 + $movements->sum('amount');
         $totalPaid = $payments->sum('amount_paid');
         $pending = $totalGain - $totalPaid;
 
@@ -230,25 +233,26 @@ class WasherController extends Controller
     public function pay(Request $request, Washer $washer)
     {
         $request->validate([
-            'ticket_ids' => 'required|string',
+            'wash_ids' => 'required|string',
         ], [
-            'ticket_ids.required' => 'Debe seleccionar al menos un registro a pagar.',
+            'wash_ids.required' => 'Debe seleccionar al menos un registro a pagar.',
         ]);
 
-        $ids = array_filter(explode(',', $request->ticket_ids));
-        $tickets = Ticket::where('washer_id', $washer->id)
+        $ids = array_filter(explode(',', $request->wash_ids));
+        $washes = TicketWash::where('washer_id', $washer->id)
             ->whereIn('id', $ids)
-            ->where('washer_pending_amount', '>', 0)
+            ->where('washer_paid', false)
+            ->with('ticket')
             ->get();
 
-        if ($tickets->isEmpty()) {
+        if ($washes->isEmpty()) {
             return back()->with('success', 'No hay monto pendiente.');
         }
 
-        $ticketsByDate = $tickets->groupBy(fn($t) => $t->created_at->toDateString());
+        $washesByDate = $washes->groupBy(fn($w) => $w->ticket->created_at->toDateString());
 
-        foreach ($ticketsByDate as $group) {
-            $paymentDate = $group->first()->created_at;
+        foreach ($washesByDate as $group) {
+            $paymentDate = $group->first()->ticket->created_at;
             WasherPayment::create([
                 'washer_id' => $washer->id,
                 'payment_date' => $paymentDate,
@@ -258,11 +262,11 @@ class WasherController extends Controller
             ]);
         }
 
-        $decrement = $tickets->count() * 100;
+        $decrement = $washes->count() * 100;
         $washer->pending_amount = max(0, $washer->pending_amount - $decrement);
         $washer->save();
 
-        Ticket::whereIn('id', $tickets->pluck('id'))->update(['washer_pending_amount' => 0]);
+        TicketWash::whereIn('id', $washes->pluck('id'))->update(['washer_paid' => true]);
 
         return back()->with('success', 'Pago registrado correctamente.');
     }
@@ -272,18 +276,19 @@ class WasherController extends Controller
         $washers = Washer::where('pending_amount', '>', 0)->get();
 
         foreach ($washers as $washer) {
-            $tickets = Ticket::where('washer_id', $washer->id)
-                ->where('washer_pending_amount', '>', 0)
+            $washes = TicketWash::where('washer_id', $washer->id)
+                ->where('washer_paid', false)
+                ->with('ticket')
                 ->get();
 
-            if ($tickets->isEmpty()) {
+            if ($washes->isEmpty()) {
                 continue;
             }
 
-            $ticketsByDate = $tickets->groupBy(fn($t) => $t->created_at->toDateString());
+            $washesByDate = $washes->groupBy(fn($w) => $w->ticket->created_at->toDateString());
 
-            foreach ($ticketsByDate as $group) {
-                $paymentDate = $group->first()->created_at;
+            foreach ($washesByDate as $group) {
+                $paymentDate = $group->first()->ticket->created_at;
                 WasherPayment::create([
                     'washer_id' => $washer->id,
                     'payment_date' => $paymentDate,
@@ -293,7 +298,7 @@ class WasherController extends Controller
                 ]);
             }
 
-            Ticket::whereIn('id', $tickets->pluck('id'))->update(['washer_pending_amount' => 0]);
+            TicketWash::whereIn('id', $washes->pluck('id'))->update(['washer_paid' => true]);
 
             $washer->update(['pending_amount' => 0]);
         }

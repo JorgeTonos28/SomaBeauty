@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Ticket;
+use App\Models\TicketWash;
 use App\Models\PettyCashExpense;
 use App\Models\WasherPayment;
 use App\Models\BankAccount;
@@ -126,14 +127,14 @@ class DashboardController extends Controller
             ->whereDate('created_at', '<=', $end)
             ->sum('washer_pending_amount');
 
-        $assignedPendingCommission = Ticket::with('details')
-            ->where('pending', true)
-            ->where('canceled', false)
+        $assignedPendingCommission = TicketWash::whereHas('ticket', function($q) use ($start, $end) {
+                $q->where('pending', true)
+                  ->where('canceled', false)
+                  ->whereDate('created_at', '>=', $start)
+                  ->whereDate('created_at', '<=', $end);
+            })
             ->whereNotNull('washer_id')
-            ->whereDate('created_at', '>=', $start)
-            ->whereDate('created_at', '<=', $end)
-            ->get()
-            ->sum(fn($t) => $t->details->where('type', 'service')->sum('quantity') * 100);
+            ->count() * 100;
 
         $lastExpenses = $pettyCashExpenses->take(5);
 
@@ -163,9 +164,10 @@ class DashboardController extends Controller
 
         $washerPayDue = 0;
         foreach (Washer::all() as $w) {
-            $tq = $w->tickets();
-            $tq->whereDate('created_at', '>=', $start)->whereDate('created_at', '<=', $end);
-            $ticketsTotal = $tq->count() * 100;
+            $wq = $w->ticketWashes()->where('washer_paid', false)->whereHas('ticket', function($q) use ($start, $end) {
+                $q->whereDate('created_at', '>=', $start)->whereDate('created_at', '<=', $end);
+            });
+            $ticketsTotal = $wq->count() * 100;
 
             $mq = $w->movements();
             $mq->whereDate('created_at', '>=', $start)->whereDate('created_at', '<=', $end);

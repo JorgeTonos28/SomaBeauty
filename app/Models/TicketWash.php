@@ -14,6 +14,11 @@ class TicketWash extends Model
         'vehicle_id',
         'vehicle_type_id',
         'washer_id',
+        'washer_paid',
+    ];
+
+    protected $casts = [
+        'washer_paid' => 'boolean',
     ];
 
     public function ticket()
