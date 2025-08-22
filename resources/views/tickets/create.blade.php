@@ -154,20 +154,22 @@
                 </select>
             </div>
 
-            <!-- Botón y Resumen -->
-            <div class="flex items-center gap-6 mt-4 sticky bottom-0 bg-white p-4 shadow z-10 sm:px-6 lg:px-8">
-                <div class="flex-1 space-x-4">
+            <!-- Resumen y Botones -->
+            <div class="mt-4 sticky bottom-0 bg-white p-4 shadow z-10 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap gap-6 text-lg font-bold">
                     <span>Descuento: RD$ <span id="discount_total">0.00</span></span>
                     <span>Total: RD$ <span id="total_amount">0.00</span></span>
                     <span>Cambio: RD$ <span id="change_display">0.00</span></span>
                 </div>
-                <button type="submit" name="ticket_action" value="pending" class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
-                    Crear
-                </button>
-                <button type="submit" name="ticket_action" value="pay" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
-                    Pagar
-                </button>
-                <a href="{{ route('tickets.index') }}" class="text-gray-600 hover:underline">Cancelar</a>
+                <div class="flex items-center gap-6 mt-4">
+                    <button type="submit" name="ticket_action" value="pending" class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
+                        Crear
+                    </button>
+                    <button type="submit" name="ticket_action" value="pay" class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700">
+                        Pagar
+                    </button>
+                    <a href="{{ route('tickets.index') }}" class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700">Cancelar</a>
+                </div>
             </div>
         </form>
 
@@ -299,6 +301,7 @@
             currentDiscount = discount;
             document.getElementById('total_amount').innerText = formatCurrency(total);
             document.getElementById('discount_total').innerText = formatCurrency(discount);
+            document.getElementById('paid_amount').value = currentTotal.toFixed(2);
             updateServiceLabels();
             updateVehicleOptions();
             updateChange();
