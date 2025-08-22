@@ -1,3 +1,4 @@
+<div id="pending-meta" data-pending="{{ number_format($pending, 2, '.', '') }}" class="hidden"></div>
 <div class="overflow-y-auto max-h-80">
     <table class="min-w-full table-auto border">
         <thead class="bg-gray-200">

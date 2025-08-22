@@ -73,6 +73,7 @@ class GrossProfitTest extends TestCase
 
         $grossProfit = $response->viewData('grossProfit');
         $this->assertEquals(100, $grossProfit);
+        $this->assertEquals(0, $response->viewData('accountsReceivable'));
 
         WasherPayment::create([
             'washer_id' => $washer->id,
@@ -86,6 +87,7 @@ class GrossProfitTest extends TestCase
             ->get('/dashboard?start=' . $date->toDateString() . '&end=' . $date->toDateString());
 
         $this->assertEquals(100, $response->viewData('grossProfit'));
+        $this->assertEquals(0, $response->viewData('accountsReceivable'));
     }
 
     public function test_pending_ticket_with_assigned_washer_reduces_gross_profit(): void

@@ -5,7 +5,13 @@
         </h2>
     </x-slot>
 
-    <div x-data="filterTable('{{ route('washers.show', $washer) }}')" class="py-4 max-w-6xl mx-auto sm:px-6 lg:px-8">
+    <div x-data="filterTable('{{ route('washers.show', $washer) }}', { onUpdate(html) {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const pending = doc.getElementById('pending-meta')?.dataset.pending;
+        if (pending) {
+            document.getElementById('washer-pending').textContent = parseFloat(pending).toFixed(2);
+        }
+    } })" class="py-4 max-w-6xl mx-auto sm:px-6 lg:px-8">
 
 
         <div class="mb-4">
@@ -23,7 +29,7 @@
         </div>
 
         <div class="bg-white p-4 rounded shadow">
-            <p class="mb-4"><strong>Saldo pendiente:</strong> RD$ {{ number_format($pending, 2) }}</p>
+            <p class="mb-4"><strong>Saldo pendiente:</strong> RD$ <span id="washer-pending">{{ number_format($pending, 2) }}</span></p>
             <form method="GET" x-ref="form" class="flex items-end gap-2 mb-4">
                 <div>
                     <label class="block text-sm">Desde</label>
@@ -43,7 +49,7 @@
                 </div>
             </form>
             <div x-html="tableHtml">
-                @include('washers.partials.ledger', ['events' => $events])
+                @include('washers.partials.ledger', ['events' => $events, 'pending' => $pending])
             </div>
         </div>
     <x-modal name="pay-washer-{{ $washer->id }}" focusable>

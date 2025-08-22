@@ -208,7 +208,7 @@ class WasherController extends Controller
         $pending = $totalGain - $totalPaid;
 
         if ($request->ajax()) {
-            return view('washers.partials.ledger', ['events' => $events]);
+            return view('washers.partials.ledger', ['events' => $events, 'pending' => $pending]);
         }
 
         return view('washers.show', [
@@ -250,7 +250,9 @@ class WasherController extends Controller
             ]);
         }
 
-        $washer->decrement('pending_amount', $tickets->count() * 100);
+        $decrement = $tickets->count() * 100;
+        $washer->pending_amount = max(0, $washer->pending_amount - $decrement);
+        $washer->save();
 
         Ticket::whereIn('id', $tickets->pluck('id'))->update(['washer_pending_amount' => 0]);
 

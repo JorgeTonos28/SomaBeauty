@@ -8,6 +8,7 @@ use App\Models\PettyCashExpense;
 use App\Models\WasherPayment;
 use App\Models\BankAccount;
 use App\Models\Washer;
+use App\Models\WasherMovement;
 
 class DashboardController extends Controller
 {
@@ -107,8 +108,12 @@ class DashboardController extends Controller
 
         $accountsReceivable = $pendingTickets->sum('total_amount');
 
-        $washerDebts = Washer::where('pending_amount', '<', 0)->get();
-        $accountsReceivable += $washerDebts->sum(fn($w) => abs($w->pending_amount));
+        $washerDebts = WasherMovement::with('washer')
+            ->where('amount', '<', 0)
+            ->whereDate('created_at', '>=', $start)
+            ->whereDate('created_at', '<=', $end)
+            ->get();
+        $accountsReceivable += $washerDebts->sum(fn($m) => abs($m->amount));
 
         $unassignedCommission = Ticket::where('pending', true)
             ->where('canceled', false)
@@ -170,7 +175,7 @@ class DashboardController extends Controller
         }
         $washerPayDue += $unassignedCommission;
 
-        $washerDebtAmount = $washerDebts->sum(fn($w) => abs($w->pending_amount));
+        $washerDebtAmount = $washerDebts->sum(fn($m) => abs($m->amount));
 
         $grossProfit = $totalFacturado - $pettyCashInitial - $pettyCashTotal - $washerPayTotal;
         $grossProfit -= $washerDebtAmount + $assignedPendingCommission;
