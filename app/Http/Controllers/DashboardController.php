@@ -19,6 +19,10 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
+        $request->validate([
+            'start' => ['nullable', 'date', 'before_or_equal:end'],
+            'end' => ['nullable', 'date', 'after_or_equal:start'],
+        ]);
         $start = $request->input('start', now()->toDateString());
         $end = $request->input('end', now()->toDateString());
 
@@ -224,6 +228,10 @@ class DashboardController extends Controller
 
     public function download(Request $request)
     {
+        $request->validate([
+            'start' => ['nullable', 'date', 'before_or_equal:end'],
+            'end' => ['nullable', 'date', 'after_or_equal:start'],
+        ]);
         $start = $request->input('start', now()->toDateString());
         $end = $request->input('end', now()->toDateString());
 

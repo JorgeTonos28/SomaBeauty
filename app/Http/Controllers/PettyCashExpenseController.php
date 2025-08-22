@@ -14,6 +14,11 @@ class PettyCashExpenseController extends Controller
 
     public function index(Request $request)
     {
+        $request->validate([
+            'start' => ['nullable', 'date', 'before_or_equal:end'],
+            'end' => ['nullable', 'date', 'after_or_equal:start'],
+        ]);
+
         $filters = $request->only(['start', 'end']);
         $filters['start'] = $filters['start'] ?? now()->toDateString();
         $filters['end'] = $filters['end'] ?? now()->toDateString();

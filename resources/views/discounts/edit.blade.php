@@ -82,6 +82,8 @@
         const itemSelect = document.querySelector('select[name="item"]');
         const percent = document.getElementById('amount_percentage');
         const fixed = document.getElementById('amount_fixed');
+        const startAt = document.querySelector('input[name="start_at"]');
+        const endAt = document.querySelector('input[name="end_at"]');
         function getPrice(){
             if(itemSelect.value){
                 return parseFloat(itemSelect.options[itemSelect.selectedIndex].dataset.price || 0);
@@ -108,6 +110,18 @@
             } else if(fixed.value){
                 syncFromFixed();
             }
+            syncDates();
         });
+        function syncDates(){
+            if(startAt && endAt){
+                endAt.min = startAt.value;
+                startAt.max = endAt.value;
+                if(startAt.value && endAt.value && startAt.value > endAt.value){
+                    endAt.value = startAt.value;
+                }
+            }
+        }
+        startAt.addEventListener('change', syncDates);
+        endAt.addEventListener('change', syncDates);
     </script>
 </x-app-layout>

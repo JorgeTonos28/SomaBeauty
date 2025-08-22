@@ -9,6 +9,16 @@ Alpine.data('filterTable', (url, extra = {}) => ({
     tableHtml: '',
     fetchTable() {
         const form = this.$refs.form;
+        const startInput = form.querySelector('[name="start"]');
+        const endInput = form.querySelector('[name="end"]');
+        if (startInput && endInput) {
+            endInput.min = startInput.value;
+            startInput.max = endInput.value;
+            if (startInput.value && endInput.value && startInput.value > endInput.value) {
+                alert('La fecha de inicio no puede ser mayor a la fecha de término.');
+                return;
+            }
+        }
         const params = new URLSearchParams(new FormData(form));
         params.set('pending', this.pending);
         params.append('ajax', '1');
