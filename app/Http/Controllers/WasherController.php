@@ -222,72 +222,68 @@ class WasherController extends Controller
     public function pay(Request $request, Washer $washer)
     {
         $request->validate([
-            'payment_date' => 'required|date|before_or_equal:today',
             'ticket_ids' => 'required|string',
         ], [
-            'payment_date.required' => 'La fecha del pago es obligatoria.',
-            'payment_date.date' => 'La fecha del pago no es válida.',
-            'payment_date.before_or_equal' => 'La fecha del pago no puede ser futura.',
             'ticket_ids.required' => 'Debe seleccionar al menos un registro a pagar.',
         ]);
 
         $ids = array_filter(explode(',', $request->ticket_ids));
-        $validIds = Ticket::where('washer_id', $washer->id)
+        $tickets = Ticket::where('washer_id', $washer->id)
             ->whereIn('id', $ids)
             ->where('washer_pending_amount', '>', 0)
-            ->pluck('id')
-            ->all();
+            ->get();
 
-        $count = count($validIds);
-        if ($count === 0) {
+        if ($tickets->isEmpty()) {
             return back()->with('success', 'No hay monto pendiente.');
         }
 
-        $amount = min($count * 100, $washer->pending_amount);
+        $ticketsByDate = $tickets->groupBy(fn($t) => $t->created_at->toDateString());
 
-        $paymentDate = Carbon::parse($request->payment_date)->setTimeFrom(now());
+        foreach ($ticketsByDate as $group) {
+            $paymentDate = $group->first()->created_at;
+            WasherPayment::create([
+                'washer_id' => $washer->id,
+                'payment_date' => $paymentDate,
+                'total_washes' => $group->count(),
+                'amount_paid' => $group->count() * 100,
+                'created_at' => $paymentDate,
+            ]);
+        }
 
-        WasherPayment::create([
-            'washer_id' => $washer->id,
-            'payment_date' => $paymentDate,
-            'total_washes' => $count,
-            'amount_paid' => $amount,
-            'created_at' => $paymentDate,
-        ]);
+        $washer->decrement('pending_amount', $tickets->count() * 100);
 
-        $washer->decrement('pending_amount', $amount);
-
-        Ticket::whereIn('id', $validIds)->update(['washer_pending_amount' => 0]);
+        Ticket::whereIn('id', $tickets->pluck('id'))->update(['washer_pending_amount' => 0]);
 
         return back()->with('success', 'Pago registrado correctamente.');
     }
 
-    public function payAll(Request $request)
+    public function payAll()
     {
-        $request->validate([
-            'payment_date' => 'required|date|before_or_equal:today',
-        ], [
-            'payment_date.required' => 'La fecha del pago es obligatoria.',
-            'payment_date.date' => 'La fecha del pago no es válida.',
-            'payment_date.before_or_equal' => 'La fecha del pago no puede ser futura.',
-        ]);
-
-        $paymentDate = Carbon::parse($request->payment_date)->setTimeFrom(now());
-
         $washers = Washer::where('pending_amount', '>', 0)->get();
 
         foreach ($washers as $washer) {
-            WasherPayment::create([
-                'washer_id' => $washer->id,
-                'payment_date' => $paymentDate,
-                'total_washes' => intval($washer->pending_amount / 100),
-                'amount_paid' => $washer->pending_amount,
-                'created_at' => $paymentDate,
-            ]);
-
-            Ticket::where('washer_id', $washer->id)
+            $tickets = Ticket::where('washer_id', $washer->id)
                 ->where('washer_pending_amount', '>', 0)
-                ->update(['washer_pending_amount' => 0]);
+                ->get();
+
+            if ($tickets->isEmpty()) {
+                continue;
+            }
+
+            $ticketsByDate = $tickets->groupBy(fn($t) => $t->created_at->toDateString());
+
+            foreach ($ticketsByDate as $group) {
+                $paymentDate = $group->first()->created_at;
+                WasherPayment::create([
+                    'washer_id' => $washer->id,
+                    'payment_date' => $paymentDate,
+                    'total_washes' => $group->count(),
+                    'amount_paid' => $group->count() * 100,
+                    'created_at' => $paymentDate,
+                ]);
+            }
+
+            Ticket::whereIn('id', $tickets->pluck('id'))->update(['washer_pending_amount' => 0]);
 
             $washer->update(['pending_amount' => 0]);
         }

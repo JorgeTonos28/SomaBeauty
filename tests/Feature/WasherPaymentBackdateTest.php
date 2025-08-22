@@ -12,7 +12,7 @@ class WasherPaymentBackdateTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_washer_payment_uses_selected_date(): void
+    public function test_washer_payment_uses_ticket_dates(): void
     {
         Carbon::setTestNow(Carbon::parse('2025-08-19 12:00:00'));
 
@@ -24,34 +24,47 @@ class WasherPaymentBackdateTest extends TestCase
             'active' => true,
         ]);
 
-        $tickets = [];
-        for ($i = 0; $i < 2; $i++) {
-            $tickets[] = \App\Models\Ticket::create([
-                'user_id' => $user->id,
-                'washer_id' => $washer->id,
-                'vehicle_type_id' => null,
-                'total_amount' => 0,
-                'paid_amount' => 0,
-                'payment_method' => 'efectivo',
-                'washer_pending_amount' => 100,
-                'customer_name' => 'Cliente',
-            ]);
-        }
+        $ticket1 = \App\Models\Ticket::create([
+            'user_id' => $user->id,
+            'washer_id' => $washer->id,
+            'vehicle_type_id' => null,
+            'total_amount' => 0,
+            'paid_amount' => 0,
+            'payment_method' => 'efectivo',
+            'washer_pending_amount' => 100,
+            'customer_name' => 'Cliente',
+            'created_at' => Carbon::parse('2025-08-18 08:00:00'),
+        ]);
 
-        $date = Carbon::yesterday()->toDateString();
+        $ticket2 = \App\Models\Ticket::create([
+            'user_id' => $user->id,
+            'washer_id' => $washer->id,
+            'vehicle_type_id' => null,
+            'total_amount' => 0,
+            'paid_amount' => 0,
+            'payment_method' => 'efectivo',
+            'washer_pending_amount' => 100,
+            'customer_name' => 'Cliente',
+            'created_at' => Carbon::parse('2025-08-17 09:00:00'),
+        ]);
 
         $response = $this->actingAs($user)
             ->post(route('washers.pay', $washer), [
-                'payment_date' => $date,
-                'ticket_ids' => collect($tickets)->pluck('id')->implode(','),
+                'ticket_ids' => $ticket1->id . ',' . $ticket2->id,
             ]);
 
         $response->assertRedirect();
 
         $this->assertDatabaseHas('washer_payments', [
             'washer_id' => $washer->id,
-            'payment_date' => $date . ' 12:00:00',
-            'amount_paid' => 200,
+            'payment_date' => '2025-08-18 08:00:00',
+            'amount_paid' => 100,
+        ]);
+
+        $this->assertDatabaseHas('washer_payments', [
+            'washer_id' => $washer->id,
+            'payment_date' => '2025-08-17 09:00:00',
+            'amount_paid' => 100,
         ]);
 
         $this->assertDatabaseHas('washers', [
@@ -60,11 +73,11 @@ class WasherPaymentBackdateTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('tickets', [
-            'id' => $tickets[0]->id,
+            'id' => $ticket1->id,
             'washer_pending_amount' => 0,
         ]);
         $this->assertDatabaseHas('tickets', [
-            'id' => $tickets[1]->id,
+            'id' => $ticket2->id,
             'washer_pending_amount' => 0,
         ]);
 

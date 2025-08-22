@@ -47,17 +47,13 @@
             </div>
         </div>
     <x-modal name="pay-washer-{{ $washer->id }}" focusable>
-        <form id="pay-washer-form-{{ $washer->id }}" method="POST" action="{{ route('washers.pay', $washer) }}" class="p-6 space-y-4" x-data="{ paymentDate: '{{ now()->toDateString() }}' }">
+        <form id="pay-washer-form-{{ $washer->id }}" method="POST" action="{{ route('washers.pay', $washer) }}" class="p-6 space-y-4">
             @csrf
             <input type="hidden" name="amount" value="0">
             <input type="hidden" name="total_washes" value="0">
             <input type="hidden" name="ticket_ids" value="">
             <h2 class="text-lg font-medium text-gray-900">Confirmar pago</h2>
-            <p class="text-sm text-gray-600">Se pagará a <strong>{{ $washer->name }}</strong> RD$ <span class="selected-amount">0.00</span> en la fecha <span x-text="paymentDate"></span>.</p>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mt-2">Fecha del pago</label>
-                <input type="date" name="payment_date" x-model="paymentDate" class="form-input w-full" max="{{ now()->toDateString() }}" required>
-            </div>
+            <p class="text-sm text-gray-600">Se pagará a <strong>{{ $washer->name }}</strong> RD$ <span class="selected-amount">0.00</span>.</p>
             <div class="mt-6 flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>
                 <x-primary-button class="ml-3">Confirmar</x-primary-button>

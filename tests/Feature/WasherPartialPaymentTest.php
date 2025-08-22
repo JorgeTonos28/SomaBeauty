@@ -7,6 +7,7 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\Washer;
 use App\Models\WasherPayment;
+use Carbon\Carbon;
 
 class WasherPartialPaymentTest extends TestCase
 {
@@ -14,6 +15,8 @@ class WasherPartialPaymentTest extends TestCase
 
     public function test_washer_can_be_paid_partially()
     {
+        Carbon::setTestNow(Carbon::parse('2024-01-01 10:00:00'));
+
         $user = User::factory()->create(['role' => 'admin']);
         $washer = Washer::create([
             'name' => 'Test Washer',
@@ -37,9 +40,10 @@ class WasherPartialPaymentTest extends TestCase
 
         $ids = collect($tickets)->take(2)->pluck('id')->implode(',');
 
+        Carbon::setTestNow(Carbon::parse('2024-01-10 12:00:00'));
+
         $this->actingAs($user)
             ->post(route('washers.pay', $washer), [
-                'payment_date' => '2024-01-01',
                 'ticket_ids' => $ids,
             ])
             ->assertSessionHasNoErrors();
@@ -68,5 +72,7 @@ class WasherPartialPaymentTest extends TestCase
 
         $payment = WasherPayment::first();
         $this->assertEquals('2024-01-01', $payment->payment_date->toDateString());
+
+        Carbon::setTestNow();
     }
 }
