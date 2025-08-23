@@ -59,9 +59,7 @@ class WasherController extends Controller
             return $washer;
         });
 
-        $pendingTotal = $washers->sum('range_pending');
-
-        $unassignedTotal = TicketWash::whereNull('washer_id')
+        $unassignedQuery = TicketWash::whereNull('washer_id')
             ->whereHas('ticket', function ($q) use ($filters) {
                 $q->where('pending', true)->where('canceled', false);
                 if ($filters['start']) {
@@ -70,8 +68,13 @@ class WasherController extends Controller
                 if ($filters['end']) {
                     $q->whereDate('created_at', '<=', $filters['end']);
                 }
-            })
-            ->count() * 100;
+            });
+
+        $unassignedBase = (clone $unassignedQuery)->count() * 100;
+        $unassignedTips = (clone $unassignedQuery)->sum('tip');
+        $unassignedTotal = $unassignedBase + $unassignedTips;
+
+        $pendingTotal = $washers->sum('range_pending') + $unassignedTotal;
 
         if ($request->ajax()) {
             return view('washers.partials.table', [

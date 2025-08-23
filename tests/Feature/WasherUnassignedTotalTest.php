@@ -39,13 +39,18 @@ class WasherUnassignedTotalTest extends TestCase
             'vehicle_id' => null,
             'vehicle_type_id' => null,
             'washer_paid' => false,
+            'tip' => 50,
         ]);
 
         $response = $this->actingAs($user)
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('washers.index', ['ajax' => 1]));
 
-        $response->assertSee('Pendiente de asignar');
-        $response->assertSee('RD$ 100.00');
+        $response->assertSeeInOrder([
+            'Total adeudado',
+            'RD$ 150.00',
+            'Pendiente de asignar',
+            'RD$ 150.00',
+        ]);
     }
 }

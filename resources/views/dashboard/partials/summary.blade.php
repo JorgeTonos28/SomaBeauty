@@ -34,7 +34,9 @@
                                 {{ $t->details->pluck('type')->unique()->map(fn($tt) => match($tt){
                                     'service' => 'Lavado',
                                     'product' => 'Producto',
-                                    'drink' => 'Tragos'
+                                    'drink' => 'Tragos',
+                                    'extra' => 'Cargo',
+                                    default => ''
                                 })->implode(', ') }}
                             </td>
                             <td class="border px-2 py-1 text-right">RD$ {{ number_format($t->total_amount,2) }}</td>
