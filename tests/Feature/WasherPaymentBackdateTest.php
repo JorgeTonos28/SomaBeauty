@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\Washer;
+use App\Models\Ticket;
+use App\Models\TicketWash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Carbon\Carbon;
 use Tests\TestCase;
@@ -24,33 +26,43 @@ class WasherPaymentBackdateTest extends TestCase
             'active' => true,
         ]);
 
-        $ticket1 = \App\Models\Ticket::create([
+        $ticket1 = Ticket::create([
             'user_id' => $user->id,
-            'washer_id' => $washer->id,
-            'vehicle_type_id' => null,
             'total_amount' => 0,
             'paid_amount' => 0,
             'payment_method' => 'efectivo',
-            'washer_pending_amount' => 100,
+            'washer_pending_amount' => 0,
             'customer_name' => 'Cliente',
             'created_at' => Carbon::parse('2025-08-18 08:00:00'),
         ]);
-
-        $ticket2 = \App\Models\Ticket::create([
-            'user_id' => $user->id,
+        $wash1 = TicketWash::create([
+            'ticket_id' => $ticket1->id,
             'washer_id' => $washer->id,
+            'vehicle_id' => null,
             'vehicle_type_id' => null,
+            'washer_paid' => false,
+        ]);
+
+        $ticket2 = Ticket::create([
+            'user_id' => $user->id,
             'total_amount' => 0,
             'paid_amount' => 0,
             'payment_method' => 'efectivo',
-            'washer_pending_amount' => 100,
+            'washer_pending_amount' => 0,
             'customer_name' => 'Cliente',
             'created_at' => Carbon::parse('2025-08-17 09:00:00'),
+        ]);
+        $wash2 = TicketWash::create([
+            'ticket_id' => $ticket2->id,
+            'washer_id' => $washer->id,
+            'vehicle_id' => null,
+            'vehicle_type_id' => null,
+            'washer_paid' => false,
         ]);
 
         $response = $this->actingAs($user)
             ->post(route('washers.pay', $washer), [
-                'ticket_ids' => $ticket1->id . ',' . $ticket2->id,
+                'wash_ids' => $wash1->id . ',' . $wash2->id,
             ]);
 
         $response->assertRedirect();
@@ -72,13 +84,13 @@ class WasherPaymentBackdateTest extends TestCase
             'pending_amount' => 0,
         ]);
 
-        $this->assertDatabaseHas('tickets', [
-            'id' => $ticket1->id,
-            'washer_pending_amount' => 0,
+        $this->assertDatabaseHas('ticket_washes', [
+            'id' => $wash1->id,
+            'washer_paid' => true,
         ]);
-        $this->assertDatabaseHas('tickets', [
-            'id' => $ticket2->id,
-            'washer_pending_amount' => 0,
+        $this->assertDatabaseHas('ticket_washes', [
+            'id' => $wash2->id,
+            'washer_paid' => true,
         ]);
 
         Carbon::setTestNow();

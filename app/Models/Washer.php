@@ -20,6 +20,11 @@ class Washer extends Model
         return $this->hasMany(Ticket::class);
     }
 
+    public function ticketWashes()
+    {
+        return $this->hasMany(TicketWash::class);
+    }
+
     public function payments()
     {
         return $this->hasMany(WasherPayment::class);

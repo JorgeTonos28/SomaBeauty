@@ -10,13 +10,18 @@ class TicketDetail extends Model
     use HasFactory;
 
     protected $fillable = [
-        'ticket_id', 'type', 'service_id',
+        'ticket_id', 'ticket_wash_id', 'type', 'service_id',
         'product_id', 'drink_id', 'quantity', 'unit_price', 'discount_amount', 'subtotal'
     ];
 
     public function ticket()
     {
         return $this->belongsTo(Ticket::class);
+    }
+
+    public function wash()
+    {
+        return $this->belongsTo(TicketWash::class, 'ticket_wash_id');
     }
 
     public function service()

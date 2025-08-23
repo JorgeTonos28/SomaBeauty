@@ -7,6 +7,8 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\Washer;
 use App\Models\WasherPayment;
+use App\Models\Ticket;
+use App\Models\TicketWash;
 use Carbon\Carbon;
 
 class WasherPartialPaymentTest extends TestCase
@@ -24,27 +26,33 @@ class WasherPartialPaymentTest extends TestCase
             'active' => true,
         ]);
 
-        $tickets = [];
+        $washes = [];
         for ($i = 0; $i < 3; $i++) {
-            $tickets[] = \App\Models\Ticket::create([
+            $ticket = Ticket::create([
                 'user_id' => $user->id,
-                'washer_id' => $washer->id,
-                'vehicle_type_id' => null,
                 'total_amount' => 0,
                 'paid_amount' => 0,
                 'payment_method' => 'efectivo',
-                'washer_pending_amount' => 100,
+                'washer_pending_amount' => 0,
                 'customer_name' => 'Cliente',
             ]);
+            $wash = TicketWash::create([
+                'ticket_id' => $ticket->id,
+                'washer_id' => $washer->id,
+                'vehicle_id' => null,
+                'vehicle_type_id' => null,
+                'washer_paid' => false,
+            ]);
+            $washes[] = $wash;
         }
 
-        $ids = collect($tickets)->take(2)->pluck('id')->implode(',');
+        $ids = collect($washes)->take(2)->pluck('id')->implode(',');
 
         Carbon::setTestNow(Carbon::parse('2024-01-10 12:00:00'));
 
         $this->actingAs($user)
             ->post(route('washers.pay', $washer), [
-                'ticket_ids' => $ids,
+                'wash_ids' => $ids,
             ])
             ->assertSessionHasNoErrors();
 
@@ -57,17 +65,17 @@ class WasherPartialPaymentTest extends TestCase
         $washer->refresh();
         $this->assertEquals(100, $washer->pending_amount);
 
-        $this->assertDatabaseHas('tickets', [
-            'id' => $tickets[0]->id,
-            'washer_pending_amount' => 0,
+        $this->assertDatabaseHas('ticket_washes', [
+            'id' => $washes[0]->id,
+            'washer_paid' => true,
         ]);
-        $this->assertDatabaseHas('tickets', [
-            'id' => $tickets[1]->id,
-            'washer_pending_amount' => 0,
+        $this->assertDatabaseHas('ticket_washes', [
+            'id' => $washes[1]->id,
+            'washer_paid' => true,
         ]);
-        $this->assertDatabaseHas('tickets', [
-            'id' => $tickets[2]->id,
-            'washer_pending_amount' => 100,
+        $this->assertDatabaseHas('ticket_washes', [
+            'id' => $washes[2]->id,
+            'washer_paid' => false,
         ]);
 
         $payment = WasherPayment::first();

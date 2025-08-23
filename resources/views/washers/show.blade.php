@@ -53,11 +53,11 @@
             </div>
         </div>
     <x-modal name="pay-washer-{{ $washer->id }}" focusable>
-        <form id="pay-washer-form-{{ $washer->id }}" method="POST" action="{{ route('washers.pay', $washer) }}" class="p-6 space-y-4">
+            <form id="pay-washer-form-{{ $washer->id }}" method="POST" action="{{ route('washers.pay', $washer) }}" class="p-6 space-y-4">
             @csrf
             <input type="hidden" name="amount" value="0">
             <input type="hidden" name="total_washes" value="0">
-            <input type="hidden" name="ticket_ids" value="">
+            <input type="hidden" name="wash_ids" value="">
             <h2 class="text-lg font-medium text-gray-900">Confirmar pago</h2>
             <p class="text-sm text-gray-600">Se pagará a <strong>{{ $washer->name }}</strong> RD$ <span class="selected-amount">0.00</span>.</p>
             <div class="mt-6 flex justify-end">
@@ -90,12 +90,12 @@ function preparePayment(id) {
     const ids = [];
     checks.forEach(c => {
         total += parseFloat(c.dataset.amount);
-        ids.push(c.dataset.ticket);
+        ids.push(c.dataset.wash);
     });
     const form = document.getElementById(`pay-washer-form-${id}`);
     form.querySelector('input[name="amount"]').value = total.toFixed(2);
     form.querySelector('input[name="total_washes"]').value = checks.length;
-    form.querySelector('input[name="ticket_ids"]').value = ids.join(',');
+    form.querySelector('input[name="wash_ids"]').value = ids.join(',');
     form.querySelector('.selected-amount').textContent = total.toFixed(2);
     window.dispatchEvent(new CustomEvent('open-modal', { detail: `pay-washer-${id}` }));
 }

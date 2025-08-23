@@ -16,12 +16,13 @@
         </thead>
         <tbody>
             @foreach ($tickets as $ticket)
-                <tr class="border-t cursor-pointer {{ $ticket->pending ? 'bg-red-100' : (!$ticket->washer_id && $ticket->details->where('type','service')->count() ? 'bg-orange-100' : '') }}"
+                @php $needsWasher = $ticket->washer_pending_amount > 0; @endphp
+                <tr class="border-t cursor-pointer {{ $ticket->pending ? 'bg-red-100' : ($needsWasher ? 'bg-orange-100' : '') }}"
                     x-on:click="
                         if (selected === {{ $ticket->id }}) {
                             selected = null; selectedPending = false; selectedNoWasher = false; selectedCreated = null;
                         } else {
-                            selected = {{ $ticket->id }}; selectedPending = {{ $ticket->pending ? 'true' : 'false' }}; selectedNoWasher = {{ (!$ticket->washer_id && $ticket->details->where('type','service')->count()) ? 'true' : 'false' }}; selectedCreated = '{{ $ticket->created_at }}';
+                            selected = {{ $ticket->id }}; selectedPending = {{ $ticket->pending ? 'true' : 'false' }}; selectedNoWasher = {{ $needsWasher ? 'true' : 'false' }}; selectedCreated = '{{ $ticket->created_at }}';
                         }
                     "
                     :class="selected === {{ $ticket->id }} ? (selectedPending ? 'bg-red-300' : (selectedNoWasher ? 'bg-orange-300' : 'bg-blue-100')) : ''">
@@ -136,15 +137,23 @@
                 <p><strong>Descuento:</strong> RD$ {{ number_format($ticket->discount_total, 2) }}</p>
                 <p><strong>Total:</strong> RD$ {{ number_format($ticket->total_amount, 2) }}</p>
             </div>
-            @if($ticket->details->where('type','service')->count())
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Lavador</label>
-                    <select name="washer_id" class="form-select w-full">
-                        <option value="">-- Seleccionar --</option>
-                        @foreach($washers as $w)
-                            <option value="{{ $w->id }}" {{ $w->id == $ticket->washer_id ? 'selected' : '' }}>{{ $w->name }}</option>
-                        @endforeach
-                    </select>
+            @if($ticket->washes->count())
+                <div class="space-y-2">
+                    @foreach($ticket->washes as $wash)
+                        <div class="border rounded p-2">
+                            <p class="text-sm font-semibold">{{ $wash->vehicle->brand }} | {{ $wash->vehicle->model }} | {{ $wash->vehicle->color }} | {{ $wash->vehicle->year }} | {{ $wash->vehicleType->name }}</p>
+                            <p class="text-sm">Servicios: {{ $wash->details->where('type','service')->map(fn($d)=>$d->service->name)->implode(', ') }}</p>
+                            <div class="mt-1">
+                                <label class="block text-sm font-medium text-gray-700">Lavador</label>
+                                <select name="washers[{{ $wash->id }}]" class="form-select w-full">
+                                    <option value="">-- Seleccionar --</option>
+                                    @foreach($washers as $w)
+                                        <option value="{{ $w->id }}" {{ $w->id == $wash->washer_id ? 'selected' : '' }}>{{ $w->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             @endif
             <div x-data="{method: '{{ $ticket->payment_method }}'}">
