@@ -103,12 +103,15 @@
                     <!-- Lavador -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Lavador</label>
-                        <select name="temp_washer_id" class="form-select w-full mt-1" data-searchable>
-                            <option value="">-- Seleccionar --</option>
-                            @foreach ($washers as $washer)
-                                <option value="{{ $washer->id }}">{{ $washer->name }}</option>
-                            @endforeach
-                        </select>
+                        <div class="flex space-x-2 mt-1">
+                            <select name="temp_washer_id" class="form-select w-full" data-searchable>
+                                <option value="">-- Seleccionar --</option>
+                                @foreach ($washers as $washer)
+                                    <option value="{{ $washer->id }}">{{ $washer->name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" onclick="clearWasher()" class="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50">Quitar</button>
+                        </div>
                     </div>
 
                     <!-- Lista Servicios -->
@@ -435,6 +438,12 @@
             document.querySelectorAll('.wash-item').forEach(w=>w.removeAttribute('open'));
         }
 
+        function clearWasher(){
+            const sel = document.querySelector('#wash-form select[name="temp_washer_id"]');
+            sel.value='';
+            if(sel._searchInput) sel._searchInput.value='';
+        }
+
         function saveWash() {
             const form = document.getElementById('wash-form');
             const editing = form.dataset.editIndex !== undefined && form.dataset.editIndex !== '';
@@ -449,7 +458,7 @@
             const vehicleTypeName = vtSelect.options[vtSelect.selectedIndex]?.dataset.name || '';
             const washerSelect = form.querySelector('select[name="temp_washer_id"]');
             const washerId = washerSelect.value;
-            const washerName = washerSelect.options[washerSelect.selectedIndex]?.text || '';
+            const washerName = washerId ? washerSelect.options[washerSelect.selectedIndex].text : '';
             const services = Array.from(form.querySelectorAll('input[name="temp_service_ids[]"]:checked')).map(cb => ({id: cb.value, name: cb.nextElementSibling.dataset.name}));
             if (services.length === 0) { return; }
 
