@@ -223,7 +223,8 @@ class WasherController extends Controller
                 'gain' => $m->amount,
                 'payment' => null,
                 'ticket_id' => $m->ticket_id,
-                'paid_to_washer' => false,
+                'movement_id' => $m->id,
+                'paid_to_washer' => $m->paid,
             ];
         }
         usort($events, fn($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
@@ -247,40 +248,74 @@ class WasherController extends Controller
     public function pay(Request $request, Washer $washer)
     {
         $request->validate([
-            'wash_ids' => 'required|string',
+            'wash_ids' => 'nullable|string',
+            'movement_ids' => 'nullable|string',
         ], [
             'wash_ids.required' => 'Debe seleccionar al menos un registro a pagar.',
         ]);
 
-        $ids = array_filter(explode(',', $request->wash_ids));
+        $washIds = array_filter(explode(',', $request->wash_ids));
+        $movementIds = array_filter(explode(',', $request->movement_ids));
+
+        if (empty($washIds) && empty($movementIds)) {
+            return back()->with('success', 'No hay monto pendiente.');
+        }
+
         $washes = TicketWash::where('washer_id', $washer->id)
-            ->whereIn('id', $ids)
+            ->whereIn('id', $washIds)
             ->where('washer_paid', false)
             ->with('ticket')
             ->get();
 
-        if ($washes->isEmpty()) {
+        $movements = WasherMovement::where('washer_id', $washer->id)
+            ->whereIn('id', $movementIds)
+            ->where('paid', false)
+            ->get();
+
+        if ($washes->isEmpty() && $movements->isEmpty()) {
             return back()->with('success', 'No hay monto pendiente.');
         }
 
-        $washesByDate = $washes->groupBy(fn($w) => $w->ticket->created_at->toDateString());
+        $groups = [];
+        foreach ($washes as $w) {
+            $date = $w->ticket->created_at;
+            $key = $date->toDateString();
+            $groups[$key]['washes'][] = $w;
+            $groups[$key]['amount'] = ($groups[$key]['amount'] ?? 0) + 100;
+            $groups[$key]['dateTime'] = $groups[$key]['dateTime'] ?? $date;
+        }
+        foreach ($movements as $m) {
+            $date = $m->created_at;
+            $key = $date->toDateString();
+            $groups[$key]['movements'][] = $m;
+            $groups[$key]['amount'] = ($groups[$key]['amount'] ?? 0) + $m->amount;
+            $groups[$key]['dateTime'] = $groups[$key]['dateTime'] ?? $date;
+        }
 
-        foreach ($washesByDate as $group) {
-            $paymentDate = $group->first()->ticket->created_at;
+        $totalPaid = 0;
+        foreach ($groups as $group) {
+            $washCount = isset($group['washes']) ? count($group['washes']) : 0;
+            $amount = $group['amount'];
+            $paymentDate = $group['dateTime'];
             WasherPayment::create([
                 'washer_id' => $washer->id,
                 'payment_date' => $paymentDate,
-                'total_washes' => $group->count(),
-                'amount_paid' => $group->count() * 100,
+                'total_washes' => $washCount,
+                'amount_paid' => $amount,
                 'created_at' => $paymentDate,
             ]);
+            $totalPaid += $amount;
         }
 
-        $decrement = $washes->count() * 100;
-        $washer->pending_amount = max(0, $washer->pending_amount - $decrement);
-        $washer->save();
+        if ($washes->isNotEmpty()) {
+            TicketWash::whereIn('id', $washes->pluck('id'))->update(['washer_paid' => true]);
+        }
+        if ($movements->isNotEmpty()) {
+            WasherMovement::whereIn('id', $movements->pluck('id'))->update(['paid' => true]);
+        }
 
-        TicketWash::whereIn('id', $washes->pluck('id'))->update(['washer_paid' => true]);
+        $washer->pending_amount = max(0, $washer->pending_amount - $totalPaid);
+        $washer->save();
 
         return back()->with('success', 'Pago registrado correctamente.');
     }
