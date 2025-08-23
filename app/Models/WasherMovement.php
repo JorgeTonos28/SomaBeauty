@@ -9,7 +9,7 @@ class WasherMovement extends Model
     use HasFactory;
 
     protected $fillable = [
-        'washer_id', 'ticket_id', 'amount', 'description', 'paid'
+        'washer_id', 'ticket_id', 'amount', 'description', 'paid', 'created_at', 'updated_at'
     ];
 
     protected $casts = [

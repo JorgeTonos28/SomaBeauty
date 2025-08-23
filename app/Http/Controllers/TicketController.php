@@ -632,13 +632,20 @@ class TicketController extends Controller
                 }
                 $total += $price;
             }
+            $total += $w->tip;
             return [
                 'wash' => $w,
                 'service_ids' => $serviceIds,
                 'total' => $total,
                 'discount' => $discount,
+                'tip' => $w->tip,
             ];
         });
+
+        $ticketExtras = $ticket->details->where('type','extra')->map(fn($d)=>[
+            'description'=>$d->description,
+            'amount'=>$d->unit_price,
+        ]);
 
         return view('tickets.edit', [
             'ticket' => $ticket,
@@ -658,6 +665,7 @@ class TicketController extends Controller
             'ticketProducts' => $ticketProducts,
             'ticketDrinks' => $ticketDrinks,
             'ticketWashes' => $ticketWashes,
+            'ticketExtras' => $ticketExtras,
         ]);
     }
 
@@ -1096,13 +1104,21 @@ class TicketController extends Controller
         try {
             $ticketDate = Carbon::parse($request->ticket_date)->setTimeFrom($ticket->created_at);
             $total = 0; $discountTotal = 0; $details = []; $productMovements = [];
+            $washerPendingAmount = 0; $washInfo = [];
 
             foreach ($ticket->washes as $oldWash) {
                 $has = $oldWash->details()->where('type','service')->exists();
+                $tipOld = $oldWash->tip;
                 if ($has && $oldWash->washer_id) {
-                    Washer::whereId($oldWash->washer_id)->decrement('pending_amount',100);
+                    Washer::whereId($oldWash->washer_id)->decrement('pending_amount',100 + $tipOld);
+                    if ($tipOld > 0) {
+                        WasherMovement::where('ticket_id',$ticket->id)
+                            ->where('washer_id',$oldWash->washer_id)
+                            ->where('description','like','[P]%')
+                            ->delete();
+                    }
                 } elseif ($has) {
-                    $ticket->washer_pending_amount = max(0, $ticket->washer_pending_amount - 100);
+                    $ticket->washer_pending_amount = max(0, $ticket->washer_pending_amount - (100 + $tipOld));
                 }
             }
             foreach ($ticket->details as $det) {
@@ -1116,11 +1132,11 @@ class TicketController extends Controller
             $ticket->details()->delete();
             $ticket->washes()->delete();
 
-            $washerCount = 0; $washInfo = [];
             foreach ($request->washes as $wash) {
                 $vehicleType = VehicleType::find($wash['vehicle_type_id']);
                 if (!$vehicleType) continue;
                 $washDetails = []; $hasService = false;
+                $tip = isset($wash['tip']) ? floatval($wash['tip']) : 0;
                 foreach ($wash['service_ids'] as $serviceId) {
                     $service = Service::where('active',true)->find($serviceId);
                     if(!$service) continue;
@@ -1147,8 +1163,10 @@ class TicketController extends Controller
                     ];
                     $total += $price; $discountTotal += $discValue; $hasService = true;
                 }
-                if(empty($wash['washer_id']) && $hasService){ $washerCount++; }
-                $washInfo[]=['data'=>$wash,'details'=>$washDetails,'has_service'=>$hasService];
+                $total += $tip;
+                if(empty($wash['washer_id']) && $hasService){ $washerPendingAmount += 100 + $tip; }
+                $wash['tip'] = $tip;
+                $washInfo[]=['data'=>$wash,'details'=>$washDetails,'has_service'=>$hasService,'vehicle_type_name'=>$vehicleType->name ?? ''];
             }
 
             if($request->product_ids){
@@ -1213,9 +1231,22 @@ class TicketController extends Controller
                 }
             }
 
+            if($request->charge_descriptions){
+                foreach($request->charge_descriptions as $i=>$desc){
+                    $amount = floatval($request->charge_amounts[$i] ?? 0);
+                    if($desc && $amount > 0){
+                        $details[]=[
+                            'type'=>'extra','service_id'=>null,'product_id'=>null,'drink_id'=>null,
+                            'quantity'=>1,'unit_price'=>$amount,'discount_amount'=>0,'subtotal'=>$amount,'description'=>$desc
+                        ];
+                        $total+=$amount;
+                    }
+                }
+            }
+
             if(empty($washInfo) && empty($details)){
                 DB::rollBack();
-                return back()->withErrors(['washes'=>['Debe agregar al menos un servicio, producto o trago']])->withInput();
+                return back()->withErrors(['washes'=>['Debe agregar al menos un servicio, producto, trago o cargo adicional']])->withInput();
             }
             if(!$pending && $request->paid_amount < $total){
                 DB::rollBack();
@@ -1231,7 +1262,7 @@ class TicketController extends Controller
                 'discount_total'=>$discountTotal,
                 'payment_method'=>$pending ? null : $request->payment_method,
                 'bank_account_id'=>$pending ? null : $request->bank_account_id,
-                'washer_pending_amount'=>$washerCount*100,
+                'washer_pending_amount'=>$washerPendingAmount,
                 'pending'=>$pending,
                 'paid_at'=>$pending ? null : $ticketDate,
                 'created_at'=>$ticketDate,
@@ -1259,6 +1290,7 @@ class TicketController extends Controller
                     'vehicle_type_id'=>$washData['vehicle_type_id'],
                     'washer_id'=>$washData['washer_id'] ?: null,
                     'washer_paid'=>false,
+                    'tip'=>$washData['tip'],
                 ]);
                 foreach($info['details'] as $d){
                     $d['ticket_id']=$ticket->id;
@@ -1266,7 +1298,25 @@ class TicketController extends Controller
                     TicketDetail::create($d);
                 }
                 if(!empty($washData['washer_id']) && $info['has_service']){
-                    Washer::whereId($washData['washer_id'])->increment('pending_amount',100);
+                    $increment = 100 + $washData['tip'];
+                    Washer::whereId($washData['washer_id'])->increment('pending_amount',$increment);
+                    if($washData['tip'] > 0){
+                        $parts = [
+                            $washData['brand'],
+                            $washData['model'],
+                            $washData['color'],
+                            $washData['year'],
+                            $info['vehicle_type_name'],
+                        ];
+                        WasherMovement::create([
+                            'washer_id'=>$washData['washer_id'],
+                            'ticket_id'=>$ticket->id,
+                            'amount'=>$washData['tip'],
+                            'description'=>'[P] '.implode(' | ', array_filter($parts)),
+                            'created_at'=>$ticketDate,
+                            'updated_at'=>$ticketDate,
+                        ]);
+                    }
                 }
             }
             foreach($details as $d){
@@ -1605,6 +1655,8 @@ class TicketController extends Controller
                             'ticket_id' => $ticket->id,
                             'amount' => $washData['tip'],
                             'description' => '[P] '.implode(' | ', array_filter($parts)),
+                            'created_at' => $ticketDate,
+                            'updated_at' => $ticketDate,
                         ]);
                     }
                 }
