@@ -95,7 +95,15 @@ class DashboardController extends Controller
             ->groupBy('bank_account_id')
             ->get();
 
-        $washerPayTotal = $washCount * 100;
+        $tipTotal = TicketWash::whereHas('ticket', function($q) use ($start, $end) {
+                $q->where('canceled', false)
+                  ->where('pending', false)
+                  ->whereDate('paid_at', '>=', $start)
+                  ->whereDate('paid_at', '<=', $end);
+            })
+            ->sum('tip');
+
+        $washerPayTotal = $washCount * 100 + $tipTotal;
 
         $pettyCashExpenses = PettyCashExpense::whereDate('created_at', '>=', $start)
             ->whereDate('created_at', '<=', $end)

@@ -488,26 +488,6 @@ class TicketController extends Controller
                 }
             }
 
-            if ($request->charge_descriptions) {
-                foreach ($request->charge_descriptions as $i => $desc) {
-                    $amount = floatval($request->charge_amounts[$i] ?? 0);
-                    if ($desc && $amount > 0) {
-                        $details[] = [
-                            'type' => 'extra',
-                            'service_id' => null,
-                            'product_id' => null,
-                            'drink_id' => null,
-                            'quantity' => 1,
-                            'unit_price' => $amount,
-                            'discount_amount' => 0,
-                            'subtotal' => $amount,
-                            'description' => $desc,
-                        ];
-                        $total += $amount;
-                    }
-                }
-            }
-
             if (count($details) === 0) {
                 DB::rollBack();
                 $message = ['service_ids' => ['Debe agregar al menos un servicio, producto o trago']];
