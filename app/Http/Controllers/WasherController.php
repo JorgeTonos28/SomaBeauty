@@ -61,10 +61,23 @@ class WasherController extends Controller
 
         $pendingTotal = $washers->sum('range_pending');
 
+        $unassignedTotal = TicketWash::whereNull('washer_id')
+            ->whereHas('ticket', function ($q) use ($filters) {
+                $q->where('pending', true)->where('canceled', false);
+                if ($filters['start']) {
+                    $q->whereDate('created_at', '>=', $filters['start']);
+                }
+                if ($filters['end']) {
+                    $q->whereDate('created_at', '<=', $filters['end']);
+                }
+            })
+            ->count() * 100;
+
         if ($request->ajax()) {
             return view('washers.partials.table', [
                 'washers' => $washers,
                 'pendingTotal' => $pendingTotal,
+                'unassignedTotal' => $unassignedTotal,
                 'filters' => $filters,
             ]);
         }
@@ -72,6 +85,7 @@ class WasherController extends Controller
         return view('washers.index', [
             'washers' => $washers,
             'pendingTotal' => $pendingTotal,
+            'unassignedTotal' => $unassignedTotal,
             'filters' => $filters,
         ]);
     }

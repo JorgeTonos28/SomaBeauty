@@ -1,5 +1,6 @@
-<div class="mb-4 bg-white p-4 shadow sm:rounded-lg">
+<div class="mb-4 bg-white p-4 shadow sm:rounded-lg space-y-1">
     <p>Total adeudado: <strong>RD$ {{ number_format($pendingTotal, 2) }}</strong></p>
+    <p>Pendiente de asignar: <strong>RD$ {{ number_format($unassignedTotal, 2) }}</strong></p>
 </div>
 
 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg max-h-96 overflow-y-auto">
