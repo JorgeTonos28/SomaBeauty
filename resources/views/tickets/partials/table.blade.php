@@ -53,6 +53,23 @@
                 <label class="block text-sm font-medium text-gray-700">Concepto de cancelación</label>
                 <input type="text" name="cancel_reason" class="form-input w-full" required>
             </div>
+            @php
+                $hasPaidCommission = $ticket->washes->where('washer_paid', true)->isNotEmpty();
+                $hasPaidTip = \App\Models\WasherMovement::where('ticket_id', $ticket->id)
+                    ->where('description', 'like', '[P]%')
+                    ->where('paid', true)
+                    ->exists();
+            @endphp
+            @if($hasPaidCommission || $hasPaidTip)
+            <div class="space-y-2 text-sm">
+                @if($hasPaidCommission)
+                <label class="inline-flex items-center"><input type="checkbox" name="pay_commission" value="1" class="mr-1"> Mantener comisiones pagadas</label>
+                @endif
+                @if($hasPaidTip)
+                <label class="inline-flex items-center"><input type="checkbox" name="pay_tip" value="1" class="mr-1"> Mantener propinas pagadas</label>
+                @endif
+            </div>
+            @endif
             <div class="flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>
                 <x-danger-button class="ms-3">Confirmar</x-danger-button>
@@ -139,6 +156,19 @@
                 <p><strong>Total:</strong> RD$ {{ number_format($ticket->total_amount, 2) }}</p>
             </div>
             @if($ticket->washes->count())
+                @php
+                    $canChangeWasher = true;
+                    if(!$ticket->pending){
+                        foreach($ticket->washes as $w){
+                            $tipPaid = \App\Models\WasherMovement::where('ticket_id',$ticket->id)
+                                ->where('washer_id',$w->washer_id)
+                                ->where('description','like','[P]%')
+                                ->where('paid',true)
+                                ->exists();
+                            if($w->washer_paid || $tipPaid){ $canChangeWasher = false; break; }
+                        }
+                    }
+                @endphp
                 <div class="space-y-2">
                     @foreach($ticket->washes as $wash)
                         <div class="border rounded p-2">
@@ -147,6 +177,7 @@
                             @if($wash->tip > 0)
                                 <p class="text-sm">Propina: RD$ {{ number_format($wash->tip,2) }}</p>
                             @endif
+                            @if($canChangeWasher)
                             <div class="mt-1">
                                 <label class="block text-sm font-medium text-gray-700">Lavador</label>
                                 <select name="washers[{{ $wash->id }}]" class="form-select w-full">
@@ -156,6 +187,7 @@
                                     @endforeach
                                 </select>
                             </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>

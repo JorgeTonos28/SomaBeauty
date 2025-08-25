@@ -936,6 +936,20 @@ class TicketController extends Controller
             'bank_account_id' => 'required_if:payment_method,transferencia|nullable|exists:bank_accounts,id',
         ]);
 
+        foreach ($ticket->washes as $wash) {
+            $new = $request->input('washers.' . $wash->id) ?: null;
+            if (! $ticket->pending) {
+                $tipPaid = WasherMovement::where('ticket_id', $ticket->id)
+                    ->where('washer_id', $wash->washer_id)
+                    ->where('description', 'like', '[P]%')
+                    ->where('paid', true)
+                    ->exists();
+                if (($wash->washer_paid || $tipPaid) && $new != $wash->washer_id) {
+                    return back()->withErrors(['washers' => 'No se puede cambiar el lavador porque ya fue pagado.']);
+                }
+            }
+        }
+
         DB::transaction(function() use ($ticket, $request) {
             foreach ($ticket->washes as $wash) {
                 $hasService = $wash->details()->where('type','service')->exists();
@@ -1051,6 +1065,8 @@ class TicketController extends Controller
 
         $request->validate([
             'cancel_reason' => 'required|string|max:255',
+            'pay_commission' => 'nullable|boolean',
+            'pay_tip' => 'nullable|boolean',
         ]);
 
         DB::transaction(function() use ($ticket, $request) {
@@ -1076,37 +1092,68 @@ class TicketController extends Controller
                 $tip = $wash->tip;
                 if ($wash->washer_id) {
                     $washer = Washer::find($wash->washer_id);
-                    $alreadyPaid = $washer->pending_amount <= 0;
-                    $washer->decrement('pending_amount', 100 + $tip);
+                    $tipMovement = WasherMovement::where('ticket_id', $ticket->id)
+                        ->where('washer_id', $wash->washer_id)
+                        ->where('description', 'like', '[P]%')
+                        ->first();
+                    $tipPaid = $tipMovement && $tipMovement->paid;
+                    $commissionPaid = $wash->washer_paid;
 
-                    if ($tip > 0) {
-                        $movement = WasherMovement::where('ticket_id', $ticket->id)
-                            ->where('washer_id', $wash->washer_id)
-                            ->where('description', 'like', '[P]%')
-                            ->first();
-                        if ($movement) {
-                            if ($movement->paid) {
+                    $decrement = 0;
+                    if (! $commissionPaid || ! $request->boolean('pay_commission')) {
+                        $decrement += 100;
+                    }
+                    if ($tip > 0 && (! $tipPaid || ! $request->boolean('pay_tip'))) {
+                        $decrement += $tip;
+                    }
+                    if ($decrement > 0) {
+                        $washer->decrement('pending_amount', $decrement);
+                    }
+
+                    if (! $commissionPaid) {
+                        WasherMovement::create([
+                            'washer_id' => $wash->washer_id,
+                            'ticket_id' => $ticket->id,
+                            'amount' => -100,
+                            'description' => 'Ticket Cancelado',
+                            'created_at' => $ticket->created_at,
+                            'updated_at' => $ticket->created_at,
+                        ]);
+                    } elseif (! $request->boolean('pay_commission')) {
+                        WasherMovement::create([
+                            'washer_id' => $wash->washer_id,
+                            'ticket_id' => $ticket->id,
+                            'amount' => -100,
+                            'description' => 'Cuenta por cobrar - Ganancia de ticket cancelado',
+                            'created_at' => $ticket->created_at,
+                            'updated_at' => $ticket->created_at,
+                        ]);
+                    }
+
+                    if ($tip > 0 && $tipMovement) {
+                        if ($tipPaid) {
+                            if (! $request->boolean('pay_tip')) {
                                 WasherMovement::create([
                                     'washer_id' => $wash->washer_id,
                                     'ticket_id' => $ticket->id,
-                                    'amount' => -$movement->amount,
+                                    'amount' => -$tipMovement->amount,
                                     'description' => 'Cuenta por cobrar - Propina de ticket cancelado',
+                                    'created_at' => $ticket->created_at,
+                                    'updated_at' => $ticket->created_at,
                                 ]);
+                                $tipMovement->delete();
                             }
-                            $movement->delete();
+                        } else {
+                            $tipMovement->delete();
                         }
                     }
-
-                    WasherMovement::create([
-                        'washer_id' => $wash->washer_id,
-                        'ticket_id' => $ticket->id,
-                        'amount' => -100,
-                        'description' => $alreadyPaid
-                            ? 'Cuenta por cobrar - Ganancia de ticket cancelado'
-                            : 'Ticket Cancelado',
-                    ]);
                 } else {
-                    $ticket->washer_pending_amount = max(0, $ticket->washer_pending_amount - (100 + $tip));
+                    if (! $request->boolean('pay_commission')) {
+                        $ticket->washer_pending_amount = max(0, $ticket->washer_pending_amount - 100);
+                    }
+                    if ($tip > 0 && ! $request->boolean('pay_tip')) {
+                        $ticket->washer_pending_amount = max(0, $ticket->washer_pending_amount - $tip);
+                    }
                 }
             }
 
