@@ -9,6 +9,7 @@ use App\Models\Ticket;
 use App\Models\TicketDetail;
 use App\Models\WasherPayment;
 use App\Models\WasherMovement;
+use App\Models\TicketWash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Carbon\Carbon;
@@ -34,7 +35,6 @@ class WasherDebtTest extends TestCase
 
         $ticket = Ticket::create([
             'user_id' => $user->id,
-            'washer_id' => $washer->id,
             'vehicle_type_id' => $vehicleType->id,
             'vehicle_id' => null,
             'customer_name' => 'Cliente',
@@ -52,8 +52,18 @@ class WasherDebtTest extends TestCase
             'paid_at' => now(),
         ]);
 
+        $wash = TicketWash::create([
+            'ticket_id' => $ticket->id,
+            'washer_id' => $washer->id,
+            'vehicle_id' => null,
+            'vehicle_type_id' => $vehicleType->id,
+            'washer_paid' => false,
+            'tip' => 0,
+        ]);
+
         TicketDetail::create([
             'ticket_id' => $ticket->id,
+            'ticket_wash_id' => $wash->id,
             'type' => 'service',
             'service_id' => $service->id,
             'product_id' => null,

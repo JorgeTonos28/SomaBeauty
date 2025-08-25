@@ -61,7 +61,7 @@ class WasherController extends Controller
 
         $unassignedQuery = TicketWash::whereNull('washer_id')
             ->whereHas('ticket', function ($q) use ($filters) {
-                $q->where('pending', true)->where('canceled', false);
+                $q->where('canceled', false);
                 if ($filters['start']) {
                     $q->whereDate('created_at', '>=', $filters['start']);
                 }

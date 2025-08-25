@@ -19,7 +19,7 @@
                     <td class="px-4 py-2">{{ $ticket->customer_name }}</td>
                     <td class="px-4 py-2">
                         {{ $ticket->details->pluck('type')->unique()->map(fn($t) => match($t){
-                            'service' => 'Lavado', 'product' => 'Productos', 'drink' => 'Tragos'
+                            'service' => 'Lavado', 'product' => 'Productos', 'drink' => 'Tragos', 'extra' => 'Cargos'
                         })->implode(', ') }}
                     </td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->discount_total, 2) }}</td>
@@ -62,7 +62,8 @@
                             {{ match($d->type){
                                 'service' => $d->service->name ?? 'Servicio',
                                 'product' => $d->product->name ?? 'Producto',
-                                'drink' => $d->drink->name ?? 'Trago'
+                                'drink' => $d->drink->name ?? 'Trago',
+                                'extra' => $d->description ?? 'Cargo'
                             } }} x{{ $d->quantity }} - RD$ {{ number_format($d->unit_price,2) }}
                         </li>
                     @endforeach

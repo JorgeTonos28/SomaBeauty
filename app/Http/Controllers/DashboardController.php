@@ -128,8 +128,7 @@ class DashboardController extends Controller
             ->get();
         $accountsReceivable += $washerDebts->sum(fn($m) => abs($m->amount));
 
-        $unassignedCommission = Ticket::where('pending', true)
-            ->where('canceled', false)
+        $unassignedCommission = Ticket::where('canceled', false)
             ->where('washer_pending_amount', '>', 0)
             ->whereDate('created_at', '>=', $start)
             ->whereDate('created_at', '<=', $end)
