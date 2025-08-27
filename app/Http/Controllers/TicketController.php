@@ -1067,21 +1067,13 @@ class TicketController extends Controller
         $hasCommission = $ticket->washes->whereNotNull('washer_id')->isNotEmpty();
         $hasTip = $ticket->washes->sum('tip') > 0;
         $rules = ['cancel_reason' => 'required|string|max:255'];
-        if ($hasCommission && $hasTip) {
-            $rules['pay_commission'] = 'nullable|in:yes,no';
-            $rules['pay_tip'] = 'nullable|in:yes,no';
-        } elseif ($hasCommission) {
-            $rules['pay_commission'] = 'required|in:yes,no';
-        } elseif ($hasTip) {
-            $rules['pay_tip'] = 'required|in:yes,no';
+        if ($hasCommission || $hasTip) {
+            $rules['pay_washer'] = 'required|in:yes,no';
         }
         $request->validate($rules);
-        if ($hasCommission && $hasTip && is_null($request->pay_commission) && is_null($request->pay_tip)) {
-            return back()->withErrors(['pay_commission' => 'Debe seleccionar una opción de pago.']);
-        }
 
-        $payCommission = $request->input('pay_commission') === 'yes';
-        $payTip = $request->input('pay_tip') === 'yes';
+        $payCommission = $hasCommission ? $request->input('pay_washer') === 'yes' : true;
+        $payTip = $hasTip ? $request->input('pay_washer') === 'yes' : true;
         $cancelReason = $request->cancel_reason;
 
         DB::transaction(function() use ($ticket, $payCommission, $payTip, $hasCommission, $hasTip, $cancelReason) {

@@ -85,8 +85,7 @@ class TicketCancelKeepPaymentsTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('tickets.cancel', $ticket), [
             'cancel_reason' => 'test',
-            'pay_commission' => 'yes',
-            'pay_tip' => 'yes',
+            'pay_washer' => 'yes',
         ]);
 
         $washer->refresh();
@@ -118,6 +117,7 @@ class TicketCancelKeepPaymentsTest extends TestCase
 
         $dash = $this->actingAs($user)->get('/dashboard?start=2024-01-01&end=2024-01-01');
         $this->assertEquals(0, $dash->viewData('accountsReceivable'));
+        $this->assertEquals(-115, $dash->viewData('grossProfit'));
 
         Carbon::setTestNow();
     }

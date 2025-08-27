@@ -103,7 +103,26 @@ class DashboardController extends Controller
             })
             ->sum('tip');
 
-        $washerPayTotal = $washCount * 100 + $tipTotal;
+        $extraCommission = TicketWash::whereHas('ticket', function($q) use ($start, $end) {
+                $q->where('canceled', true)
+                  ->where('keep_commission_on_cancel', true)
+                  ->where('pending', false)
+                  ->whereDate('paid_at', '>=', $start)
+                  ->whereDate('paid_at', '<=', $end);
+            })
+            ->whereNotNull('washer_id')
+            ->count() * 100;
+
+        $extraTip = TicketWash::whereHas('ticket', function($q) use ($start, $end) {
+                $q->where('canceled', true)
+                  ->where('keep_tip_on_cancel', true)
+                  ->where('pending', false)
+                  ->whereDate('paid_at', '>=', $start)
+                  ->whereDate('paid_at', '<=', $end);
+            })
+            ->sum('tip');
+
+        $washerPayTotal = $washCount * 100 + $tipTotal + $extraCommission + $extraTip;
 
         $pettyCashExpenses = PettyCashExpense::whereDate('created_at', '>=', $start)
             ->whereDate('created_at', '<=', $end)

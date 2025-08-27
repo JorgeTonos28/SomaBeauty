@@ -59,27 +59,12 @@
             @endphp
             @if($hasCommission || $hasTip)
             <div class="space-y-2 text-sm">
-                <p class="font-medium">¿Desea pagar al lavador de todos modos?</p>
-                @if($hasCommission)
-                <div>
-                    <label class="block">Comisión</label>
-                    <select name="pay_commission" class="form-select w-full" {{ $hasTip ? '' : 'required' }}>
-                        <option value=""></option>
-                        <option value="yes">Si</option>
-                        <option value="no">No</option>
-                    </select>
-                </div>
-                @endif
-                @if($hasTip)
-                <div>
-                    <label class="block">Propina</label>
-                    <select name="pay_tip" class="form-select w-full" {{ $hasCommission ? '' : 'required' }}>
-                        <option value=""></option>
-                        <option value="yes">Si</option>
-                        <option value="no">No</option>
-                    </select>
-                </div>
-                @endif
+                <label class="block font-medium">¿Desea pagar la comisión o propina al lavador de todos modos?</label>
+                <select name="pay_washer" class="form-select w-full" required>
+                    <option value=""></option>
+                    <option value="yes">Si</option>
+                    <option value="no">No</option>
+                </select>
             </div>
             @endif
             <div class="flex justify-end">
