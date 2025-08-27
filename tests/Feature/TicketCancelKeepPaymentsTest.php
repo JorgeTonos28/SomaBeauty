@@ -85,8 +85,8 @@ class TicketCancelKeepPaymentsTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('tickets.cancel', $ticket), [
             'cancel_reason' => 'test',
-            'pay_commission' => 1,
-            'pay_tip' => 1,
+            'pay_commission' => 'yes',
+            'pay_tip' => 'yes',
         ]);
 
         $washer->refresh();
@@ -105,6 +105,15 @@ class TicketCancelKeepPaymentsTest extends TestCase
         $this->assertDatabaseMissing('washer_movements', [
             'description' => 'Cuenta por cobrar - Propina de ticket cancelado',
             'ticket_id' => $ticket->id,
+        ]);
+        $this->assertDatabaseHas('tickets', [
+            'id' => $ticket->id,
+            'keep_commission_on_cancel' => true,
+            'keep_tip_on_cancel' => true,
+        ]);
+        $this->assertDatabaseHas('washer_payments', [
+            'washer_id' => $washer->id,
+            'canceled_ticket' => true,
         ]);
 
         $dash = $this->actingAs($user)->get('/dashboard?start=2024-01-01&end=2024-01-01');

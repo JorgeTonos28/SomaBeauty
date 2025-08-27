@@ -14,7 +14,7 @@
         </thead>
         <tbody>
             @foreach($events as $e)
-                <tr class="border-b">
+                <tr class="border-b {{ ($e['canceled'] ?? false) ? 'bg-red-100' : '' }}">
                     <td class="px-4 py-2 text-center">
                         @if(!is_null($e['gain']) && $e['gain'] > 0 && !($e['paid_to_washer'] ?? false))
                             <input type="checkbox" class="gain-check" data-amount="{{ $e['gain'] }}"

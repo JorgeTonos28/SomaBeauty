@@ -15,6 +15,7 @@ class Ticket extends Model
         'total_amount', 'paid_amount', 'change', 'discount_total',
         'payment_method', 'bank_account_id',
         'washer_pending_amount', 'canceled', 'cancel_reason',
+        'keep_commission_on_cancel', 'keep_tip_on_cancel',
         'pending', 'paid_at', 'created_at'
     ];
 
@@ -22,6 +23,8 @@ class Ticket extends Model
         'canceled' => 'boolean',
         'pending' => 'boolean',
         'paid_at' => 'datetime',
+        'keep_commission_on_cancel' => 'boolean',
+        'keep_tip_on_cancel' => 'boolean',
     ];
 
     public function user()

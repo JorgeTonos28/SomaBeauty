@@ -204,6 +204,7 @@ class WasherController extends Controller
                 'wash_id' => $w->id,
                 'ticket_id' => $t->id,
                 'paid_to_washer' => $w->washer_paid,
+                'canceled' => $t->canceled && $t->keep_commission_on_cancel,
             ];
         }
         foreach ($payments as $p) {
@@ -215,10 +216,13 @@ class WasherController extends Controller
                 'payment' => $p->amount_paid,
                 'ticket_id' => null,
                 'paid_to_washer' => false,
+                'canceled' => $p->canceled_ticket,
             ];
         }
 
         foreach ($movements as $m) {
+            $t = $m->ticket;
+            $isTip = str_starts_with($m->description, '[P]');
             $events[] = [
                 'date' => $m->created_at,
                 'customer' => null,
@@ -228,6 +232,7 @@ class WasherController extends Controller
                 'ticket_id' => $m->ticket_id,
                 'movement_id' => $m->id,
                 'paid_to_washer' => $m->paid,
+                'canceled' => $t && $t->canceled && ($isTip ? $t->keep_tip_on_cancel : $t->keep_commission_on_cancel),
             ];
         }
         usort($events, fn($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
@@ -300,12 +305,31 @@ class WasherController extends Controller
             $washCount = isset($group['washes']) ? count($group['washes']) : 0;
             $amount = $group['amount'];
             $paymentDate = $group['dateTime'];
+            $canceled = false;
+            if (!empty($group['washes'])) {
+                foreach ($group['washes'] as $w) {
+                    if ($w->ticket->canceled && $w->ticket->keep_commission_on_cancel) {
+                        $canceled = true; break;
+                    }
+                }
+            }
+            if (!empty($group['movements'])) {
+                foreach ($group['movements'] as $m) {
+                    if ($m->ticket && $m->ticket->canceled) {
+                        $isTip = str_starts_with($m->description, '[P]');
+                        if (($isTip && $m->ticket->keep_tip_on_cancel) || (!$isTip && $m->ticket->keep_commission_on_cancel)) {
+                            $canceled = true; break;
+                        }
+                    }
+                }
+            }
             WasherPayment::create([
                 'washer_id' => $washer->id,
                 'payment_date' => $paymentDate,
                 'total_washes' => $washCount,
                 'amount_paid' => $amount,
                 'created_at' => $paymentDate,
+                'canceled_ticket' => $canceled,
             ]);
             $totalPaid += $amount;
         }

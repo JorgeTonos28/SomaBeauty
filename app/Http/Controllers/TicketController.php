@@ -12,6 +12,7 @@ use App\Models\VehicleType;
 use App\Models\Vehicle;
 use App\Models\Washer;
 use App\Models\WasherMovement;
+use App\Models\WasherPayment;
 use App\Models\Drink;
 use App\Models\Discount;
 use App\Models\BankAccount;
@@ -1063,13 +1064,27 @@ class TicketController extends Controller
             return back()->with('error', 'No se puede cancelar un ticket con más de 6 horas de creado.');
         }
 
-        $request->validate([
-            'cancel_reason' => 'required|string|max:255',
-            'pay_commission' => 'nullable|boolean',
-            'pay_tip' => 'nullable|boolean',
-        ]);
+        $hasCommission = $ticket->washes->whereNotNull('washer_id')->isNotEmpty();
+        $hasTip = $ticket->washes->sum('tip') > 0;
+        $rules = ['cancel_reason' => 'required|string|max:255'];
+        if ($hasCommission && $hasTip) {
+            $rules['pay_commission'] = 'nullable|in:yes,no';
+            $rules['pay_tip'] = 'nullable|in:yes,no';
+        } elseif ($hasCommission) {
+            $rules['pay_commission'] = 'required|in:yes,no';
+        } elseif ($hasTip) {
+            $rules['pay_tip'] = 'required|in:yes,no';
+        }
+        $request->validate($rules);
+        if ($hasCommission && $hasTip && is_null($request->pay_commission) && is_null($request->pay_tip)) {
+            return back()->withErrors(['pay_commission' => 'Debe seleccionar una opción de pago.']);
+        }
 
-        DB::transaction(function() use ($ticket, $request) {
+        $payCommission = $request->input('pay_commission') === 'yes';
+        $payTip = $request->input('pay_tip') === 'yes';
+        $cancelReason = $request->cancel_reason;
+
+        DB::transaction(function() use ($ticket, $payCommission, $payTip, $hasCommission, $hasTip, $cancelReason) {
             foreach ($ticket->details as $detail) {
                 if ($detail->type === 'product' && $detail->product) {
                     $detail->product->increment('stock', $detail->quantity);
@@ -1099,40 +1114,42 @@ class TicketController extends Controller
                     $tipPaid = $tipMovement && $tipMovement->paid;
                     $commissionPaid = $wash->washer_paid;
 
-                    $decrement = 0;
-                    if (! $commissionPaid || ! $request->boolean('pay_commission')) {
-                        $decrement += 100;
-                    }
-                    if ($tip > 0 && (! $tipPaid || ! $request->boolean('pay_tip'))) {
-                        $decrement += $tip;
-                    }
-                    if ($decrement > 0) {
-                        $washer->decrement('pending_amount', $decrement);
-                    }
-
                     if (! $commissionPaid) {
-                        WasherMovement::create([
-                            'washer_id' => $wash->washer_id,
-                            'ticket_id' => $ticket->id,
-                            'amount' => -100,
-                            'description' => 'Ticket Cancelado',
-                            'created_at' => $ticket->created_at,
-                            'updated_at' => $ticket->created_at,
-                        ]);
-                    } elseif (! $request->boolean('pay_commission')) {
-                        WasherMovement::create([
-                            'washer_id' => $wash->washer_id,
-                            'ticket_id' => $ticket->id,
-                            'amount' => -100,
-                            'description' => 'Cuenta por cobrar - Ganancia de ticket cancelado',
-                            'created_at' => $ticket->created_at,
-                            'updated_at' => $ticket->created_at,
-                        ]);
+                        if (! $payCommission) {
+                            $washer->decrement('pending_amount', 100);
+                            $ticket->washer_pending_amount = max(0, $ticket->washer_pending_amount - 100);
+                            $wash->update(['washer_id' => null]);
+                        }
+                    } else {
+                        if ($payCommission) {
+                            WasherPayment::where('washer_id', $wash->washer_id)
+                                ->whereDate('payment_date', $ticket->created_at->toDateString())
+                                ->update(['canceled_ticket' => true]);
+                        } else {
+                            WasherMovement::create([
+                                'washer_id' => $wash->washer_id,
+                                'ticket_id' => $ticket->id,
+                                'amount' => -100,
+                                'description' => 'Cuenta por cobrar - Ganancia de ticket cancelado',
+                                'created_at' => $ticket->created_at,
+                                'updated_at' => $ticket->created_at,
+                            ]);
+                        }
                     }
 
                     if ($tip > 0 && $tipMovement) {
-                        if ($tipPaid) {
-                            if (! $request->boolean('pay_tip')) {
+                        if (! $tipPaid) {
+                            if (! $payTip) {
+                                $washer->decrement('pending_amount', $tip);
+                                $ticket->washer_pending_amount = max(0, $ticket->washer_pending_amount - $tip);
+                                $tipMovement->delete();
+                            }
+                        } else {
+                            if ($payTip) {
+                                WasherPayment::where('washer_id', $wash->washer_id)
+                                    ->whereDate('payment_date', $ticket->created_at->toDateString())
+                                    ->update(['canceled_ticket' => true]);
+                            } else {
                                 WasherMovement::create([
                                     'washer_id' => $wash->washer_id,
                                     'ticket_id' => $ticket->id,
@@ -1141,17 +1158,14 @@ class TicketController extends Controller
                                     'created_at' => $ticket->created_at,
                                     'updated_at' => $ticket->created_at,
                                 ]);
-                                $tipMovement->delete();
                             }
-                        } else {
-                            $tipMovement->delete();
                         }
                     }
                 } else {
-                    if (! $request->boolean('pay_commission')) {
+                    if (! $payCommission) {
                         $ticket->washer_pending_amount = max(0, $ticket->washer_pending_amount - 100);
                     }
-                    if ($tip > 0 && ! $request->boolean('pay_tip')) {
+                    if ($tip > 0 && ! $payTip) {
                         $ticket->washer_pending_amount = max(0, $ticket->washer_pending_amount - $tip);
                     }
                 }
@@ -1163,8 +1177,10 @@ class TicketController extends Controller
 
             $ticket->update([
                 'canceled' => true,
-                'cancel_reason' => $request->cancel_reason,
-                'washer_pending_amount' => $ticket->washer_pending_amount
+                'cancel_reason' => $cancelReason,
+                'washer_pending_amount' => $ticket->washer_pending_amount,
+                'keep_commission_on_cancel' => $hasCommission ? $payCommission : null,
+                'keep_tip_on_cancel' => $hasTip ? $payTip : null,
             ]);
         });
 

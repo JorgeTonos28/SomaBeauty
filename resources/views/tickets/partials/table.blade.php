@@ -54,19 +54,31 @@
                 <input type="text" name="cancel_reason" class="form-input w-full" required>
             </div>
             @php
-                $hasPaidCommission = $ticket->washes->where('washer_paid', true)->isNotEmpty();
-                $hasPaidTip = \App\Models\WasherMovement::where('ticket_id', $ticket->id)
-                    ->where('description', 'like', '[P]%')
-                    ->where('paid', true)
-                    ->exists();
+                $hasCommission = $ticket->washes->whereNotNull('washer_id')->isNotEmpty();
+                $hasTip = $ticket->washes->sum('tip') > 0;
             @endphp
-            @if($hasPaidCommission || $hasPaidTip)
+            @if($hasCommission || $hasTip)
             <div class="space-y-2 text-sm">
-                @if($hasPaidCommission)
-                <label class="inline-flex items-center"><input type="checkbox" name="pay_commission" value="1" class="mr-1"> Mantener comisiones pagadas</label>
+                <p class="font-medium">¿Desea pagar al lavador de todos modos?</p>
+                @if($hasCommission)
+                <div>
+                    <label class="block">Comisión</label>
+                    <select name="pay_commission" class="form-select w-full" {{ $hasTip ? '' : 'required' }}>
+                        <option value=""></option>
+                        <option value="yes">Si</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
                 @endif
-                @if($hasPaidTip)
-                <label class="inline-flex items-center"><input type="checkbox" name="pay_tip" value="1" class="mr-1"> Mantener propinas pagadas</label>
+                @if($hasTip)
+                <div>
+                    <label class="block">Propina</label>
+                    <select name="pay_tip" class="form-select w-full" {{ $hasCommission ? '' : 'required' }}>
+                        <option value=""></option>
+                        <option value="yes">Si</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
                 @endif
             </div>
             @endif

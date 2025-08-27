@@ -59,7 +59,11 @@ class TicketCancelTipTest extends TestCase
         ]);
         $washer->increment('pending_amount', 130);
 
-        $this->actingAs($user)->post(route('tickets.cancel', $ticket), ['cancel_reason' => 'test']);
+        $this->actingAs($user)->post(route('tickets.cancel', $ticket), [
+            'cancel_reason' => 'test',
+            'pay_commission' => 'no',
+            'pay_tip' => 'no',
+        ]);
 
         $washer->refresh();
         $this->assertEquals(0, $washer->pending_amount);
