@@ -1116,7 +1116,10 @@ class TicketController extends Controller
                         if ($payCommission) {
                             WasherPayment::where('washer_id', $wash->washer_id)
                                 ->whereDate('payment_date', $ticket->created_at->toDateString())
-                                ->update(['canceled_ticket' => true]);
+                                ->update([
+                                    'canceled_ticket' => true,
+                                    'payment_date' => DB::raw('payment_date'),
+                                ]);
                         } else {
                             WasherMovement::create([
                                 'washer_id' => $wash->washer_id,
@@ -1140,7 +1143,10 @@ class TicketController extends Controller
                             if ($payTip) {
                                 WasherPayment::where('washer_id', $wash->washer_id)
                                     ->whereDate('payment_date', $ticket->created_at->toDateString())
-                                    ->update(['canceled_ticket' => true]);
+                                    ->update([
+                                        'canceled_ticket' => true,
+                                        'payment_date' => DB::raw('payment_date'),
+                                    ]);
                             } else {
                                 WasherMovement::create([
                                     'washer_id' => $wash->washer_id,
