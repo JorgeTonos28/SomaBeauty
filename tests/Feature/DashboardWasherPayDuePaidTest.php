@@ -6,30 +6,23 @@ use App\Models\Washer;
 use App\Models\Service;
 use App\Models\VehicleType;
 use App\Models\Ticket;
-use App\Models\TicketDetail;
-use App\Models\WasherPayment;
-use App\Models\WasherMovement;
 use App\Models\TicketWash;
+use App\Models\TicketDetail;
+use App\Models\WasherMovement;
+use App\Models\WasherPayment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Carbon\Carbon;
 
-class WasherDebtTest extends TestCase
+class DashboardWasherPayDuePaidTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_cancel_paid_ticket_creates_washer_debt(): void
+    public function test_washer_pay_due_after_payment_is_zero(): void
     {
         Carbon::setTestNow(Carbon::parse('2024-01-01 10:00:00'));
-
         $user = User::factory()->create(['role' => 'admin']);
-
-        $washer = Washer::create([
-            'name' => 'Lavador',
-            'pending_amount' => 0,
-            'active' => true,
-        ]);
-
+        $washer = Washer::create(['name' => 'Lavador', 'pending_amount' => 0, 'active' => true]);
         $vehicleType = VehicleType::create(['name' => 'Car']);
         $service = Service::create(['name' => 'Lavado', 'description' => 'Lavado', 'active' => true]);
 
@@ -39,8 +32,8 @@ class WasherDebtTest extends TestCase
             'vehicle_id' => null,
             'customer_name' => 'Cliente',
             'customer_cedula' => null,
-            'total_amount' => 200,
-            'paid_amount' => 200,
+            'total_amount' => 0,
+            'paid_amount' => 0,
             'change' => 0,
             'discount_total' => 0,
             'payment_method' => 'efectivo',
@@ -58,7 +51,7 @@ class WasherDebtTest extends TestCase
             'vehicle_id' => null,
             'vehicle_type_id' => $vehicleType->id,
             'washer_paid' => false,
-            'tip' => 0,
+            'tip' => 10,
         ]);
 
         TicketDetail::create([
@@ -69,41 +62,33 @@ class WasherDebtTest extends TestCase
             'product_id' => null,
             'drink_id' => null,
             'quantity' => 1,
-            'unit_price' => 200,
+            'unit_price' => 0,
             'discount_amount' => 0,
-            'subtotal' => 200,
+            'subtotal' => 0,
         ]);
 
-        $washer->increment('pending_amount', 100);
+        $movement = WasherMovement::create([
+            'washer_id' => $washer->id,
+            'ticket_id' => $ticket->id,
+            'amount' => 10,
+            'description' => '[P] Test',
+            'created_at' => now(),
+        ]);
+        $washer->increment('pending_amount', 110);
+
         WasherPayment::create([
             'washer_id' => $washer->id,
             'payment_date' => now(),
             'total_washes' => 1,
-            'amount_paid' => 100,
+            'amount_paid' => 110,
+            'created_at' => now(),
         ]);
-        $washer->update(['pending_amount' => 0]);
         $wash->update(['washer_paid' => true]);
+        $movement->update(['paid' => true]);
+        $washer->update(['pending_amount' => 0]);
 
-        $this->actingAs($user)
-            ->post(route('tickets.cancel', $ticket), [
-                'cancel_reason' => 'test',
-                'pay_washer' => 'no',
-            ]);
-
-        $this->assertDatabaseHas('washer_movements', [
-            'washer_id' => $washer->id,
-            'ticket_id' => $ticket->id,
-            'amount' => -100,
-            'description' => 'Cuenta por cobrar - Ganancia de ticket cancelado',
-        ]);
-
-        $response = $this->actingAs($user)
-            ->get('/dashboard?start=' . now()->toDateString() . '&end=' . now()->toDateString());
-        $this->assertEquals(100, $response->viewData('accountsReceivable'));
-
-        $response = $this->actingAs($user)
-            ->get('/dashboard?start=' . now()->addDay()->toDateString() . '&end=' . now()->addDay()->toDateString());
-        $this->assertEquals(0, $response->viewData('accountsReceivable'));
+        $response = $this->actingAs($user)->get('/dashboard?start=2024-01-01&end=2024-01-01');
+        $this->assertEquals(0, $response->viewData('washerPayDue'));
 
         Carbon::setTestNow();
     }

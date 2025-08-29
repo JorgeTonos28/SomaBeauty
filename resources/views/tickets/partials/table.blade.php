@@ -30,7 +30,7 @@
                     <td class="px-4 py-2">{{ $ticket->customer_name }}</td>
                     <td class="px-4 py-2">
                         {{ $ticket->details->pluck('type')->unique()->map(fn($t) => match($t){
-                            'service' => 'Lavado', 'product' => 'Productos', 'drink' => 'Tragos'
+                            'service' => 'Lavado', 'product' => 'Productos', 'drink' => 'Tragos', 'extra' => 'Cargos'
                         })->implode(', ') }}
                     </td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->discount_total, 2) }}</td>
@@ -53,6 +53,20 @@
                 <label class="block text-sm font-medium text-gray-700">Concepto de cancelación</label>
                 <input type="text" name="cancel_reason" class="form-input w-full" required>
             </div>
+            @php
+                $hasCommission = $ticket->washes->whereNotNull('washer_id')->isNotEmpty();
+                $hasTip = $ticket->washes->sum('tip') > 0;
+            @endphp
+            @if($hasCommission || $hasTip)
+            <div class="space-y-2 text-sm">
+                <label class="block font-medium">¿Desea pagar la comisión o propina al lavador de todos modos?</label>
+                <select name="pay_washer" class="form-select w-full" required>
+                    <option value=""></option>
+                    <option value="yes">Si</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+            @endif
             <div class="flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>
                 <x-danger-button class="ms-3">Confirmar</x-danger-button>
@@ -127,7 +141,8 @@
                             {{ match($d->type){
                                 'service' => $d->service->name ?? 'Servicio',
                                 'product' => $d->product->name ?? 'Producto',
-                                'drink' => $d->drink->name ?? 'Trago'
+                                'drink' => $d->drink->name ?? 'Trago',
+                                'extra' => $d->description ?? 'Cargo'
                             } }} x{{ $d->quantity }} - RD$ {{ number_format($d->unit_price,2) }}
                         </li>
                     @endforeach
@@ -138,11 +153,28 @@
                 <p><strong>Total:</strong> RD$ {{ number_format($ticket->total_amount, 2) }}</p>
             </div>
             @if($ticket->washes->count())
+                @php
+                    $canChangeWasher = true;
+                    if(!$ticket->pending){
+                        foreach($ticket->washes as $w){
+                            $tipPaid = \App\Models\WasherMovement::where('ticket_id',$ticket->id)
+                                ->where('washer_id',$w->washer_id)
+                                ->where('description','like','[P]%')
+                                ->where('paid',true)
+                                ->exists();
+                            if($w->washer_paid || $tipPaid){ $canChangeWasher = false; break; }
+                        }
+                    }
+                @endphp
                 <div class="space-y-2">
                     @foreach($ticket->washes as $wash)
                         <div class="border rounded p-2">
                             <p class="text-sm font-semibold">{{ $wash->vehicle->brand }} | {{ $wash->vehicle->model }} | {{ $wash->vehicle->color }} | {{ $wash->vehicle->year }} | {{ $wash->vehicleType->name }}</p>
                             <p class="text-sm">Servicios: {{ $wash->details->where('type','service')->map(fn($d)=>$d->service->name)->implode(', ') }}</p>
+                            @if($wash->tip > 0)
+                                <p class="text-sm">Propina: RD$ {{ number_format($wash->tip,2) }}</p>
+                            @endif
+                            @if($canChangeWasher)
                             <div class="mt-1">
                                 <label class="block text-sm font-medium text-gray-700">Lavador</label>
                                 <select name="washers[{{ $wash->id }}]" class="form-select w-full">
@@ -152,6 +184,7 @@
                                     @endforeach
                                 </select>
                             </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>

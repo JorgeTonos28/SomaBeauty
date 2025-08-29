@@ -59,19 +59,22 @@ class WasherController extends Controller
             return $washer;
         });
 
-        $pendingTotal = $washers->sum('range_pending');
-
-        $unassignedTotal = TicketWash::whereNull('washer_id')
+        $unassignedQuery = TicketWash::whereNull('washer_id')
             ->whereHas('ticket', function ($q) use ($filters) {
-                $q->where('pending', true)->where('canceled', false);
+                $q->where('canceled', false);
                 if ($filters['start']) {
                     $q->whereDate('created_at', '>=', $filters['start']);
                 }
                 if ($filters['end']) {
                     $q->whereDate('created_at', '<=', $filters['end']);
                 }
-            })
-            ->count() * 100;
+            });
+
+        $unassignedBase = (clone $unassignedQuery)->count() * 100;
+        $unassignedTips = (clone $unassignedQuery)->sum('tip');
+        $unassignedTotal = $unassignedBase + $unassignedTips;
+
+        $pendingTotal = $washers->sum('range_pending') + $unassignedTotal;
 
         if ($request->ajax()) {
             return view('washers.partials.table', [
@@ -201,6 +204,7 @@ class WasherController extends Controller
                 'wash_id' => $w->id,
                 'ticket_id' => $t->id,
                 'paid_to_washer' => $w->washer_paid,
+                'canceled' => $t->canceled && $t->keep_commission_on_cancel,
             ];
         }
         foreach ($payments as $p) {
@@ -212,10 +216,13 @@ class WasherController extends Controller
                 'payment' => $p->amount_paid,
                 'ticket_id' => null,
                 'paid_to_washer' => false,
+                'canceled' => $p->canceled_ticket,
             ];
         }
 
         foreach ($movements as $m) {
+            $t = $m->ticket;
+            $isTip = str_starts_with($m->description, '[P]');
             $events[] = [
                 'date' => $m->created_at,
                 'customer' => null,
@@ -223,7 +230,9 @@ class WasherController extends Controller
                 'gain' => $m->amount,
                 'payment' => null,
                 'ticket_id' => $m->ticket_id,
-                'paid_to_washer' => false,
+                'movement_id' => $m->id,
+                'paid_to_washer' => $m->paid,
+                'canceled' => $t && $t->canceled && ($isTip ? $t->keep_tip_on_cancel : $t->keep_commission_on_cancel),
             ];
         }
         usort($events, fn($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
@@ -247,40 +256,93 @@ class WasherController extends Controller
     public function pay(Request $request, Washer $washer)
     {
         $request->validate([
-            'wash_ids' => 'required|string',
+            'wash_ids' => 'nullable|string',
+            'movement_ids' => 'nullable|string',
         ], [
             'wash_ids.required' => 'Debe seleccionar al menos un registro a pagar.',
         ]);
 
-        $ids = array_filter(explode(',', $request->wash_ids));
+        $washIds = array_filter(explode(',', $request->wash_ids));
+        $movementIds = array_filter(explode(',', $request->movement_ids));
+
+        if (empty($washIds) && empty($movementIds)) {
+            return back()->with('success', 'No hay monto pendiente.');
+        }
+
         $washes = TicketWash::where('washer_id', $washer->id)
-            ->whereIn('id', $ids)
+            ->whereIn('id', $washIds)
             ->where('washer_paid', false)
             ->with('ticket')
             ->get();
 
-        if ($washes->isEmpty()) {
+        $movements = WasherMovement::where('washer_id', $washer->id)
+            ->whereIn('id', $movementIds)
+            ->where('paid', false)
+            ->get();
+
+        if ($washes->isEmpty() && $movements->isEmpty()) {
             return back()->with('success', 'No hay monto pendiente.');
         }
 
-        $washesByDate = $washes->groupBy(fn($w) => $w->ticket->created_at->toDateString());
+        $groups = [];
+        foreach ($washes as $w) {
+            $date = $w->ticket->created_at;
+            $key = $date->toDateString();
+            $groups[$key]['washes'][] = $w;
+            $groups[$key]['amount'] = ($groups[$key]['amount'] ?? 0) + 100;
+            $groups[$key]['dateTime'] = $groups[$key]['dateTime'] ?? $date;
+        }
+        foreach ($movements as $m) {
+            $date = $m->created_at;
+            $key = $date->toDateString();
+            $groups[$key]['movements'][] = $m;
+            $groups[$key]['amount'] = ($groups[$key]['amount'] ?? 0) + $m->amount;
+            $groups[$key]['dateTime'] = $groups[$key]['dateTime'] ?? $date;
+        }
 
-        foreach ($washesByDate as $group) {
-            $paymentDate = $group->first()->ticket->created_at;
+        $totalPaid = 0;
+        foreach ($groups as $group) {
+            $washCount = isset($group['washes']) ? count($group['washes']) : 0;
+            $amount = $group['amount'];
+            $paymentDate = $group['dateTime'];
+            $canceled = false;
+            if (!empty($group['washes'])) {
+                foreach ($group['washes'] as $w) {
+                    if ($w->ticket->canceled && $w->ticket->keep_commission_on_cancel) {
+                        $canceled = true; break;
+                    }
+                }
+            }
+            if (!empty($group['movements'])) {
+                foreach ($group['movements'] as $m) {
+                    if ($m->ticket && $m->ticket->canceled) {
+                        $isTip = str_starts_with($m->description, '[P]');
+                        if (($isTip && $m->ticket->keep_tip_on_cancel) || (!$isTip && $m->ticket->keep_commission_on_cancel)) {
+                            $canceled = true; break;
+                        }
+                    }
+                }
+            }
             WasherPayment::create([
                 'washer_id' => $washer->id,
                 'payment_date' => $paymentDate,
-                'total_washes' => $group->count(),
-                'amount_paid' => $group->count() * 100,
+                'total_washes' => $washCount,
+                'amount_paid' => $amount,
                 'created_at' => $paymentDate,
+                'canceled_ticket' => $canceled,
             ]);
+            $totalPaid += $amount;
         }
 
-        $decrement = $washes->count() * 100;
-        $washer->pending_amount = max(0, $washer->pending_amount - $decrement);
-        $washer->save();
+        if ($washes->isNotEmpty()) {
+            TicketWash::whereIn('id', $washes->pluck('id'))->update(['washer_paid' => true]);
+        }
+        if ($movements->isNotEmpty()) {
+            WasherMovement::whereIn('id', $movements->pluck('id'))->update(['paid' => true]);
+        }
 
-        TicketWash::whereIn('id', $washes->pluck('id'))->update(['washer_paid' => true]);
+        $washer->pending_amount = max(0, $washer->pending_amount - $totalPaid);
+        $washer->save();
 
         return back()->with('success', 'Pago registrado correctamente.');
     }

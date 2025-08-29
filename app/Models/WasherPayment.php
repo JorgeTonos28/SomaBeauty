@@ -9,11 +9,12 @@ class WasherPayment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'washer_id', 'payment_date', 'total_washes', 'amount_paid', 'observations'
+        'washer_id', 'payment_date', 'total_washes', 'amount_paid', 'observations', 'canceled_ticket'
     ];
 
     protected $casts = [
         'payment_date' => 'datetime',
+        'canceled_ticket' => 'boolean',
     ];
 
     public function washer()

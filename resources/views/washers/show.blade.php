@@ -58,6 +58,7 @@
             <input type="hidden" name="amount" value="0">
             <input type="hidden" name="total_washes" value="0">
             <input type="hidden" name="wash_ids" value="">
+            <input type="hidden" name="movement_ids" value="">
             <h2 class="text-lg font-medium text-gray-900">Confirmar pago</h2>
             <p class="text-sm text-gray-600">Se pagará a <strong>{{ $washer->name }}</strong> RD$ <span class="selected-amount">0.00</span>.</p>
             <div class="mt-6 flex justify-end">
@@ -87,15 +88,18 @@ function preparePayment(id) {
         return;
     }
     let total = 0;
-    const ids = [];
+    const washIds = [];
+    const movementIds = [];
     checks.forEach(c => {
         total += parseFloat(c.dataset.amount);
-        ids.push(c.dataset.wash);
+        if (c.dataset.wash) washIds.push(c.dataset.wash);
+        if (c.dataset.movement) movementIds.push(c.dataset.movement);
     });
     const form = document.getElementById(`pay-washer-form-${id}`);
     form.querySelector('input[name="amount"]').value = total.toFixed(2);
-    form.querySelector('input[name="total_washes"]').value = checks.length;
-    form.querySelector('input[name="wash_ids"]').value = ids.join(',');
+    form.querySelector('input[name="total_washes"]').value = washIds.length;
+    form.querySelector('input[name="wash_ids"]').value = washIds.join(',');
+    form.querySelector('input[name="movement_ids"]').value = movementIds.join(',');
     form.querySelector('.selected-amount').textContent = total.toFixed(2);
     window.dispatchEvent(new CustomEvent('open-modal', { detail: `pay-washer-${id}` }));
 }

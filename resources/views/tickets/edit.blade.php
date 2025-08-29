@@ -48,10 +48,14 @@
                             <input type="hidden" name="washes[{{ $i }}][year]" value="{{ $w->vehicle->year }}">
                             <input type="hidden" name="washes[{{ $i }}][vehicle_type_id]" value="{{ $w->vehicle_type_id }}">
                             <input type="hidden" name="washes[{{ $i }}][washer_id]" value="{{ $w->washer_id }}">
+                            <input type="hidden" name="washes[{{ $i }}][tip]" value="{{ $wData['tip'] }}">
                             <div class="mt-2 space-y-1 text-sm">
                                 <p>Placa: {{ $w->vehicle->plate }}</p>
                                 <p>Lavador: {{ optional($w->washer)->name ?? 'N/A' }}</p>
                                 <p>Servicios: {{ $servicesText }}</p>
+                                @if($w->tip > 0)
+                                    <p>Propina: RD$ {{ number_format($w->tip,2) }}</p>
+                                @endif
                             </div>
                         </details>
                     @endforeach
@@ -112,6 +116,12 @@
                             </select>
                             <button type="button" onclick="clearWasher()" class="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50">Quitar</button>
                         </div>
+                    </div>
+
+                    <!-- Propina -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Propina</label>
+                        <input type="number" name="temp_tip" min="0" step="0.01" class="form-input w-full mt-1">
                     </div>
 
                     <!-- Lista Servicios -->
@@ -190,6 +200,23 @@
                     @endforeach
                     </div>
                     <button type="button" onclick="addProductRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar otro producto</button>
+                </div>
+            </details>
+
+            <!-- Cargos adicionales -->
+            <details class="border rounded p-4" id="charge-section">
+                <summary class="cursor-pointer font-medium text-gray-700">Cargos Adicionales</summary>
+                <div class="mt-4">
+                    <div id="charge-list">
+                        @foreach ($ticketExtras as $extra)
+                        <div class="flex gap-4 mb-2 items-center">
+                            <input type="text" name="charge_descriptions[]" placeholder="Descripción" class="form-input w-full" value="{{ $extra['description'] }}" />
+                            <input type="number" name="charge_amounts[]" placeholder="Monto" step="0.01" class="form-input w-32" oninput="updateTotal()" value="{{ $extra['amount'] }}" />
+                            <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
+                        </div>
+                        @endforeach
+                    </div>
+                    <button type="button" onclick="addChargeRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Agregar cargo</button>
                 </div>
             </details>
 
@@ -308,6 +335,11 @@
                 total += price * qty;
             });
 
+            document.querySelectorAll('#charge-list > div').forEach(row => {
+                const amount = parseFloat(row.querySelector('input[name="charge_amounts[]"]').value) || 0;
+                total += amount;
+            });
+
             currentTotal = total;
             currentDiscount = discount;
             document.getElementById('total_amount').innerText = formatCurrency(total);
@@ -415,6 +447,18 @@
             convertSelectToSearchable(row.querySelector('select'));
         }
 
+        function addChargeRow() {
+            const container = document.getElementById('charge-list');
+            const row = document.createElement('div');
+            row.classList.add('flex', 'gap-4', 'mb-2', 'items-center');
+            row.innerHTML = `
+                <input type="text" name="charge_descriptions[]" placeholder="Descripción" class="form-input w-full" />
+                <input type="number" name="charge_amounts[]" placeholder="Monto" step="0.01" class="form-input w-32" oninput="updateTotal()" />
+                <button type="button" class="text-red-600" onclick="this.parentElement.remove(); updateTotal();">x</button>
+            `;
+            container.appendChild(row);
+        }
+
         function showWashForm() {
             const form = document.getElementById('wash-form');
             document.getElementById('show-wash-form-btn').classList.add('hidden');
@@ -473,6 +517,8 @@
                 }
                 washTotal += price;
             });
+            const tip = parseFloat(form.querySelector('input[name="temp_tip"]').value) || 0;
+            washTotal += tip;
 
             const summary = `${brand} | ${model} | ${color} | ${year} | ${vehicleTypeName}`;
             let wrapper;
@@ -488,16 +534,17 @@
             wrapper.dataset.total = washTotal;
             wrapper.dataset.discount = washDiscount;
             const servicesText = services.map(s=>s.name).join(', ');
-            wrapper.innerHTML = `<summary class="cursor-pointer font-medium text-gray-700">${summary}<button type="button" class="ml-2 text-red-600" onclick="removeWash(this); event.stopPropagation();">Eliminar</button></summary>` +
-                services.map(s=>`<input type="hidden" name="washes[${index}][service_ids][]" value="${s.id}">`).join('') +
-                `<input type="hidden" name="washes[${index}][plate]" value="${plate}">` +
-                `<input type="hidden" name="washes[${index}][brand]" value="${brand}">` +
-                `<input type="hidden" name="washes[${index}][model]" value="${model}">` +
-                `<input type="hidden" name="washes[${index}][color]" value="${color}">` +
-                `<input type="hidden" name="washes[${index}][year]" value="${year}">` +
-                `<input type="hidden" name="washes[${index}][vehicle_type_id]" value="${vehicleTypeId}">` +
-                `<input type="hidden" name="washes[${index}][washer_id]" value="${washerId}">` +
-                `<div class="mt-2 space-y-1 text-sm"><p>Placa: ${plate}</p><p>Lavador: ${washerName || 'N/A'}</p><p>Servicios: ${servicesText}</p></div>`;
+            wrapper.innerHTML = `<summary class=\"cursor-pointer font-medium text-gray-700\">${summary}<button type=\"button\" class=\"ml-2 text-red-600\" onclick=\"removeWash(this); event.stopPropagation();\">Eliminar</button></summary>` +
+                services.map(s=>`<input type=\"hidden\" name=\"washes[${index}][service_ids][]\" value=\"${s.id}\">`).join('') +
+                `<input type=\"hidden\" name=\"washes[${index}][plate]\" value=\"${plate}\">` +
+                `<input type=\"hidden\" name=\"washes[${index}][brand]\" value=\"${brand}\">` +
+                `<input type=\"hidden\" name=\"washes[${index}][model]\" value=\"${model}\">` +
+                `<input type=\"hidden\" name=\"washes[${index}][color]\" value=\"${color}\">` +
+                `<input type=\"hidden\" name=\"washes[${index}][year]\" value=\"${year}\">` +
+                `<input type=\"hidden\" name=\"washes[${index}][vehicle_type_id]\" value=\"${vehicleTypeId}\">` +
+                `<input type=\"hidden\" name=\"washes[${index}][washer_id]\" value=\"${washerId}\">` +
+                `<input type=\"hidden\" name=\"washes[${index}][tip]\" value=\"${tip.toFixed(2)}\">` +
+                `<div class=\"mt-2 space-y-1 text-sm\"><p>Placa: ${plate}</p><p>Lavador: ${washerName || 'N/A'}</p><p>Servicios: ${servicesText}</p><p>Propina: RD$ ${tip.toFixed(2)}</p></div>`;
 
             updateWashIndexes();
 
@@ -536,6 +583,7 @@
                 const val = cb.value;
                 cb.checked = wrapper.querySelector(`input[name="washes[${index}][service_ids][]"][value="${val}"]`) !== null;
             });
+            form.querySelector('input[name="temp_tip"]').value = wrapper.querySelector(`input[name="washes[${index}][tip]"]`).value;
 
             document.querySelectorAll('.wash-item').forEach(w=>{ if(w!==wrapper) w.removeAttribute('open'); });
         }
@@ -746,8 +794,12 @@
                     const hasWash = form.querySelectorAll('.wash-item').length > 0;
                     const hasProduct = Array.from(form.querySelectorAll('#product-list select[name="product_ids[]"]')).some(s => s.value);
                     const hasDrink = Array.from(form.querySelectorAll('#drink-list select[name="drink_ids[]"]')).some(s => s.value);
-                    if (!hasWash && !hasProduct && !hasDrink) {
-                        this.errors.push('Debe agregar al menos un servicio, producto o trago');
+                    const hasCharge = Array.from(form.querySelectorAll('#charge-list input[name="charge_descriptions[]"]')).some((input,idx) => {
+                        const amount = parseFloat(form.querySelectorAll('#charge-list input[name="charge_amounts[]"]')[idx].value || 0);
+                        return input.value.trim() !== '' && amount > 0;
+                    });
+                    if (!hasWash && !hasProduct && !hasDrink && !hasCharge) {
+                        this.errors.push('Debe agregar al menos un servicio, producto, trago o cargo adicional');
                         this.showErrors();
                         return;
                     }
