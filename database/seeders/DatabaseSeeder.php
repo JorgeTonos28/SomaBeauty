@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             VehicleSeeder::class,
             ExtraVehicleSeeder::class,
             DrinkSeeder::class,
+            ProductSeeder::class,
             BankAccountSeeder::class,
             UserSeeder::class,
         ]);
