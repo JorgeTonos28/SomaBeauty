@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DrinkSeeder extends Seeder
@@ -14,26 +13,44 @@ class DrinkSeeder extends Seeder
     {
         $drinks = [
             [
-                'name' => 'Margarita',
+                'name' => 'Margarita de limón',
                 'ingredients' => 'Tequila, sal y limón.',
                 'price' => 300,
                 'active' => true,
             ],
             [
-                'name' => 'Mojito',
-                'ingredients' => 'Hoja de menta, limón, ron blanco, azúcar y 7up.',
-                'price' => 300,
-                'active' => true,
-            ],
-            [
-                'name' => 'Sangría',
-                'ingredients' => 'Vino tinto, jugo de naranja, jugo de limón y soda (agua con gas).',
+                'name' => 'Mojito de limón',
+                'ingredients' => '*',
                 'price' => 350,
                 'active' => true,
             ],
             [
-                'name' => 'Gin Tonic',
-                'ingredients' => 'Ginebra y agua tónica, decorada con aceitunas.',
+                'name' => 'Sangría',
+                'ingredients' => 'Vino tinto, jugo de naranja, jugo de limón y soda ...',
+                'price' => 350,
+                'active' => true,
+            ],
+            [
+                'name' => 'Mojito de Coco',
+                'ingredients' => '*',
+                'price' => 350,
+                'active' => true,
+            ],
+            [
+                'name' => 'Margarita de fresa',
+                'ingredients' => '*',
+                'price' => 350,
+                'active' => true,
+            ],
+            [
+                'name' => 'Caipiriña',
+                'ingredients' => '*',
+                'price' => 350,
+                'active' => true,
+            ],
+            [
+                'name' => 'Piña Colada',
+                'ingredients' => '*',
                 'price' => 350,
                 'active' => true,
             ],
