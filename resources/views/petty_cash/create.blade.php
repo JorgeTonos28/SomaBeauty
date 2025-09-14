@@ -7,7 +7,7 @@
 
     <div class="py-4">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8 bg-white p-6 shadow sm:rounded-lg">
-            <p class="mb-4 text-sm text-gray-700">Disponible hoy: RD$ {{ number_format($remaining, 2) }}</p>
+            <p class="mb-4 text-sm text-gray-700">Monto diario: RD$ {{ number_format($pettyCashAmount, 2) }} | Disponible hoy: RD$ {{ number_format($remaining, 2) }}</p>
             @if ($errors->any())
                 <div class="mb-4 text-sm text-red-600">
                     <ul class="list-disc list-inside">
@@ -28,6 +28,11 @@
                 <div class="mb-4">
                     <label for="amount" class="block font-medium text-sm text-gray-700">Monto</label>
                     <input type="number" step="0.01" name="amount" id="amount" required class="form-input w-full rounded border-gray-300 shadow-sm mt-1">
+                </div>
+
+                <div class="mb-4">
+                    <label for="date" class="block font-medium text-sm text-gray-700">Fecha</label>
+                    <input type="date" name="date" id="date" max="{{ now()->toDateString() }}" value="{{ now()->toDateString() }}" required class="form-input w-full rounded border-gray-300 shadow-sm mt-1">
                 </div>
 
                 <div class="flex justify-end">

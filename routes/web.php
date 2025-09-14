@@ -47,6 +47,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('bank-accounts', \App\Http\Controllers\BankAccountController::class);
     Route::get('appearance', [AppearanceController::class, 'index'])->name('appearance.index');
     Route::post('appearance', [AppearanceController::class, 'store'])->name('appearance.store');
+    Route::post('petty-cash/fund', [PettyCashExpenseController::class, 'updateFund'])->name('petty-cash.update-fund');
 });
 Route::middleware(['auth', 'role:admin,cajero'])->group(function () {
     Route::resource('products', ProductController::class);
