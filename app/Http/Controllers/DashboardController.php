@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Ticket;
 use App\Models\TicketWash;
 use App\Models\PettyCashExpense;
+use App\Models\PettyCashSetting;
 use App\Models\WasherPayment;
 use App\Models\BankAccount;
 use App\Models\Washer;
@@ -75,15 +76,21 @@ class DashboardController extends Controller
             ->where('payment_method', 'transferencia')
             ->sum('total_amount');
 
-        $pettyCashInitial = 3200;
-        $totalFacturado = $cashPayments + $transferTotal + $pettyCashInitial;
+        $pettyCashAmount = PettyCashSetting::amountForDate($start);
+        $pettyCashExpenses = PettyCashExpense::whereDate('created_at', '>=', $start)
+            ->whereDate('created_at', '<=', $end)
+            ->latest()
+            ->get();
+        $pettyCashTotal = $pettyCashExpenses->sum('amount');
+
+        $totalFacturado = $cashPayments + $transferTotal + $pettyCashAmount - $pettyCashTotal;
         $invoicedTotal = $cashPayments + $transferTotal;
 
         $washerPayments = WasherPayment::whereDate('payment_date', '>=', $start)
             ->whereDate('payment_date', '<=', $end)
             ->sum('amount_paid');
 
-        $cashTotal = $cashPayments - $washerPayments;
+        $cashTotal = $cashPayments - $washerPayments - $pettyCashTotal;
 
         $bankAccountTotals = Ticket::selectRaw('bank_account_id, SUM(total_amount) as total')
             ->with('bankAccount')
@@ -123,13 +130,6 @@ class DashboardController extends Controller
             ->sum('tip');
 
         $washerPayTotal = $washCount * 100 + $tipTotal + $extraCommission + $extraTip;
-
-        $pettyCashExpenses = PettyCashExpense::whereDate('created_at', '>=', $start)
-            ->whereDate('created_at', '<=', $end)
-            ->latest()
-            ->get();
-
-        $pettyCashTotal = $pettyCashExpenses->sum('amount');
 
         $pendingTickets = Ticket::with('details')
             ->where('canceled', false)
@@ -210,7 +210,7 @@ class DashboardController extends Controller
 
         $washerDebtAmount = $washerDebts->sum(fn($m) => abs($m->amount));
 
-        $grossProfit = $totalFacturado - $pettyCashInitial - $pettyCashTotal - $washerPayTotal;
+        $grossProfit = $totalFacturado - $pettyCashAmount - $washerPayTotal;
         $grossProfit -= $washerDebtAmount + $assignedPendingCommission;
 
         if ($request->ajax()) {
@@ -230,7 +230,8 @@ class DashboardController extends Controller
                 'movements',
                 'accountsReceivable',
                 'pendingTickets',
-                'washerDebts'
+                'washerDebts',
+                'pettyCashAmount'
             ));
         }
 
@@ -252,6 +253,7 @@ class DashboardController extends Controller
             'accountsReceivable' => $accountsReceivable,
             'pendingTickets' => $pendingTickets,
             'washerDebts' => $washerDebts,
+            'pettyCashAmount' => $pettyCashAmount,
         ]);
     }
 

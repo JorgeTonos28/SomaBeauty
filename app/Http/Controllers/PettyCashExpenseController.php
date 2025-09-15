@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PettyCashExpense;
+use App\Models\PettyCashSetting;
 use Illuminate\Http\Request;
 
 class PettyCashExpenseController extends Controller
@@ -35,8 +36,9 @@ class PettyCashExpenseController extends Controller
 
         $expenses = $query->latest()->get();
 
+        $pettyCashAmount = PettyCashSetting::amountForDate(now()->toDateString());
         $todayTotal = PettyCashExpense::whereDate('created_at', now()->toDateString())->sum('amount');
-        $remaining = max(0, 3200 - $todayTotal);
+        $remaining = max(0, $pettyCashAmount - $todayTotal);
 
         if ($request->ajax()) {
             return view('petty_cash.partials.table', [
@@ -49,14 +51,16 @@ class PettyCashExpenseController extends Controller
             'filters' => $filters,
             'todayTotal' => $todayTotal,
             'remaining' => $remaining,
+            'pettyCashAmount' => $pettyCashAmount,
         ]);
     }
 
     public function create()
     {
+        $pettyCashAmount = PettyCashSetting::amountForDate(now()->toDateString());
         $todayTotal = PettyCashExpense::whereDate('created_at', now()->toDateString())->sum('amount');
-        $remaining = max(0, 3200 - $todayTotal);
-        return view('petty_cash.create', compact('remaining'));
+        $remaining = max(0, $pettyCashAmount - $todayTotal);
+        return view('petty_cash.create', compact('remaining', 'pettyCashAmount'));
     }
 
     public function store(Request $request)
@@ -64,21 +68,56 @@ class PettyCashExpenseController extends Controller
         $request->validate([
             'description' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01',
+            'date' => 'required|date|before_or_equal:today',
         ]);
-
-        $todayTotal = PettyCashExpense::whereDate('created_at', now()->toDateString())->sum('amount');
-        if ($todayTotal + $request->amount > 3200) {
-            return back()->withErrors(['amount' => 'Fondo insuficiente en caja chica para hoy.'])->withInput();
+        $date = $request->date;
+        $dateTotal = PettyCashExpense::whereDate('created_at', $date)->sum('amount');
+        $limit = PettyCashSetting::amountForDate($date);
+        if ($dateTotal + $request->amount > $limit) {
+            return back()->withErrors(['amount' => 'Fondo insuficiente en caja chica para esa fecha.'])->withInput();
         }
 
+        $timestamp = $date . ' ' . now()->format('H:i:s');
         PettyCashExpense::create([
             'user_id' => auth()->id(),
             'description' => $request->description,
             'amount' => $request->amount,
+            'created_at' => $timestamp,
+            'updated_at' => $timestamp,
         ]);
 
         return redirect()->route('petty-cash.index')
             ->with('success', 'Gasto registrado correctamente.');
+    }
+
+    public function updateFund(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'apply_today' => 'nullable|boolean',
+        ]);
+
+        $amount = $request->amount;
+        $applyToday = $request->boolean('apply_today');
+        $today = now()->toDateString();
+
+        if ($applyToday) {
+            $todayTotal = PettyCashExpense::whereDate('created_at', $today)->sum('amount');
+            if ($todayTotal > $amount) {
+                return back()->withErrors(['amount' => 'Los gastos de hoy exceden el nuevo monto.'])->withInput();
+            }
+            PettyCashSetting::create([
+                'amount' => $amount,
+                'effective_date' => $today,
+            ]);
+        } else {
+            PettyCashSetting::create([
+                'amount' => $amount,
+                'effective_date' => now()->addDay()->toDateString(),
+            ]);
+        }
+
+        return back()->with('success', 'Monto de caja chica actualizado.');
     }
 
     public function destroy(PettyCashExpense $pettyCash)

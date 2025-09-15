@@ -8,7 +8,7 @@ class PettyCashExpense extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'description', 'amount'];
+    protected $fillable = ['user_id', 'description', 'amount', 'created_at', 'updated_at'];
 
     public function user()
     {
