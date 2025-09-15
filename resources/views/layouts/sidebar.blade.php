@@ -1,4 +1,4 @@
-<aside x-cloak :class="{'-translate-x-full': !sidebarOpen}" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 md:relative md:translate-x-0 md:w-48">
+<aside :class="{'translate-x-0': sidebarOpen}" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 -translate-x-full md:relative md:translate-x-0 md:w-48">
     <div class="p-4 h-full overflow-y-auto">
         <nav class="space-y-2">
             <a href="{{ route('dashboard') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('dashboard') ? 'bg-gray-200' : '' }}">
