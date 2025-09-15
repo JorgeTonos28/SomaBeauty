@@ -54,7 +54,7 @@
         <div x-html="tableHtml"></div>
 
         @if(Auth::user()->role === 'admin')
-        <div x-show="showFundModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div x-show="showFundModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div class="bg-white p-6 rounded shadow w-80" @click.away="showFundModal=false">
                 <h3 class="text-lg font-semibold mb-4">Configurar Caja Chica</h3>
                 <form method="POST" action="{{ route('petty-cash.update-fund') }}">
