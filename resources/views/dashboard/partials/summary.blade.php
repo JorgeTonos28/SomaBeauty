@@ -32,7 +32,7 @@
                             <td class="border px-2 py-1">{{ $t->customer_name }}</td>
                             <td class="border px-2 py-1">
                                 {{ $t->details->pluck('type')->unique()->map(fn($tt) => match($tt){
-                                    'service' => 'Lavado',
+                                    'service' => 'Servicios',
                                     'product' => 'Producto',
                                     'drink' => 'Tragos',
                                     'extra' => 'Cargo',

@@ -19,7 +19,7 @@
                     <td class="px-4 py-2">{{ $ticket->customer_name }}</td>
                     <td class="px-4 py-2">
                         {{ $ticket->details->pluck('type')->unique()->map(fn($t) => match($t){
-                            'service' => 'Lavado', 'product' => 'Productos', 'drink' => 'Tragos', 'extra' => 'Cargos'
+                            'service' => 'Servicios', 'product' => 'Productos', 'drink' => 'Tragos', 'extra' => 'Cargos'
                         })->implode(', ') }}
                     </td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->discount_total, 2) }}</td>
@@ -42,17 +42,11 @@
                 <p><strong>Teléfono:</strong> {{ $ticket->customer_phone }}</p>
             @endif
             <p><strong>Fecha:</strong> {{ $ticket->created_at->format('d/m/Y h:i A') }}</p>
-            @if($ticket->vehicle)
-                <p><strong>Placa:</strong> {{ $ticket->vehicle->plate }}</p>
-                <p><strong>Marca:</strong> {{ $ticket->vehicle->brand }}</p>
-                <p><strong>Modelo:</strong> {{ $ticket->vehicle->model }}</p>
-                <p><strong>Color:</strong> {{ $ticket->vehicle->color }}</p>
-                @if($ticket->vehicle->year)
-                    <p><strong>Año:</strong> {{ $ticket->vehicle->year }}</p>
-                @endif
-            @endif
-            @if($ticket->vehicleType)
-                <p><strong>Tipo de Vehículo:</strong> {{ $ticket->vehicleType->name }}</p>
+            @php
+                $serviceNames = $ticket->washes->flatMap(fn($wash) => $wash->details->where('type','service'));
+            @endphp
+            @if($serviceNames->isNotEmpty())
+                <p><strong>Servicios:</strong> {{ $serviceNames->map(fn($d) => $d->service->name ?? 'Servicio')->implode(', ') }}</p>
             @endif
             <div>
                 <h3 class="font-semibold mb-1">Detalles</h3>

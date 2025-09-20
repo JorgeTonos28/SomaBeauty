@@ -30,7 +30,7 @@
                     <td class="px-4 py-2">{{ $ticket->customer_name }}</td>
                     <td class="px-4 py-2">
                         {{ $ticket->details->pluck('type')->unique()->map(fn($t) => match($t){
-                            'service' => 'Lavado', 'product' => 'Productos', 'drink' => 'Tragos', 'extra' => 'Cargos'
+                            'service' => 'Servicios', 'product' => 'Productos', 'drink' => 'Tragos', 'extra' => 'Cargos'
                         })->implode(', ') }}
                     </td>
                     <td class="px-4 py-2">RD$ {{ number_format($ticket->discount_total, 2) }}</td>
@@ -120,18 +120,6 @@
                     <p><strong>Teléfono:</strong> {{ $ticket->customer_phone }}</p>
                 @endif
                 <p><strong>Fecha:</strong> {{ $ticket->created_at->format('d/m/Y h:i A') }}</p>
-                @if($ticket->vehicle)
-                    <p><strong>Placa:</strong> {{ $ticket->vehicle->plate }}</p>
-                    <p><strong>Marca:</strong> {{ $ticket->vehicle->brand }}</p>
-                    <p><strong>Modelo:</strong> {{ $ticket->vehicle->model }}</p>
-                    <p><strong>Color:</strong> {{ $ticket->vehicle->color }}</p>
-                    @if($ticket->vehicle->year)
-                        <p><strong>Año:</strong> {{ $ticket->vehicle->year }}</p>
-                    @endif
-                @endif
-                @if($ticket->vehicleType)
-                    <p><strong>Tipo de Vehículo:</strong> {{ $ticket->vehicleType->name }}</p>
-                @endif
             </div>
             <div>
                 <h3 class="font-semibold text-sm mb-1">Detalles</h3>
@@ -168,9 +156,17 @@
                 @endphp
                 <div class="space-y-2">
                     @foreach($ticket->washes as $wash)
-                        <div class="border rounded p-2">
-                            <p class="text-sm font-semibold">{{ $wash->vehicle->brand }} | {{ $wash->vehicle->model }} | {{ $wash->vehicle->color }} | {{ $wash->vehicle->year }} | {{ $wash->vehicleType->name }}</p>
-                            <p class="text-sm">Servicios: {{ $wash->details->where('type','service')->map(fn($d)=>$d->service->name)->implode(', ') }}</p>
+                        <div class="border rounded p-2 space-y-1">
+                            @php
+                                $serviceNames = $wash->details->where('type','service')->map(fn($d)=>$d->service->name ?? 'Servicio')->implode(', ');
+                                $priceLabel = optional($wash->vehicleType)->name;
+                            @endphp
+                            <p class="text-sm font-semibold">
+                                {{ $serviceNames ?: 'Servicio' }}
+                                @if($priceLabel)
+                                    <span class="text-gray-600">({{ $priceLabel }})</span>
+                                @endif
+                            </p>
                             @if($wash->tip > 0)
                                 <p class="text-sm">Propina: RD$ {{ number_format($wash->tip,2) }}</p>
                             @endif

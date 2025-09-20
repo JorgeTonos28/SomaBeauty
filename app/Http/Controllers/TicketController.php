@@ -37,7 +37,7 @@ class TicketController extends Controller
         $filters['start'] = $filters['start'] ?? now()->toDateString();
         $filters['end'] = $filters['end'] ?? now()->toDateString();
 
-        $query = Ticket::with(['details', 'bankAccount', 'washes.vehicle', 'washes.vehicleType', 'washes.washer', 'washes.details.service'])->where('canceled', false);
+        $query = Ticket::with(['details', 'bankAccount', 'washes.vehicleType', 'washes.washer', 'washes.details.service'])->where('canceled', false);
 
         if ($request->boolean('pending')) {
             $query->where('pending', true);
@@ -89,7 +89,7 @@ class TicketController extends Controller
             'start' => ['nullable', 'date', 'before_or_equal:end'],
             'end' => ['nullable', 'date', 'after_or_equal:start'],
         ]);
-        $query = Ticket::with(['details', 'bankAccount'])->where('canceled', true);
+        $query = Ticket::with(['details', 'bankAccount', 'washes.details.service', 'washes.vehicleType'])->where('canceled', true);
 
         if ($request->filled('start')) {
             $query->whereDate('created_at', '>=', $request->start);
@@ -123,7 +123,7 @@ class TicketController extends Controller
         $filters['start'] = $filters['start'] ?? now()->toDateString();
         $filters['end'] = $filters['end'] ?? now()->toDateString();
 
-        $query = Ticket::with(['details', 'bankAccount', 'washes.vehicle', 'washes.vehicleType', 'washes.washer', 'washes.details.service'])
+        $query = Ticket::with(['details', 'bankAccount', 'washes.vehicleType', 'washes.washer', 'washes.details.service'])
             ->where('canceled', false)
             ->where('pending', true);
 
