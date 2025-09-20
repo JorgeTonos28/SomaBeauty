@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Lavadores') }}
+            {{ __('Estilistas') }}
         </h2>
     </x-slot>
 
@@ -26,7 +26,7 @@
                         ">Hoy</button>
                     </div>
                 </form>
-                <a href="{{ route('washers.create') }}" class="btn-primary">Nuevo Lavador</a>
+                <a href="{{ route('washers.create') }}" class="btn-primary">Nuevo Estilista</a>
             </div>
 
             <div x-html="tableHtml"></div>

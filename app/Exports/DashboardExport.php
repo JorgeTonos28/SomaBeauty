@@ -49,7 +49,7 @@ class DashboardExport implements WithMultipleSheets, Responsable
                     $payments = WasherPayment::whereDate('payment_date','>=',$this->start)
                         ->whereDate('payment_date','<=',$this->end)->get();
                     foreach($payments as $p){
-                        $rows[] = ['Pago Lavador '.$p->washer->name, $p->payment_date->format('d/m/Y h:i A'), -$p->amount_paid];
+                        $rows[] = ['Pago Estilista '.$p->washer->name, $p->payment_date->format('d/m/Y h:i A'), -$p->amount_paid];
                     }
                     return collect($rows);
                 }
@@ -86,7 +86,7 @@ class DashboardExport implements WithMultipleSheets, Responsable
                 public function headings(): array
                 { return ['Producto','Tipo','Cantidad','Fecha']; }
             },
-            'Lavadores' => new class($this->start,$this->end) implements FromCollection, WithHeadings {
+            'Estilistas' => new class($this->start,$this->end) implements FromCollection, WithHeadings {
                 private $start;private $end;
                 public function __construct($s,$e){$this->start=$s;$this->end=$e;}
                 public function collection(){
@@ -100,7 +100,7 @@ class DashboardExport implements WithMultipleSheets, Responsable
                         ]);
                 }
                 public function headings(): array
-                { return ['Lavador','Fecha','Monto']; }
+                { return ['Estilista','Fecha','Monto']; }
             },
         ];
     }

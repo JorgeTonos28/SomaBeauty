@@ -22,7 +22,7 @@ class DashboardWasherPayDuePaidTest extends TestCase
     {
         Carbon::setTestNow(Carbon::parse('2024-01-01 10:00:00'));
         $user = User::factory()->create(['role' => 'admin']);
-        $washer = Washer::create(['name' => 'Lavador', 'pending_amount' => 0, 'active' => true]);
+        $washer = Washer::create(['name' => 'Estilista', 'pending_amount' => 0, 'active' => true]);
         $vehicleType = VehicleType::create(['name' => 'Car']);
         $service = Service::create(['name' => 'Lavado', 'description' => 'Lavado', 'active' => true]);
 

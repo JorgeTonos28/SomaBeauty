@@ -112,7 +112,7 @@ class WasherController extends Controller
         ]);
 
         return redirect()->route('washers.index')
-            ->with('success', 'Lavador creado correctamente.');
+            ->with('success', 'Estilista creado correctamente.');
     }
 
     public function edit(Washer $washer)
@@ -133,7 +133,7 @@ class WasherController extends Controller
         ]);
 
         return redirect()->route('washers.index')
-            ->with('success', 'Lavador actualizado correctamente.');
+            ->with('success', 'Estilista actualizado correctamente.');
     }
 
     public function destroy(Washer $washer)
@@ -141,7 +141,7 @@ class WasherController extends Controller
         $washer->delete();
 
         return redirect()->route('washers.index')
-            ->with('success', 'Lavador eliminado correctamente.');
+            ->with('success', 'Estilista eliminado correctamente.');
     }
 
     public function show(Request $request, Washer $washer)
