@@ -26,8 +26,7 @@ class ServiceController extends Controller
 
     public function create()
     {
-        $vehicleTypes = VehicleType::all();
-        return view('services.create', compact('vehicleTypes'));
+        return view('services.create');
     }
 
     public function store(Request $request)
@@ -36,8 +35,9 @@ class ServiceController extends Controller
             'name' => 'required|string|max:255|unique:services,name',
             'description' => 'nullable|string',
             'active' => 'sometimes|boolean',
-            'prices' => 'required|array',
-            'prices.*' => 'required|numeric|min:0'
+            'price_options' => 'required|array|min:1',
+            'price_options.*.label' => 'required|string|max:255',
+            'price_options.*.price' => 'required|numeric|min:0'
         ]);
 
         $service = Service::create([
@@ -46,11 +46,15 @@ class ServiceController extends Controller
             'active' => $request->boolean('active')
         ]);
 
-        foreach ($request->prices as $vehicleTypeId => $price) {
-            ServicePrice::create([
-                'service_id' => $service->id,
-                'vehicle_type_id' => $vehicleTypeId,
-                'price' => $price
+        foreach ($request->price_options as $option) {
+            $vehicleType = VehicleType::create([
+                'name' => $option['label'],
+            ]);
+
+            $service->prices()->create([
+                'vehicle_type_id' => $vehicleType->id,
+                'label' => $option['label'],
+                'price' => $option['price'],
             ]);
         }
 
@@ -60,9 +64,8 @@ class ServiceController extends Controller
 
     public function edit(Service $service)
     {
-        $vehicleTypes = VehicleType::all();
-        $prices = $service->prices->pluck('price', 'vehicle_type_id');
-        return view('services.edit', compact('service', 'vehicleTypes', 'prices'));
+        $prices = $service->prices()->orderBy('id')->with('vehicleType')->get();
+        return view('services.edit', compact('service', 'prices'));
     }
 
     public function update(Request $request, Service $service)
@@ -71,8 +74,10 @@ class ServiceController extends Controller
             'name' => 'required|string|max:255|unique:services,name,' . $service->id,
             'description' => 'nullable|string',
             'active' => 'sometimes|boolean',
-            'prices' => 'required|array',
-            'prices.*' => 'required|numeric|min:0'
+            'price_options' => 'required|array|min:1',
+            'price_options.*.id' => 'nullable|integer|exists:service_prices,id',
+            'price_options.*.label' => 'required|string|max:255',
+            'price_options.*.price' => 'required|numeric|min:0'
         ]);
 
         $service->update([
@@ -81,11 +86,46 @@ class ServiceController extends Controller
             'active' => $request->boolean('active')
         ]);
 
-        foreach ($request->prices as $vehicleTypeId => $price) {
-            ServicePrice::updateOrCreate(
-                ['service_id' => $service->id, 'vehicle_type_id' => $vehicleTypeId],
-                ['price' => $price]
-            );
+        $submittedOptions = collect($request->price_options);
+        $submittedIds = $submittedOptions
+            ->pluck('id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $service->prices()->whereNotIn('id', $submittedIds)->get()->each(function (ServicePrice $price) {
+            $vehicleType = $price->vehicleType;
+            $price->delete();
+
+            if ($vehicleType && $vehicleType->prices()->count() === 0 && $vehicleType->vehicles()->count() === 0) {
+                $vehicleType->delete();
+            }
+        });
+
+        foreach ($submittedOptions as $option) {
+            if (!empty($option['id'])) {
+                /** @var ServicePrice|null $price */
+                $price = $service->prices()->where('id', $option['id'])->with('vehicleType')->first();
+                if ($price) {
+                    $price->update([
+                        'label' => $option['label'],
+                        'price' => $option['price'],
+                    ]);
+
+                    if ($price->vehicleType) {
+                        $price->vehicleType->update(['name' => $option['label']]);
+                    }
+                }
+                continue;
+            }
+
+            $vehicleType = VehicleType::create(['name' => $option['label']]);
+
+            $service->prices()->create([
+                'vehicle_type_id' => $vehicleType->id,
+                'label' => $option['label'],
+                'price' => $option['price'],
+            ]);
         }
 
         return redirect()->route('services.index')

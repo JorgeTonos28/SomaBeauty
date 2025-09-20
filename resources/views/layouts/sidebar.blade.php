@@ -17,7 +17,7 @@
                 <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5V4H2v16h5m0 0v-2.5A2.5 2.5 0 0 1 9.5 15h5a2.5 2.5 0 0 1 2.5 2.5V20m-10 0h10" />
                 </svg>
-                Lavadores
+                Estilistas
             </a>
             <div x-data="{ open: {{ request()->routeIs('services.*','products.*','drinks.*') ? 'true' : 'false' }} }">
                 <button type="button" @click="open=!open" class="w-full text-left px-3 py-2 font-semibold rounded hover:bg-gray-100 {{ request()->routeIs('services.*','products.*','drinks.*') ? 'bg-gray-200' : '' }}">

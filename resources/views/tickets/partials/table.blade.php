@@ -59,7 +59,7 @@
             @endphp
             @if($hasCommission || $hasTip)
             <div class="space-y-2 text-sm">
-                <label class="block font-medium">¿Desea pagar la comisión o propina al lavador de todos modos?</label>
+                <label class="block font-medium">¿Desea pagar la comisión o propina al estilista de todos modos?</label>
                 <select name="pay_washer" class="form-select w-full" required>
                     <option value=""></option>
                     <option value="yes">Si</option>
@@ -176,7 +176,7 @@
                             @endif
                             @if($canChangeWasher)
                             <div class="mt-1">
-                                <label class="block text-sm font-medium text-gray-700">Lavador</label>
+                                <label class="block text-sm font-medium text-gray-700">Estilista</label>
                                 <select name="washers[{{ $wash->id }}]" class="form-select w-full">
                                     <option value="">-- Seleccionar --</option>
                                     @foreach($washers as $w)

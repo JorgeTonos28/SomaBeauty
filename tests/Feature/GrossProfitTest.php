@@ -104,7 +104,7 @@ class GrossProfitTest extends TestCase
         $user = User::factory()->create(['role' => 'admin']);
 
         $washer = Washer::create([
-            'name' => 'Lavador',
+            'name' => 'Estilista',
             'pending_amount' => 0,
             'active' => true,
         ]);
