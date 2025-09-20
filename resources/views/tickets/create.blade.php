@@ -73,9 +73,9 @@
                         </select>
                     </div>
 
-                    <!-- Lavador -->
+                    <!-- Estilista -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Lavador</label>
+                        <label class="block text-sm font-medium text-gray-700">Estilista</label>
                         <div class="flex space-x-2 mt-1">
                             <select name="temp_washer_id" class="form-select w-full" data-searchable>
                                 <option value="">-- Seleccionar --</option>
@@ -467,7 +467,7 @@
                 `<input type="hidden" name="washes[${index}][vehicle_type_id]" value="${vehicleTypeId}">` +
                 `<input type="hidden" name="washes[${index}][washer_id]" value="${washerId}">` +
                 `<input type="hidden" name="washes[${index}][tip]" value="${tip.toFixed(2)}">` +
-                `<div class="mt-2 space-y-1 text-sm"><p>Placa: ${plate}</p><p>Lavador: ${washerName || 'N/A'}</p><p>Servicios: ${servicesText}</p><p>Propina: RD$ ${tip.toFixed(2)}</p></div>`;
+                `<div class="mt-2 space-y-1 text-sm"><p>Placa: ${plate}</p><p>Estilista: ${washerName || 'N/A'}</p><p>Servicios: ${servicesText}</p><p>Propina: RD$ ${tip.toFixed(2)}</p></div>`;
 
             updateWashIndexes();
 

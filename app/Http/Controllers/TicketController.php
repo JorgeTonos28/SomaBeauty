@@ -294,7 +294,7 @@ class TicketController extends Controller
             'customer_name.regex' => 'El nombre solo puede contener letras.',
             'customer_phone.regex' => 'El teléfono solo puede contener números y caracteres + - ()',
             'year.between' => 'El año debe estar entre 1890 y '.date('Y').'.',
-            'washer_id.exists' => 'El lavador seleccionado no es válido.',
+            'washer_id.exists' => 'El estilista seleccionado no es válido.',
             'service_ids.*.exists' => 'Alguno de los servicios seleccionados es inválido.',
             'product_ids.*.exists' => 'Alguno de los productos seleccionados es inválido.',
             'quantities.*.min' => 'La cantidad debe ser al menos 1.',
@@ -946,7 +946,7 @@ class TicketController extends Controller
                     ->where('paid', true)
                     ->exists();
                 if (($wash->washer_paid || $tipPaid) && $new != $wash->washer_id) {
-                    return back()->withErrors(['washers' => 'No se puede cambiar el lavador porque ya fue pagado.']);
+                    return back()->withErrors(['washers' => 'No se puede cambiar el estilista porque ya fue pagado.']);
                 }
             }
         }
@@ -1516,7 +1516,7 @@ class TicketController extends Controller
             'washes.*.model.regex' => 'El modelo solo puede contener letras y numeros.',
             'washes.*.color.required' => 'El color es obligatorio.',
             'washes.*.color.regex' => 'El color solo puede contener letras.',
-            'washes.*.washer_id.exists' => 'El lavador seleccionado no es válido.',
+            'washes.*.washer_id.exists' => 'El estilista seleccionado no es válido.',
             'washes.*.service_ids.required' => 'Debe seleccionar al menos un servicio.',
             'washes.*.service_ids.*.exists' => 'Alguno de los servicios seleccionados es inválido.',
             'product_ids.*.exists' => 'Alguno de los productos seleccionados es inválido.',

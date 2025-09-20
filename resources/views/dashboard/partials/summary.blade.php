@@ -45,7 +45,7 @@
                     @foreach($washerDebts as $w)
                         <tr>
                             <td class="border px-2 py-1">{{ $w->created_at->format('d/m h:i A') }}</td>
-                            <td class="border px-2 py-1">Lavador - {{ $w->washer->name }}</td>
+                            <td class="border px-2 py-1">Estilista - {{ $w->washer->name }}</td>
                             <td class="border px-2 py-1">{{ $w->description }}</td>
                             <td class="border px-2 py-1 text-right">RD$ {{ number_format(abs($w->amount),2) }}</td>
                         </tr>
@@ -60,7 +60,7 @@
             <p>Total facturado: <strong>RD$ {{ number_format($invoicedTotal, 2) }}</strong></p>
             <p>Caja chica: <strong>RD$ {{ number_format($pettyCashAmount, 2) }}</strong></p>
             <p>Gastos de caja chica: <strong>RD$ {{ number_format($pettyCashTotal, 2) }}</strong></p>
-            <p>Para lavadores: <strong>RD$ {{ number_format($washerPayDue, 2) }}</strong></p>
+            <p>Para estilistas: <strong>RD$ {{ number_format($washerPayDue, 2) }}</strong></p>
             <p>Ventas de lavados: RD$ {{ number_format($serviceTotal, 2) }}</p>
             <p>Ventas de productos: RD$ {{ number_format($productTotal, 2) }}</p>
             <p>Ventas de tragos: RD$ {{ number_format($drinkTotal, 2) }}</p>

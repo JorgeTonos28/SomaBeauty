@@ -182,7 +182,7 @@ class DashboardController extends Controller
         }
         foreach (WasherPayment::whereDate('payment_date', '>=', $start)->whereDate('payment_date', '<=', $end)->get() as $p) {
             $movements[] = [
-                'description' => 'Pago Lavador '.$p->washer->name,
+                'description' => 'Pago Estilista '.$p->washer->name,
                 'date' => $p->payment_date->format('d/m/Y h:i A'),
                 'amount' => -$p->amount_paid,
             ];
