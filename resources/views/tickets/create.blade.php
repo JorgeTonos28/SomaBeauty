@@ -27,50 +27,28 @@
 
             <!-- Servicios -->
             <details class="border rounded p-4" id="wash-section">
-                <summary class="cursor-pointer font-medium text-gray-700">Servicios</summary>
+                <summary class="cursor-pointer font-medium text-gray-700">Agregar o quitar servicio</summary>
                 <div id="wash-list" class="space-y-4 mt-4"></div>
 
                 <div id="wash-form" class="space-y-4 mt-4 hidden">
-                    <!-- Placa -->
-                    <div class="relative">
-                        <label class="block text-sm font-medium text-gray-700">Placa</label>
-                        <input type="text" name="temp_plate" id="plate" autocomplete="off" pattern="[A-Za-z0-9]+" class="form-input w-full mt-1">
-                        <ul id="plate-options" class="absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden"></ul>
-                    </div>
-
-                    <!-- Marca -->
+                    <!-- Servicio -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Marca</label>
-                        <input type="text" name="temp_brand" pattern="[A-Za-z0-9 ]+" class="form-input w-full mt-1">
-                    </div>
-
-                    <!-- Modelo -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Modelo</label>
-                        <input type="text" name="temp_model" pattern="[A-Za-z0-9 ]+" class="form-input w-full mt-1">
-                    </div>
-
-                    <!-- Color -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Color</label>
-                        <input type="text" name="temp_color" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑ ]+" class="form-input w-full mt-1">
-                    </div>
-
-                    <!-- Año -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Año</label>
-                        <input type="number" name="temp_year" min="1890" max="{{ date('Y') }}" class="form-input w-full mt-1">
-                    </div>
-
-                    <!-- Tipo de Vehículo -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Tipo de Vehículo</label>
-                        <select name="temp_vehicle_type_id" class="form-select w-full mt-1">
+                        <label class="block text-sm font-medium text-gray-700">Servicio</label>
+                        <select name="temp_service_id" class="form-select w-full mt-1" onchange="handleTempServiceChange(this)">
                             <option value="">-- Seleccionar --</option>
-                            @foreach ($vehicleTypes as $type)
-                                <option value="{{ $type->id }}" data-name="{{ $type->name }}">{{ $type->name }}</option>
+                            @foreach ($services as $service)
+                                <option value="{{ $service->id }}">{{ $service->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+
+                    <!-- Opción de precio -->
+                    <div id="price-option-wrapper" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700">Opción de precio</label>
+                        <select name="temp_service_price_id" class="form-select w-full mt-1" onchange="updateTempPriceDisplay()">
+                            <option value="">-- Seleccionar --</option>
+                        </select>
+                        <p class="text-sm text-gray-600 mt-1">Precio: RD$ <span id="temp_service_price">0.00</span></p>
                     </div>
 
                     <!-- Estilista -->
@@ -93,26 +71,14 @@
                         <input type="number" name="temp_tip" min="0" step="0.01" class="form-input w-full mt-1">
                     </div>
 
-                    <!-- Lista Servicios -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Servicios Realizados</label>
-                        <div id="service-list">
-                        @foreach ($services as $service)
-                            <div class="flex items-center space-x-2 mt-1">
-                                <input type="checkbox" name="temp_service_ids[]" value="{{ $service->id }}">
-                                <label data-service-id="{{ $service->id }}" data-name="{{ $service->name }}">{{ $service->name }}</label>
-                            </div>
-                        @endforeach
-                        </div>
-                    </div>
-                <div class="mt-2 space-x-2">
-                        <button type="button" id="save-wash-btn" class="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700" onclick="saveWash()">Agregar lavado</button>
+                    <div class="mt-2 space-x-2">
+                        <button type="button" id="save-wash-btn" class="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700" onclick="saveWash()">Agregar servicio</button>
                         <button type="button" id="cancel-wash-btn" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300 hidden" onclick="cancelWashForm()">Cancelar</button>
                     </div>
                 </div>
 
                 <div class="mt-2">
-                    <button type="button" id="show-wash-form-btn" class="text-sm text-blue-600" onclick="showWashForm()">Agregar lavado</button>
+                    <button type="button" id="show-wash-form-btn" class="text-sm text-blue-600" onclick="showWashForm()">Agregar servicio</button>
                 </div>
             </details>
 
@@ -206,6 +172,9 @@
 
     <script>
         const servicePrices = @json($servicePrices);
+        const servicesCatalog = @json($services->mapWithKeys(function ($service) {
+            return [$service->id => ['name' => $service->name]];
+        }));
         const productPrices = @json($productPrices);
         const productStocks = @json($productStocks);
         const drinkPrices = @json($drinkPrices);
@@ -386,23 +355,33 @@
             const form = document.getElementById('wash-form');
             document.getElementById('show-wash-form-btn').classList.add('hidden');
             document.getElementById('cancel-wash-btn').classList.remove('hidden');
-            document.getElementById('save-wash-btn').textContent = 'Agregar lavado';
+            document.getElementById('save-wash-btn').textContent = form.dataset.editIndex ? 'Guardar cambios' : 'Agregar servicio';
             form.classList.remove('hidden');
+        }
+
+        function resetWashForm() {
+            const form = document.getElementById('wash-form');
             form.dataset.editIndex = '';
+            form.querySelector('select[name="temp_service_id"]').value = '';
+            handleTempServiceChange(form.querySelector('select[name="temp_service_id"]'));
+            const priceSelect = form.querySelector('select[name="temp_service_price_id"]');
+            priceSelect.value = '';
+            document.getElementById('temp_service_price').textContent = '0.00';
+            const washerSelect = form.querySelector('select[name="temp_washer_id"]');
+            washerSelect.value = '';
+            if (washerSelect._searchInput) {
+                washerSelect._searchInput.value = '';
+            }
+            form.querySelector('input[name="temp_tip"]').value = '';
         }
 
         function cancelWashForm() {
             const form = document.getElementById('wash-form');
-            document.getElementById('wash-list').after(form);
+            resetWashForm();
             form.classList.add('hidden');
             document.getElementById('show-wash-form-btn').classList.remove('hidden');
             document.getElementById('cancel-wash-btn').classList.add('hidden');
-            document.getElementById('save-wash-btn').textContent = 'Agregar lavado';
-            delete form.dataset.editIndex;
-            form.querySelectorAll('input[type=text], input[type=number]').forEach(el=>el.value='');
-            form.querySelectorAll('select').forEach(sel=>{sel.value=''; if(sel._searchInput) sel._searchInput.value='';});
-            form.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
-            document.querySelectorAll('.wash-item').forEach(w=>w.removeAttribute('open'));
+            document.getElementById('save-wash-btn').textContent = 'Agregar servicio';
         }
 
         function clearWasher(){
@@ -411,105 +390,185 @@
             if(sel._searchInput) sel._searchInput.value='';
         }
 
+        function showFormError(message) {
+            const list = document.getElementById('error-list');
+            list.innerHTML = `<li>${message}</li>`;
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+        }
+
+        function handleTempServiceChange(select) {
+            const serviceId = select.value;
+            const wrapper = document.getElementById('price-option-wrapper');
+            const priceSelect = wrapper.querySelector('select');
+            priceSelect.innerHTML = '<option value="">-- Seleccionar --</option>';
+            priceSelect.value = '';
+            document.getElementById('temp_service_price').textContent = '0.00';
+
+            if (!serviceId) {
+                wrapper.classList.add('hidden');
+                return;
+            }
+
+            const options = servicePrices[serviceId] || [];
+            if (!options.length) {
+                wrapper.classList.add('hidden');
+                return;
+            }
+
+            wrapper.classList.remove('hidden');
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.id;
+                option.textContent = `${opt.label} (RD$ ${parseFloat(opt.price).toFixed(2)})`;
+                priceSelect.appendChild(option);
+            });
+
+            if (options.length === 1) {
+                priceSelect.value = options[0].id;
+                document.getElementById('temp_service_price').textContent = parseFloat(options[0].price).toFixed(2);
+            }
+
+            if (priceSelect._searchInput) {
+                priceSelect._searchInput.value = priceSelect.options[priceSelect.selectedIndex]?.text || '';
+            }
+        }
+
+        function updateTempPriceDisplay() {
+            const form = document.getElementById('wash-form');
+            const serviceId = form.querySelector('select[name="temp_service_id"]').value;
+            const priceId = form.querySelector('select[name="temp_service_price_id"]').value;
+            const options = servicePrices[serviceId] || [];
+            const selected = options.find(opt => String(opt.id) === priceId);
+            const price = selected ? parseFloat(selected.price) : 0;
+            document.getElementById('temp_service_price').textContent = price.toFixed(2);
+        }
+
+        function createHiddenInput(field, value) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.dataset.field = field;
+            input.value = value;
+            return input;
+        }
+
         function saveWash() {
             const form = document.getElementById('wash-form');
-            const editing = form.dataset.editIndex !== undefined && form.dataset.editIndex !== '';
-            const index = editing ? parseInt(form.dataset.editIndex) : document.querySelectorAll('.wash-item').length;
-            const plate = form.querySelector('input[name="temp_plate"]').value.trim();
-            const brand = form.querySelector('input[name="temp_brand"]').value.trim();
-            const model = form.querySelector('input[name="temp_model"]').value.trim();
-            const color = form.querySelector('input[name="temp_color"]').value.trim();
-            const year = form.querySelector('input[name="temp_year"]').value.trim();
-            const vtSelect = form.querySelector('select[name="temp_vehicle_type_id"]');
-            const vehicleTypeId = vtSelect.value;
-            const vehicleTypeName = vtSelect.options[vtSelect.selectedIndex]?.dataset.name || '';
+            const serviceSelect = form.querySelector('select[name="temp_service_id"]');
+            const serviceId = serviceSelect.value;
+            if (!serviceId) {
+                showFormError('Debe seleccionar un servicio.');
+                return;
+            }
+
+            const options = servicePrices[serviceId] || [];
+            let priceOptionId = form.querySelector('select[name="temp_service_price_id"]').value;
+            if (options.length === 1) {
+                priceOptionId = options[0].id;
+            }
+            const priceOption = options.find(opt => String(opt.id) === String(priceOptionId));
+            if (options.length > 1 && !priceOption) {
+                showFormError('Seleccione una opción de precio.');
+                return;
+            }
+
             const washerSelect = form.querySelector('select[name="temp_washer_id"]');
             const washerId = washerSelect.value;
-            const washerName = washerId ? washerSelect.options[washerSelect.selectedIndex].text : '';
-            const services = Array.from(form.querySelectorAll('input[name="temp_service_ids[]"]:checked')).map(cb => ({id: cb.value, name: cb.nextElementSibling.dataset.name}));
-            if (services.length === 0) { return; }
-
-            let washTotal = 0, washDiscount = 0;
-            services.forEach(s => {
-                let price = servicePrices[s.id] && servicePrices[s.id][vehicleTypeId] ? parseFloat(servicePrices[s.id][vehicleTypeId]) : 0;
-                const disc = serviceDiscounts[s.id];
-                if (disc) {
-                    const d = disc.type === 'fixed' ? parseFloat(disc.amount) : price * parseFloat(disc.amount) / 100;
-                    washDiscount += d;
-                    price = Math.max(0, price - d);
-                }
-                washTotal += price;
-            });
+            const washerName = washerId ? washerSelect.options[washerSelect.selectedIndex]?.text : '';
             const tip = parseFloat(form.querySelector('input[name="temp_tip"]').value) || 0;
-            washTotal += tip;
 
-            const summary = `${brand} | ${model} | ${color} | ${year} | ${vehicleTypeName}`;
+            const basePrice = priceOption ? parseFloat(priceOption.price) : 0;
+            const discountInfo = serviceDiscounts[serviceId];
+            let discount = 0;
+            let finalPrice = basePrice;
+            if (discountInfo) {
+                const amount = parseFloat(discountInfo.amount);
+                discount = discountInfo.type === 'fixed' ? amount : (basePrice * amount / 100);
+                finalPrice = Math.max(0, basePrice - discount);
+            }
+
+            const total = finalPrice + tip;
+            const serviceName = servicesCatalog[serviceId]?.name || serviceSelect.options[serviceSelect.selectedIndex]?.text || '';
+            const priceLabel = priceOption ? priceOption.label : '';
+
+            const editing = form.dataset.editIndex !== undefined && form.dataset.editIndex !== '';
+            const index = editing ? parseInt(form.dataset.editIndex, 10) : document.querySelectorAll('#wash-list .wash-item').length;
+
             let wrapper;
             if (editing) {
-                wrapper = document.querySelectorAll('.wash-item')[index];
+                wrapper = document.querySelectorAll('#wash-list .wash-item')[index];
                 wrapper.innerHTML = '';
             } else {
-                wrapper = document.createElement('details');
-                wrapper.className = 'border rounded p-2 wash-item';
-                wrapper.addEventListener('toggle', function(){ if(this.open) editWash(this); else cancelWashForm(); });
+                wrapper = document.createElement('div');
+                wrapper.className = 'border rounded p-3 wash-item';
                 document.getElementById('wash-list').appendChild(wrapper);
             }
-            wrapper.dataset.total = washTotal;
-            wrapper.dataset.discount = washDiscount;
-            const servicesText = services.map(s=>s.name).join(', ');
-            wrapper.innerHTML = `<summary class="cursor-pointer font-medium text-gray-700">${summary}<button type="button" class="ml-2 text-red-600" onclick="removeWash(this); event.stopPropagation();">Eliminar</button></summary>` +
-                services.map(s=>`<input type="hidden" name="washes[${index}][service_ids][]" value="${s.id}">`).join('') +
-                `<input type="hidden" name="washes[${index}][plate]" value="${plate}">` +
-                `<input type="hidden" name="washes[${index}][brand]" value="${brand}">` +
-                `<input type="hidden" name="washes[${index}][model]" value="${model}">` +
-                `<input type="hidden" name="washes[${index}][color]" value="${color}">` +
-                `<input type="hidden" name="washes[${index}][year]" value="${year}">` +
-                `<input type="hidden" name="washes[${index}][vehicle_type_id]" value="${vehicleTypeId}">` +
-                `<input type="hidden" name="washes[${index}][washer_id]" value="${washerId}">` +
-                `<input type="hidden" name="washes[${index}][tip]" value="${tip.toFixed(2)}">` +
-                `<div class="mt-2 space-y-1 text-sm"><p>Placa: ${plate}</p><p>Estilista: ${washerName || 'N/A'}</p><p>Servicios: ${servicesText}</p><p>Propina: RD$ ${tip.toFixed(2)}</p></div>`;
+
+            wrapper.dataset.total = total;
+            wrapper.dataset.discount = discount;
+            wrapper.dataset.serviceId = serviceId;
+            wrapper.dataset.priceLabel = priceLabel || '';
+
+            const info = document.createElement('div');
+            info.className = 'flex justify-between items-start gap-4';
+            info.innerHTML = `
+                <div>
+                    <p class="font-semibold text-gray-800">${serviceName}</p>
+                    ${priceLabel ? `<p class="text-sm text-gray-600">${priceLabel}</p>` : ''}
+                    ${washerName ? `<p class="text-sm text-gray-600">Estilista: ${washerName}</p>` : ''}
+                    ${tip > 0 ? `<p class="text-sm text-gray-600">Propina: RD$ ${tip.toFixed(2)}</p>` : ''}
+                    <p class="text-sm font-medium text-gray-800">Subtotal: RD$ ${total.toFixed(2)}</p>
+                </div>
+                <div class="flex gap-2 text-sm">
+                    <button type="button" class="text-blue-600 hover:underline" onclick="editWash(this)">Editar</button>
+                    <button type="button" class="text-red-600 hover:underline" onclick="removeWash(this)">Eliminar</button>
+                </div>
+            `;
+            wrapper.appendChild(info);
+
+            const hiddenFields = [
+                createHiddenInput('service_id', serviceId),
+                createHiddenInput('service_price_id', priceOption ? priceOption.id : ''),
+                createHiddenInput('washer_id', washerId || ''),
+                createHiddenInput('tip', tip.toFixed(2))
+            ];
+            hiddenFields.forEach(input => wrapper.appendChild(input));
 
             updateWashIndexes();
-
-            form.querySelectorAll('input[type=text], input[type=number]').forEach(el=>el.value='');
-            form.querySelectorAll('select').forEach(sel=>{sel.value=''; if(sel._searchInput) sel._searchInput.value='';});
-            form.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
-            form.querySelector('input[name="temp_tip"]').value='';
-            delete form.dataset.editIndex;
-            document.getElementById('wash-list').after(form);
-            form.classList.add('hidden');
-            document.getElementById('show-wash-form-btn').classList.remove('hidden');
-            document.getElementById('cancel-wash-btn').classList.add('hidden');
-            document.getElementById('save-wash-btn').textContent = 'Agregar lavado';
-            wrapper.removeAttribute('open');
+            resetWashForm();
+            cancelWashForm();
             updateTotal();
         }
 
-        function editWash(wrapper) {
-            const index = Array.from(document.querySelectorAll('.wash-item')).indexOf(wrapper);
+        function editWash(btn) {
+            const wrapper = btn.closest('.wash-item');
+            const index = Array.from(document.querySelectorAll('#wash-list .wash-item')).indexOf(wrapper);
             const form = document.getElementById('wash-form');
             form.dataset.editIndex = index;
-            document.getElementById('show-wash-form-btn').classList.add('hidden');
-            document.getElementById('cancel-wash-btn').classList.add('hidden');
             document.getElementById('save-wash-btn').textContent = 'Guardar cambios';
-            form.classList.remove('hidden');
-            wrapper.appendChild(form);
-            form.querySelector('input[name="temp_plate"]').value = wrapper.querySelector(`input[name="washes[${index}][plate]"]`).value;
-            form.querySelector('input[name="temp_brand"]').value = wrapper.querySelector(`input[name="washes[${index}][brand]"]`).value;
-            form.querySelector('input[name="temp_model"]').value = wrapper.querySelector(`input[name="washes[${index}][model]"]`).value;
-            form.querySelector('input[name="temp_color"]').value = wrapper.querySelector(`input[name="washes[${index}][color]"]`).value;
-            form.querySelector('input[name="temp_year"]').value = wrapper.querySelector(`input[name="washes[${index}][year]"]`).value;
-            form.querySelector('select[name="temp_vehicle_type_id"]').value = wrapper.querySelector(`input[name="washes[${index}][vehicle_type_id]"]`).value;
-            const washerSelect = form.querySelector('select[name="temp_washer_id"]');
-            washerSelect.value = wrapper.querySelector(`input[name="washes[${index}][washer_id]"]`).value;
-            if(washerSelect._searchInput){ washerSelect._searchInput.value = washerSelect.options[washerSelect.selectedIndex]?.text || ''; }
-            form.querySelector('input[name="temp_tip"]').value = wrapper.querySelector(`input[name="washes[${index}][tip]"]`).value;
-            form.querySelectorAll('input[name="temp_service_ids[]"]').forEach(cb=>{
-                const val = cb.value;
-                cb.checked = wrapper.querySelector(`input[name="washes[${index}][service_ids][]"][value="${val}"]`) !== null;
-            });
 
-            document.querySelectorAll('.wash-item').forEach(w=>{ if(w!==wrapper) w.removeAttribute('open'); });
+            const serviceId = wrapper.querySelector('input[data-field="service_id"]').value;
+            const priceId = wrapper.querySelector('input[data-field="service_price_id"]').value;
+            const washerId = wrapper.querySelector('input[data-field="washer_id"]').value;
+            const tip = wrapper.querySelector('input[data-field="tip"]').value;
+
+            const serviceSelect = form.querySelector('select[name="temp_service_id"]');
+            serviceSelect.value = serviceId;
+            handleTempServiceChange(serviceSelect);
+
+            const priceSelect = form.querySelector('select[name="temp_service_price_id"]');
+            if (priceId) {
+                priceSelect.value = priceId;
+                updateTempPriceDisplay();
+            }
+
+            const washerSelect = form.querySelector('select[name="temp_washer_id"]');
+            washerSelect.value = washerId;
+            if (washerSelect._searchInput) {
+                washerSelect._searchInput.value = washerSelect.options[washerSelect.selectedIndex]?.text || '';
+            }
+            form.querySelector('input[name="temp_tip"]').value = tip;
+
+            showWashForm();
         }
 
         function removeWash(btn) {
@@ -521,13 +580,9 @@
 
         function updateWashIndexes(){
             document.querySelectorAll('#wash-list .wash-item').forEach((item,i)=>{
-                item.querySelectorAll('input[name^="washes["]').forEach(input=>{
-                    const field = input.name.replace(/washes\[\d+\]\[(.*)\]/,'$1');
-                    if(field.startsWith('service_ids')){
-                        input.name = `washes[${i}][service_ids][]`;
-                    }else{
-                        input.name = `washes[${i}][${field}]`;
-                    }
+                item.dataset.index = i;
+                item.querySelectorAll('input[data-field]').forEach(input=>{
+                    input.name = `washes[${i}][${input.dataset.field}]`;
                 });
             });
         }
@@ -538,14 +593,8 @@
             field.style.display = method === 'transferencia' ? '' : 'none';
         }
 
-        const plateInput = document.getElementById('plate');
         const nameInput = document.querySelector('input[name="customer_name"]');
         const phoneInput = document.querySelector('input[name="customer_phone"]');
-        const colorInput = document.querySelector('input[name="temp_color"]');
-        const yearInput = document.querySelector('input[name="temp_year"]');
-        const plateList = document.getElementById('plate-options');
-        let plateData = [];
-        let selectedIndex = -1;
 
         function restrictInput(el, keyRegex, pasteRegex, msg){
             el.addEventListener('keydown', e => {
@@ -569,9 +618,6 @@
         }
 
         restrictInput(nameInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/, 'El nombre solo puede contener letras');
-        restrictInput(plateInput, /^[A-Za-z0-9]$/, /^[A-Za-z0-9]+$/, 'La placa solo puede contener letras y números');
-        restrictInput(colorInput, /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]$/, /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/, 'El color solo puede contener letras');
-        restrictInput(yearInput, /^\d$/, /^\d+$/, 'El año solo puede contener números');
         restrictInput(phoneInput, /^[0-9+() -]$/, /^[0-9+() -]+$/, 'El teléfono solo puede contener números');
 
         function convertSelectToSearchable(select){
@@ -596,102 +642,6 @@
             list.addEventListener('mousedown', e=>{const li=e.target.closest('li'); if(!li) return; e.preventDefault(); input.value=li.textContent; select.value=li.dataset.val; select.dispatchEvent(new Event('change')); list.classList.add('hidden');});
             input.addEventListener('blur', ()=>setTimeout(()=>list.classList.add('hidden'),200));
         }
-
-        const maxYear = {{ date('Y') }};
-        const minYear = 1890;
-        yearInput.addEventListener('input', () => {
-            let val = yearInput.value.replace(/\D/g, '').slice(0, 4);
-            yearInput.value = val;
-            if (val.length === 4) {
-                const num = parseInt(val, 10);
-                if (num < minYear || num > maxYear) {
-                    yearInput.value = '';
-                    const list = document.getElementById('error-list');
-                    list.innerHTML = `<li>El año debe estar entre ${minYear} y ${maxYear}</li>`;
-                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
-                }
-            }
-        });
-
-        plateInput.addEventListener('input', async () => {
-            const q = plateInput.value.trim();
-            if (!q) { plateList.innerHTML = ''; plateList.classList.add('hidden'); return; }
-            try {
-                const res = await fetch(`{{ route('vehicles.search') }}?plate=${encodeURIComponent(q)}`, {headers:{'Accept':'application/json'}});
-                if(res.ok){
-                    plateData = (await res.json()).slice(0,10);
-                    plateList.innerHTML = '';
-                    selectedIndex = -1;
-                    if(plateData.length === 0){
-                        plateList.classList.add('hidden');
-                        return;
-                    }
-                    plateList.classList.remove('hidden');
-                    plateData.forEach(v => {
-                        const li = document.createElement('li');
-                        li.textContent = `${v.brand} | ${v.model} | ${v.color} | ${v.year ?? ''} | ${v.plate} | ${v.type}`;
-                        li.dataset.plate = v.plate;
-                        li.className = 'px-2 py-1 cursor-pointer hover:bg-gray-200';
-                        plateList.appendChild(li);
-                    });
-                }
-            } catch(e) {}
-        });
-
-        plateInput.addEventListener('keydown', e => {
-            const items = plateList.querySelectorAll('li');
-            if(plateList.classList.contains('hidden') || items.length === 0) return;
-            if(e.key === 'ArrowDown'){
-                e.preventDefault();
-                selectedIndex = (selectedIndex + 1) % items.length;
-                updateActive(items);
-            } else if(e.key === 'ArrowUp'){
-                e.preventDefault();
-                selectedIndex = (selectedIndex - 1 + items.length) % items.length;
-                updateActive(items);
-            } else if(e.key === 'Enter' && selectedIndex >= 0){
-                e.preventDefault();
-                const li = items[selectedIndex];
-                plateInput.value = li.dataset.plate;
-                fillVehicleFields(li.dataset.plate);
-                plateList.classList.add('hidden');
-            }
-        });
-
-        function updateActive(items){
-            items.forEach((li,i)=>{
-                li.classList.toggle('bg-gray-200', i===selectedIndex);
-            });
-        }
-
-        plateList.addEventListener('mousedown', e => {
-            const li = e.target.closest('li[data-plate]');
-            if(!li) return;
-            e.preventDefault();
-            plateInput.value = li.dataset.plate;
-            fillVehicleFields(li.dataset.plate);
-            plateList.classList.add('hidden');
-        });
-
-        plateInput.addEventListener('blur', () => {
-            setTimeout(() => plateList.classList.add('hidden'), 200);
-        });
-
-        plateInput.addEventListener('change', () => {
-            fillVehicleFields(plateInput.value);
-        });
-
-        function fillVehicleFields(plate){
-            const found = plateData.find(v => v.plate === plate);
-            if(found){
-                document.querySelector('input[name="temp_brand"]').value = found.brand;
-                document.querySelector('input[name="temp_model"]').value = found.model;
-                document.querySelector('input[name="temp_color"]').value = found.color;
-                document.querySelector('input[name="temp_year"]').value = found.year || '';
-                document.querySelector('select[name="temp_vehicle_type_id"]').value = found.vehicle_type_id;
-            }
-        }
-
 
         document.querySelectorAll('select[data-searchable]').forEach(convertSelectToSearchable);
 
