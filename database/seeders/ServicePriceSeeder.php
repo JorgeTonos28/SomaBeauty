@@ -40,7 +40,7 @@ class ServicePriceSeeder extends Seeder
 
                 ServicePrice::updateOrCreate(
                     ['service_id' => $service->id, 'vehicle_type_id' => $vehicle->id],
-                    ['price' => $price]
+                    ['label' => $vehicle->name, 'price' => $price]
                 );
             }
         }

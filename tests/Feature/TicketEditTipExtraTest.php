@@ -28,7 +28,7 @@ class TicketEditTipExtraTest extends TestCase
         $vehicleType = VehicleType::create(['name' => 'Carro']);
         $washer = Washer::create(['name' => 'Juan', 'pending_amount' => 0, 'active' => true]);
         $service = Service::create(['name' => 'Lavado', 'description' => 'test', 'active' => true]);
-        ServicePrice::create(['service_id' => $service->id, 'vehicle_type_id' => $vehicleType->id, 'price' => 200]);
+        ServicePrice::create(['service_id' => $service->id, 'vehicle_type_id' => $vehicleType->id, 'label' => 'Carro', 'price' => 200]);
 
         $date = Carbon::parse('2024-01-10');
 
