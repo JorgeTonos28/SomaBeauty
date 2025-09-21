@@ -29,7 +29,7 @@
                 <div class="flex items-center gap-3 ml-auto">
                     <span class="text-sm text-gray-700">Comisión por defecto: <strong>{{ number_format($commissionRate, 2) }}%</strong></span>
                     <button type="button" class="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700" onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'commission-rate-settings' }))">Actualizar comisión</button>
-                    <a href="{{ route('washers.create') }}" class="btn-primary">Nuevo Estilista</a>
+                    <a href="{{ route('washers.create') }}" class="btn-primary">Agregar Estilista</a>
                 </div>
             </div>
 

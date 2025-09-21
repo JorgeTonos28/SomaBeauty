@@ -97,7 +97,7 @@ class ServiceController extends Controller
             $vehicleType = $price->vehicleType;
             $price->delete();
 
-            if ($vehicleType && $vehicleType->prices()->count() === 0 && $vehicleType->vehicles()->count() === 0) {
+            if ($vehicleType && $vehicleType->servicePrices()->count() === 0 && $vehicleType->vehicles()->count() === 0) {
                 $vehicleType->delete();
             }
         });

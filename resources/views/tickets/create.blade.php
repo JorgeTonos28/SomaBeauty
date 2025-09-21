@@ -27,7 +27,7 @@
 
             <!-- Servicios -->
             <details class="border rounded p-4" id="wash-section">
-                <summary class="cursor-pointer font-medium text-gray-700">Agregar o quitar servicio</summary>
+                <summary class="cursor-pointer font-medium text-gray-700">Servicios</summary>
                 <div id="wash-list" class="space-y-4 mt-4"></div>
 
                 <div id="wash-form" class="space-y-4 mt-4 hidden">

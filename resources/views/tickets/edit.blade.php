@@ -28,7 +28,7 @@
 
             <!-- Servicios -->
             <details class="border rounded p-4" id="wash-section">
-                <summary class="cursor-pointer font-medium text-gray-700">Agregar o quitar servicio</summary>
+                <summary class="cursor-pointer font-medium text-gray-700">Servicios</summary>
                 <div id="wash-list" class="space-y-4 mt-4">
                     @foreach($ticketWashes as $i => $wData)
                         <div class="border rounded p-3 wash-item" data-total="{{ $wData['total'] }}" data-discount="{{ $wData['discount'] ?? 0 }}" data-commission-percentage="{{ $wData['commission_percentage'] !== null ? number_format($wData['commission_percentage'], 2, '.', '') : '' }}">

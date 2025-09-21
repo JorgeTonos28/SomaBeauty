@@ -10,8 +10,20 @@ class VehicleTypeSeeder extends Seeder
     public function run()
     {
         $types = [
-            'Bicicleta', 'Motor', 'Pasola', 'Carro', 'Jeepeta',
-            'Camioneta', 'Minibús', 'Guagua', 'Camión',
+            'Pelo Corto',
+            'Pelo Largo',
+            'Regular',
+            'Puntas',
+            'Elaborado',
+            'Simple',
+            'Manos - Pintura Normal',
+            'Pies - Pintura Normal',
+            'Gel Mano y Pie',
+            'Manicure Ruso',
+            'Pedicure Ruso',
+            'Retiro de gel',
+            'Acrílico',
+            'Acrílico Full',
         ];
 
         foreach ($types as $type) {
