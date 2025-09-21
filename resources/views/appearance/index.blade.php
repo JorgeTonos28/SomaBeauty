@@ -10,6 +10,11 @@
             <form method="POST" action="{{ route('appearance.store') }}" enctype="multipart/form-data" class="space-y-6">
                 @csrf
                 <div>
+                    <label class="block font-medium text-sm text-gray-700">Nombre del negocio</label>
+                    <input type="text" name="business_name" value="{{ old('business_name', optional($settings)->business_name) }}" class="form-input mt-1 w-full" placeholder="Ej. Salon Soma">
+                    <p class="text-xs text-gray-500 mt-1">Este nombre se mostrará en el pie de página.</p>
+                </div>
+                <div>
                     <label class="block font-medium text-sm text-gray-700">Logo</label>
                     <input type="file" name="logo" class="form-input mt-1">
                     <p class="text-xs text-gray-500 mt-1">Tamaño recomendado: 200x50 px.</p>
