@@ -22,7 +22,7 @@
             <div x-show="sidebarOpen" x-cloak class="fixed inset-0 bg-black/50 z-30 md:hidden" @click="sidebarOpen = false"></div>
             @include('layouts.sidebar')
 
-            <div class="flex-1">
+            <div class="flex-1 flex flex-col min-h-screen">
                 @include('layouts.navigation')
                 @include('partials.flash-messages')
 
@@ -36,11 +36,14 @@
             @endif
 
                 <!-- Page Content -->
-                <main>
+                <main class="flex-1">
                     {{ $slot }}
                 </main>
-                <footer class="bg-gray-100 text-sm px-4 py-2 flex justify-between items-center">
-                    <span>&copy; {{ date('Y') }} 3Glam</span>
+                @php
+                    $businessName = optional($appearanceSettings)->business_name;
+                @endphp
+                <footer class="bg-gray-100 text-sm px-4 py-2 flex justify-between items-center mt-auto">
+                    <span>&copy; 2025{{ $businessName ? ' ' . $businessName : '' }}</span>
                     <img src="{{ asset('images/signature.png') }}" alt="Firma" class="h-10">
                 </footer>
             </div>
