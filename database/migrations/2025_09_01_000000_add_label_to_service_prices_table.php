@@ -13,9 +13,14 @@ return new class extends Migration
             $table->string('label')->after('service_id');
         });
 
-        DB::table('service_prices')
-            ->join('vehicle_types', 'service_prices.vehicle_type_id', '=', 'vehicle_types.id')
-            ->update(['label' => DB::raw('vehicle_types.name')]);
+        DB::statement(
+            "UPDATE service_prices
+             SET label = (
+                SELECT name
+                FROM vehicle_types
+                WHERE vehicle_types.id = service_prices.vehicle_type_id
+             )"
+        );
     }
 
     public function down(): void
