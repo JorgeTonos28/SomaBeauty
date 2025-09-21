@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CommissionSetting;
 use App\Models\Washer;
 use App\Models\WasherPayment;
 use App\Models\WasherMovement;
@@ -35,7 +36,7 @@ class WasherController extends Controller
                     $q->whereDate('created_at', '<=', $filters['end']);
                 }
             });
-            $ticketTotal = $washQuery->count() * 100;
+            $ticketTotal = (clone $washQuery)->sum('commission_amount');
 
             $movementQuery = $washer->movements();
             if ($filters['start']) {
@@ -70,11 +71,13 @@ class WasherController extends Controller
                 }
             });
 
-        $unassignedBase = (clone $unassignedQuery)->count() * 100;
+        $unassignedBase = (clone $unassignedQuery)->sum('commission_amount');
         $unassignedTips = (clone $unassignedQuery)->sum('tip');
         $unassignedTotal = $unassignedBase + $unassignedTips;
 
         $pendingTotal = $washers->sum('range_pending') + $unassignedTotal;
+
+        $commissionRate = CommissionSetting::currentPercentage();
 
         if ($request->ajax()) {
             return view('washers.partials.table', [
@@ -90,6 +93,7 @@ class WasherController extends Controller
             'pendingTotal' => $pendingTotal,
             'unassignedTotal' => $unassignedTotal,
             'filters' => $filters,
+            'commissionRate' => $commissionRate,
         ]);
     }
 
@@ -155,7 +159,7 @@ class WasherController extends Controller
         $start = $request->input('start', $today);
         $end = $request->input('end', $today);
 
-        $washesQuery = $washer->ticketWashes()->with(['ticket', 'ticket.vehicle', 'ticket.vehicleType', 'vehicle', 'vehicleType']);
+        $washesQuery = $washer->ticketWashes()->with(['ticket', 'ticket.vehicle', 'ticket.vehicleType', 'vehicle', 'vehicleType', 'details.service']);
         if ($start) {
             $washesQuery->whereHas('ticket', fn($q) => $q->whereDate('created_at', '>=', $start));
         }
@@ -183,23 +187,24 @@ class WasherController extends Controller
         $movements = $movementsQuery->get();
 
         $events = [];
+        $defaultCommission = CommissionSetting::currentPercentage();
+
         foreach ($washes as $w) {
             $t = $w->ticket;
-            $vehicle = $w->vehicle;
-            $detailParts = [];
-            if ($vehicle) {
-                $detailParts[] = $vehicle->brand;
-                $detailParts[] = $vehicle->model;
-                $detailParts[] = $vehicle->color;
-                $detailParts[] = $vehicle->year;
-            }
-            $detailParts[] = optional($w->vehicleType)->name;
+            $serviceDetail = $w->details->firstWhere('type', 'service');
+            $serviceName = $serviceDetail ? optional($serviceDetail->service)->name : 'Servicio';
+            $priceLabel = optional($w->vehicleType)->name;
+            $label = trim($serviceName . ($priceLabel ? ' | '.$priceLabel : ''));
+            $percentage = $w->commission_percentage !== null
+                ? number_format($w->commission_percentage, 2)
+                : number_format($defaultCommission, 2);
+            $commissionAmount = $w->commission_amount ?? 0;
 
             $events[] = [
                 'date' => $t->created_at,
                 'customer' => $t->customer_name,
-                'description' => implode(' | ', array_filter($detailParts)),
-                'gain' => 100,
+                'description' => trim($label).' ['.rtrim(rtrim($percentage, '0'), '.').'%]',
+                'gain' => $commissionAmount,
                 'payment' => null,
                 'wash_id' => $w->id,
                 'ticket_id' => $t->id,
@@ -237,7 +242,7 @@ class WasherController extends Controller
         }
         usort($events, fn($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
 
-        $totalGain = $washes->count() * 100 + $movements->sum('amount');
+        $totalGain = $washes->sum('commission_amount') + $movements->sum('amount');
         $totalPaid = $payments->sum('amount_paid');
         $pending = $totalGain - $totalPaid;
 
@@ -289,7 +294,7 @@ class WasherController extends Controller
             $date = $w->ticket->created_at;
             $key = $date->toDateString();
             $groups[$key]['washes'][] = $w;
-            $groups[$key]['amount'] = ($groups[$key]['amount'] ?? 0) + 100;
+            $groups[$key]['amount'] = ($groups[$key]['amount'] ?? 0) + ($w->commission_amount ?? 0);
             $groups[$key]['dateTime'] = $groups[$key]['dateTime'] ?? $date;
         }
         foreach ($movements as $m) {
@@ -347,6 +352,23 @@ class WasherController extends Controller
         return back()->with('success', 'Pago registrado correctamente.');
     }
 
+    public function updateCommissionRate(Request $request)
+    {
+        $request->validate([
+            'commission_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
+        ], [
+            'commission_percentage.required' => 'Debe indicar un porcentaje.',
+            'commission_percentage.numeric' => 'El porcentaje debe ser un número válido.',
+            'commission_percentage.min' => 'El porcentaje no puede ser negativo.',
+            'commission_percentage.max' => 'El porcentaje no puede ser mayor a 100.',
+        ]);
+
+        $percentage = round((float) $request->commission_percentage, 2);
+        CommissionSetting::updatePercentage($percentage);
+
+        return redirect()->route('washers.index')->with('success', 'Porcentaje de comisión actualizado.');
+    }
+
     public function payAll()
     {
         $washers = Washer::where('pending_amount', '>', 0)->get();
@@ -369,7 +391,7 @@ class WasherController extends Controller
                     'washer_id' => $washer->id,
                     'payment_date' => $paymentDate,
                     'total_washes' => $group->count(),
-                    'amount_paid' => $group->count() * 100,
+                    'amount_paid' => $group->sum('commission_amount'),
                     'created_at' => $paymentDate,
                 ]);
             }

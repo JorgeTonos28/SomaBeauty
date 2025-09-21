@@ -61,7 +61,7 @@
             <p>Caja chica: <strong>RD$ {{ number_format($pettyCashAmount, 2) }}</strong></p>
             <p>Gastos de caja chica: <strong>RD$ {{ number_format($pettyCashTotal, 2) }}</strong></p>
             <p>Para estilistas: <strong>RD$ {{ number_format($washerPayDue, 2) }}</strong></p>
-            <p>Ventas de lavados: RD$ {{ number_format($serviceTotal, 2) }}</p>
+            <p>Ventas de servicios: RD$ {{ number_format($serviceTotal, 2) }}</p>
             <p>Ventas de productos: RD$ {{ number_format($productTotal, 2) }}</p>
             <p>Ventas de tragos: RD$ {{ number_format($drinkTotal, 2) }}</p>
             @if(Auth::user()->role === 'admin')

@@ -59,6 +59,7 @@ Route::middleware(['auth', 'role:admin,cajero'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('washers/pay-all', [WasherController::class, 'payAll'])->name('washers.payAll');
     Route::post('washers/{washer}/pay', [WasherController::class, 'pay'])->name('washers.pay');
+    Route::post('washers/commission-rate', [WasherController::class, 'updateCommissionRate'])->name('washers.updateCommissionRate');
     Route::resource('washers', WasherController::class);
 });
 Route::middleware(['auth', 'role:admin,cajero'])->group(function () {

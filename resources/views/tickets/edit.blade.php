@@ -28,10 +28,10 @@
 
             <!-- Servicios -->
             <details class="border rounded p-4" id="wash-section">
-                <summary class="cursor-pointer font-medium text-gray-700">Servicios</summary>
+                <summary class="cursor-pointer font-medium text-gray-700">Agregar o quitar servicio</summary>
                 <div id="wash-list" class="space-y-4 mt-4">
                     @foreach($ticketWashes as $i => $wData)
-                        <div class="border rounded p-3 wash-item" data-total="{{ $wData['total'] }}" data-discount="{{ $wData['discount'] ?? 0 }}">
+                        <div class="border rounded p-3 wash-item" data-total="{{ $wData['total'] }}" data-discount="{{ $wData['discount'] ?? 0 }}" data-commission-percentage="{{ $wData['commission_percentage'] !== null ? number_format($wData['commission_percentage'], 2, '.', '') : '' }}">
                             <div class="flex justify-between items-start gap-4">
                                 <div>
                                     <p class="font-semibold text-gray-800">{{ $wData['service_name'] }}</p>
@@ -53,6 +53,7 @@
                             <input type="hidden" data-field="service_price_id" name="washes[{{ $i }}][service_price_id]" value="{{ $wData['service_price_id'] }}">
                             <input type="hidden" data-field="washer_id" name="washes[{{ $i }}][washer_id]" value="{{ $wData['wash']->washer_id }}">
                             <input type="hidden" data-field="tip" name="washes[{{ $i }}][tip]" value="{{ number_format($wData['tip'], 2, '.', '') }}">
+                            <input type="hidden" data-field="commission_percentage" name="washes[{{ $i }}][commission_percentage]" value="{{ $wData['commission_percentage'] !== null ? number_format($wData['commission_percentage'], 2, '.', '') : '' }}">
                         </div>
                     @endforeach
                 </div>
@@ -570,8 +571,10 @@
             const index = editing ? parseInt(form.dataset.editIndex, 10) : document.querySelectorAll('#wash-list .wash-item').length;
 
             let wrapper;
+            let existingCommission = '';
             if (editing) {
                 wrapper = document.querySelectorAll('#wash-list .wash-item')[index];
+                existingCommission = wrapper.querySelector('input[data-field="commission_percentage"]')?.value || '';
                 wrapper.innerHTML = '';
             } else {
                 wrapper = document.createElement('div');
@@ -583,6 +586,7 @@
             wrapper.dataset.discount = discount;
             wrapper.dataset.serviceId = serviceId;
             wrapper.dataset.priceLabel = priceLabel || '';
+            wrapper.dataset.commissionPercentage = existingCommission || '';
 
             const info = document.createElement('div');
             info.className = 'flex justify-between items-start gap-4';
@@ -607,6 +611,9 @@
                 createHiddenInput('washer_id', washerId || ''),
                 createHiddenInput('tip', tip.toFixed(2))
             ];
+            if (existingCommission) {
+                hiddenFields.push(createHiddenInput('commission_percentage', existingCommission));
+            }
             hiddenFields.forEach(input => wrapper.appendChild(input));
 
             updateWashIndexes();

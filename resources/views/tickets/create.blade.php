@@ -27,7 +27,7 @@
 
             <!-- Servicios -->
             <details class="border rounded p-4" id="wash-section">
-                <summary class="cursor-pointer font-medium text-gray-700">Servicios</summary>
+                <summary class="cursor-pointer font-medium text-gray-700">Agregar o quitar servicio</summary>
                 <div id="wash-list" class="space-y-4 mt-4"></div>
 
                 <div id="wash-form" class="space-y-4 mt-4 hidden">
@@ -498,8 +498,10 @@
             const index = editing ? parseInt(form.dataset.editIndex, 10) : document.querySelectorAll('#wash-list .wash-item').length;
 
             let wrapper;
+            let existingCommission = '';
             if (editing) {
                 wrapper = document.querySelectorAll('#wash-list .wash-item')[index];
+                existingCommission = wrapper.querySelector('input[data-field="commission_percentage"]')?.value || '';
                 wrapper.innerHTML = '';
             } else {
                 wrapper = document.createElement('div');
@@ -511,6 +513,7 @@
             wrapper.dataset.discount = discount;
             wrapper.dataset.serviceId = serviceId;
             wrapper.dataset.priceLabel = priceLabel || '';
+            wrapper.dataset.commissionPercentage = existingCommission || '';
 
             const info = document.createElement('div');
             info.className = 'flex justify-between items-start gap-4';
@@ -535,6 +538,9 @@
                 createHiddenInput('washer_id', washerId || ''),
                 createHiddenInput('tip', tip.toFixed(2))
             ];
+            if (existingCommission) {
+                hiddenFields.push(createHiddenInput('commission_percentage', existingCommission));
+            }
             hiddenFields.forEach(input => wrapper.appendChild(input));
 
             updateWashIndexes();
