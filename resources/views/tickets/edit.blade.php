@@ -62,7 +62,7 @@
                     <!-- Servicio -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Servicio</label>
-                        <select name="temp_service_id" class="form-select w-full mt-1" onchange="handleTempServiceChange(this)">
+                        <select name="temp_service_id" class="form-select w-full mt-1" data-searchable onchange="handleTempServiceChange(this)">
                             <option value="">-- Seleccionar --</option>
                             @foreach ($services as $service)
                                 <option value="{{ $service->id }}">{{ $service->name }}</option>
@@ -435,8 +435,12 @@
         function resetWashForm() {
             const form = document.getElementById('wash-form');
             form.dataset.editIndex = '';
-            form.querySelector('select[name="temp_service_id"]').value = '';
-            handleTempServiceChange(form.querySelector('select[name="temp_service_id"]'));
+            const serviceSelect = form.querySelector('select[name="temp_service_id"]');
+            serviceSelect.value = '';
+            if (serviceSelect._searchInput) {
+                serviceSelect._searchInput.value = '';
+            }
+            handleTempServiceChange(serviceSelect);
             const priceSelect = form.querySelector('select[name="temp_service_price_id"]');
             priceSelect.value = '';
             document.getElementById('temp_service_price').textContent = '0.00';
@@ -636,6 +640,9 @@
 
             const serviceSelect = form.querySelector('select[name="temp_service_id"]');
             serviceSelect.value = serviceId;
+            if (serviceSelect._searchInput) {
+                serviceSelect._searchInput.value = serviceSelect.options[serviceSelect.selectedIndex]?.text || '';
+            }
             handleTempServiceChange(serviceSelect);
 
             const priceSelect = form.querySelector('select[name="temp_service_price_id"]');
