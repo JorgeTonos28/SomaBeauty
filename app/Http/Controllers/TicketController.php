@@ -602,7 +602,7 @@ class TicketController extends Controller
 
                 if ($hasService && $oldWash->washer_id) {
                     Washer::whereId($oldWash->washer_id)->decrement('pending_amount', $oldCommission + $tipOld);
-
+                  
                     if ($tipOld > 0) {
                         $serviceName = optional($serviceDetail->service)->name;
                         $label = optional($oldWash->vehicleType)->name;
@@ -638,6 +638,7 @@ class TicketController extends Controller
                 }
 
                 $prices = $service->prices;
+              
                 if ($prices->isEmpty()) {
                     DB::rollBack();
                     $message = ['washes' => ['El servicio seleccionado no tiene opciones de precio configuradas.']];

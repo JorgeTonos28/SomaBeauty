@@ -27,7 +27,7 @@
 
             <!-- Servicios -->
             <details class="border rounded p-4" id="wash-section">
-                <summary class="cursor-pointer font-medium text-gray-700">Servicios</summary>
+                <summary class="cursor-pointer font-medium text-gray-700">Agregar o quitar servicio</summary>
                 <div id="wash-list" class="space-y-4 mt-4"></div>
 
                 <div id="wash-form" class="space-y-4 mt-4 hidden">
@@ -392,6 +392,67 @@
             const sel = document.querySelector('#wash-form select[name="temp_washer_id"]');
             sel.value='';
             if(sel._syncSearchInput) sel._syncSearchInput();
+        }
+
+        function showFormError(message) {
+            const list = document.getElementById('error-list');
+            list.innerHTML = `<li>${message}</li>`;
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+        }
+
+        function handleTempServiceChange(select) {
+            const serviceId = select.value;
+            const wrapper = document.getElementById('price-option-wrapper');
+            const priceSelect = wrapper.querySelector('select');
+            priceSelect.innerHTML = '<option value="">-- Seleccionar --</option>';
+            priceSelect.value = '';
+            document.getElementById('temp_service_price').textContent = '0.00';
+
+            if (!serviceId) {
+                wrapper.classList.add('hidden');
+                return;
+            }
+
+            const options = servicePrices[serviceId] || [];
+            if (!options.length) {
+                wrapper.classList.add('hidden');
+                return;
+            }
+
+            wrapper.classList.remove('hidden');
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.id;
+                option.textContent = `${opt.label} (RD$ ${parseFloat(opt.price).toFixed(2)})`;
+                priceSelect.appendChild(option);
+            });
+
+            if (options.length === 1) {
+                priceSelect.value = options[0].id;
+                document.getElementById('temp_service_price').textContent = parseFloat(options[0].price).toFixed(2);
+            }
+
+            if (priceSelect._searchInput) {
+                priceSelect._searchInput.value = priceSelect.options[priceSelect.selectedIndex]?.text || '';
+            }
+        }
+
+        function updateTempPriceDisplay() {
+            const form = document.getElementById('wash-form');
+            const serviceId = form.querySelector('select[name="temp_service_id"]').value;
+            const priceId = form.querySelector('select[name="temp_service_price_id"]').value;
+            const options = servicePrices[serviceId] || [];
+            const selected = options.find(opt => String(opt.id) === priceId);
+            const price = selected ? parseFloat(selected.price) : 0;
+            document.getElementById('temp_service_price').textContent = price.toFixed(2);
+        }
+
+        function createHiddenInput(field, value) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.dataset.field = field;
+            input.value = value;
+            return input;
         }
 
         function showFormError(message) {
