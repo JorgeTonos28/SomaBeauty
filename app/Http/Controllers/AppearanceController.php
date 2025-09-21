@@ -24,6 +24,7 @@ class AppearanceController extends Controller
     {
         $request->validate([
             'logo' => 'nullable|image|max:1024',
+            'login_logo' => 'nullable|image|max:1024',
             'favicon' => 'nullable|file|max:512',
             'business_name' => 'nullable|string|max:255',
         ]);
@@ -38,6 +39,16 @@ class AppearanceController extends Controller
 
             $request->file('logo')->move($dir, 'logo.png');
             $settings->logo_updated_at = now();
+        }
+
+        if ($request->hasFile('login_logo')) {
+            $dir = public_path('images');
+            if (! file_exists($dir)) {
+                mkdir($dir, 0755, true);
+            }
+
+            $request->file('login_logo')->move($dir, 'login-logo.png');
+            $settings->login_logo_updated_at = now();
         }
 
         if ($request->hasFile('favicon')) {

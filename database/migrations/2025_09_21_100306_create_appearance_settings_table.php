@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('business_name')->nullable();
             $table->timestamp('logo_updated_at')->nullable();
+            $table->timestamp('login_logo_updated_at')->nullable();
             $table->timestamp('favicon_updated_at')->nullable();
             $table->timestamps();
         });

@@ -20,6 +20,11 @@
                     <p class="text-xs text-gray-500 mt-1">Tamaño recomendado: 200x50 px.</p>
                 </div>
                 <div>
+                    <label class="block font-medium text-sm text-gray-700">Logo para el login</label>
+                    <input type="file" name="login_logo" class="form-input mt-1">
+                    <p class="text-xs text-gray-500 mt-1">Tamaño recomendado: 320x160 px.</p>
+                </div>
+                <div>
                     <label class="block font-medium text-sm text-gray-700">Favicon</label>
                     <input type="file" name="favicon" class="form-input mt-1">
                     <p class="text-xs text-gray-500 mt-1">Tamaño recomendado: 32x32 px.</p>

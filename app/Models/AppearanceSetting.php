@@ -23,6 +23,7 @@ class AppearanceSetting extends Model
      */
     protected $casts = [
         'logo_updated_at' => 'datetime',
+        'login_logo_updated_at' => 'datetime',
         'favicon_updated_at' => 'datetime',
     ];
 }
