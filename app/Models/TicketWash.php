@@ -16,11 +16,15 @@ class TicketWash extends Model
         'washer_id',
         'washer_paid',
         'tip',
+        'commission_percentage',
+        'commission_amount',
     ];
 
     protected $casts = [
         'washer_paid' => 'boolean',
         'tip' => 'float',
+        'commission_percentage' => 'float',
+        'commission_amount' => 'float',
     ];
 
     public function ticket()

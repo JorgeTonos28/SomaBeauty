@@ -34,7 +34,7 @@
                     <!-- Servicio -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Servicio</label>
-                        <select name="temp_service_id" class="form-select w-full mt-1" onchange="handleTempServiceChange(this)">
+                        <select name="temp_service_id" class="form-select w-full mt-1" data-searchable onchange="handleTempServiceChange(this)">
                             <option value="">-- Seleccionar --</option>
                             @foreach ($services as $service)
                                 <option value="{{ $service->id }}">{{ $service->name }}</option>
@@ -362,15 +362,19 @@
         function resetWashForm() {
             const form = document.getElementById('wash-form');
             form.dataset.editIndex = '';
-            form.querySelector('select[name="temp_service_id"]').value = '';
-            handleTempServiceChange(form.querySelector('select[name="temp_service_id"]'));
+            const serviceSelect = form.querySelector('select[name="temp_service_id"]');
+            serviceSelect.value = '';
+            if (serviceSelect._syncSearchInput) {
+                serviceSelect._syncSearchInput();
+            }
+            handleTempServiceChange(serviceSelect);
             const priceSelect = form.querySelector('select[name="temp_service_price_id"]');
             priceSelect.value = '';
             document.getElementById('temp_service_price').textContent = '0.00';
             const washerSelect = form.querySelector('select[name="temp_washer_id"]');
             washerSelect.value = '';
-            if (washerSelect._searchInput) {
-                washerSelect._searchInput.value = '';
+            if (washerSelect._syncSearchInput) {
+                washerSelect._syncSearchInput();
             }
             form.querySelector('input[name="temp_tip"]').value = '';
         }
@@ -387,7 +391,68 @@
         function clearWasher(){
             const sel = document.querySelector('#wash-form select[name="temp_washer_id"]');
             sel.value='';
-            if(sel._searchInput) sel._searchInput.value='';
+            if(sel._syncSearchInput) sel._syncSearchInput();
+        }
+
+        function showFormError(message) {
+            const list = document.getElementById('error-list');
+            list.innerHTML = `<li>${message}</li>`;
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'error-modal' }));
+        }
+
+        function handleTempServiceChange(select) {
+            const serviceId = select.value;
+            const wrapper = document.getElementById('price-option-wrapper');
+            const priceSelect = wrapper.querySelector('select');
+            priceSelect.innerHTML = '<option value="">-- Seleccionar --</option>';
+            priceSelect.value = '';
+            document.getElementById('temp_service_price').textContent = '0.00';
+
+            if (!serviceId) {
+                wrapper.classList.add('hidden');
+                return;
+            }
+
+            const options = servicePrices[serviceId] || [];
+            if (!options.length) {
+                wrapper.classList.add('hidden');
+                return;
+            }
+
+            wrapper.classList.remove('hidden');
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.id;
+                option.textContent = `${opt.label} (RD$ ${parseFloat(opt.price).toFixed(2)})`;
+                priceSelect.appendChild(option);
+            });
+
+            if (options.length === 1) {
+                priceSelect.value = options[0].id;
+                document.getElementById('temp_service_price').textContent = parseFloat(options[0].price).toFixed(2);
+            }
+
+            if (priceSelect._searchInput) {
+                priceSelect._searchInput.value = priceSelect.options[priceSelect.selectedIndex]?.text || '';
+            }
+        }
+
+        function updateTempPriceDisplay() {
+            const form = document.getElementById('wash-form');
+            const serviceId = form.querySelector('select[name="temp_service_id"]').value;
+            const priceId = form.querySelector('select[name="temp_service_price_id"]').value;
+            const options = servicePrices[serviceId] || [];
+            const selected = options.find(opt => String(opt.id) === priceId);
+            const price = selected ? parseFloat(selected.price) : 0;
+            document.getElementById('temp_service_price').textContent = price.toFixed(2);
+        }
+
+        function createHiddenInput(field, value) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.dataset.field = field;
+            input.value = value;
+            return input;
         }
 
         function showFormError(message) {
@@ -461,6 +526,10 @@
             }
 
             const options = servicePrices[serviceId] || [];
+            if (!options.length) {
+                showFormError('El servicio seleccionado no tiene opciones de precio configuradas.');
+                return;
+            }
             let priceOptionId = form.querySelector('select[name="temp_service_price_id"]').value;
             if (options.length === 1) {
                 priceOptionId = options[0].id;
@@ -494,8 +563,10 @@
             const index = editing ? parseInt(form.dataset.editIndex, 10) : document.querySelectorAll('#wash-list .wash-item').length;
 
             let wrapper;
+            let existingCommission = '';
             if (editing) {
                 wrapper = document.querySelectorAll('#wash-list .wash-item')[index];
+                existingCommission = wrapper.querySelector('input[data-field="commission_percentage"]')?.value || '';
                 wrapper.innerHTML = '';
             } else {
                 wrapper = document.createElement('div');
@@ -507,6 +578,7 @@
             wrapper.dataset.discount = discount;
             wrapper.dataset.serviceId = serviceId;
             wrapper.dataset.priceLabel = priceLabel || '';
+            wrapper.dataset.commissionPercentage = existingCommission || '';
 
             const info = document.createElement('div');
             info.className = 'flex justify-between items-start gap-4';
@@ -531,6 +603,9 @@
                 createHiddenInput('washer_id', washerId || ''),
                 createHiddenInput('tip', tip.toFixed(2))
             ];
+            if (existingCommission) {
+                hiddenFields.push(createHiddenInput('commission_percentage', existingCommission));
+            }
             hiddenFields.forEach(input => wrapper.appendChild(input));
 
             updateWashIndexes();
@@ -553,6 +628,9 @@
 
             const serviceSelect = form.querySelector('select[name="temp_service_id"]');
             serviceSelect.value = serviceId;
+            if (serviceSelect._syncSearchInput) {
+                serviceSelect._syncSearchInput();
+            }
             handleTempServiceChange(serviceSelect);
 
             const priceSelect = form.querySelector('select[name="temp_service_price_id"]');
@@ -563,8 +641,8 @@
 
             const washerSelect = form.querySelector('select[name="temp_washer_id"]');
             washerSelect.value = washerId;
-            if (washerSelect._searchInput) {
-                washerSelect._searchInput.value = washerSelect.options[washerSelect.selectedIndex]?.text || '';
+            if (washerSelect._syncSearchInput) {
+                washerSelect._syncSearchInput();
             }
             form.querySelector('input[name="temp_tip"]').value = tip;
 
@@ -627,7 +705,8 @@
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'form-input w-full mt-1';
-            input.value = select.options[select.selectedIndex]?.text || '';
+            const placeholderText = select.dataset.placeholder || '-- Seleccionar --';
+            input.placeholder = placeholderText;
             select._searchInput = input;
             wrapper.appendChild(input);
             const list = document.createElement('ul');
@@ -635,12 +714,38 @@
             wrapper.appendChild(list);
             select.parentNode.insertBefore(wrapper, select);
 
-            const options = Array.from(select.options);
-            function show(filter=''){list.innerHTML=''; const f=filter.toLowerCase(); options.forEach(o=>{if(!o.value) return; if(o.text.toLowerCase().includes(f)){const li=document.createElement('li');li.textContent=o.text; li.dataset.val=o.value; li.className='px-2 py-1 cursor-pointer hover:bg-gray-200'; list.appendChild(li);}}); list.classList.toggle('hidden', list.children.length===0);}
-            input.addEventListener('focus', ()=>show());
+            function syncFromSelect(){
+                const selectedOption = select.options[select.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    input.value = selectedOption.text;
+                } else {
+                    input.value = '';
+                }
+                input.placeholder = placeholderText;
+            }
+            select._syncSearchInput = syncFromSelect;
+            syncFromSelect();
+
+            function show(filter=''){
+                list.innerHTML='';
+                const f=filter.toLowerCase();
+                Array.from(select.options).forEach(o=>{
+                    if(!o.value) return;
+                    if(o.text.toLowerCase().includes(f)){
+                        const li=document.createElement('li');
+                        li.textContent=o.text;
+                        li.dataset.val=o.value;
+                        li.className='px-2 py-1 cursor-pointer hover:bg-gray-200';
+                        list.appendChild(li);
+                    }
+                });
+                list.classList.toggle('hidden', list.children.length===0);
+            }
+            input.addEventListener('focus', ()=>{ if(!select.value){ input.value=''; } show(); });
             input.addEventListener('input', ()=>show(input.value));
             list.addEventListener('mousedown', e=>{const li=e.target.closest('li'); if(!li) return; e.preventDefault(); input.value=li.textContent; select.value=li.dataset.val; select.dispatchEvent(new Event('change')); list.classList.add('hidden');});
             input.addEventListener('blur', ()=>setTimeout(()=>list.classList.add('hidden'),200));
+            select.addEventListener('change', syncFromSelect);
         }
 
         document.querySelectorAll('select[data-searchable]').forEach(convertSelectToSearchable);
