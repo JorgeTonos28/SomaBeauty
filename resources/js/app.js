@@ -4,6 +4,27 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
+window.openTicketPrintTab = (url) => {
+    if (!url) {
+        return;
+    }
+
+    if (!document.body) {
+        window.open(url, '_blank');
+        return;
+    }
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    anchor.style.display = 'none';
+
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+};
+
 Alpine.data('filterTable', (url, extra = {}) => ({
     ...extra,
     tableHtml: '',
@@ -71,7 +92,6 @@ Alpine.data('payForm', (total, action) => ({
     method: 'efectivo',
     action,
     isSubmitting: false,
-    printFeatures: 'width=420,height=720,noopener,noreferrer',
     get change() {
         return (this.paid || 0) - total;
     },
@@ -88,7 +108,7 @@ Alpine.data('payForm', (total, action) => ({
         }
 
         this.isSubmitting = true;
-        let printWindow = window.open('', '_blank', this.printFeatures);
+        const openPrint = window.openTicketPrintTab ?? ((url) => window.open(url, '_blank'));
 
         try {
             const form = event.target;
@@ -109,22 +129,13 @@ Alpine.data('payForm', (total, action) => ({
             }
 
             if (res.ok) {
-                if (data?.print_url && printWindow) {
+                if (data?.print_url) {
                     sessionStorage.setItem('skip_print_ticket', '1');
-                    printWindow.location = data.print_url;
-                    printWindow.focus();
-                } else if (printWindow) {
-                    printWindow.close();
-                    printWindow = null;
+                    openPrint(data.print_url);
                 }
                 const redirectUrl = data?.redirect ?? window.location.href;
                 window.location = redirectUrl;
                 return;
-            }
-
-            if (printWindow) {
-                printWindow.close();
-                printWindow = null;
             }
 
             const message = data?.errors
@@ -132,10 +143,6 @@ Alpine.data('payForm', (total, action) => ({
                 : (data?.message || 'Error inesperado');
             alert(message);
         } catch (error) {
-            if (printWindow) {
-                printWindow.close();
-                printWindow = null;
-            }
             alert('Error de red');
         } finally {
             this.isSubmitting = false;

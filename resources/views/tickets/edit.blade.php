@@ -834,11 +834,8 @@
                     const submitter = e?.submitter;
                     this.errors = [];
 
-                    const printFeatures = 'width=420,height=720,noopener,noreferrer';
-                    let printWindow = null;
-                    if (submitter?.value === 'pay') {
-                        printWindow = window.open('', '_blank', printFeatures);
-                    }
+                    const shouldPrint = submitter?.value === 'pay';
+                    const openPrint = window.openTicketPrintTab ?? ((url) => window.open(url, '_blank'));
 
                     if (submitter?.value === 'pending') {
                         const paid = form.querySelector('[name=paid_amount]').value;
@@ -881,12 +878,9 @@
 
                         if (res.ok) {
                             const redirectUrl = data?.redirect ?? '{{ route('tickets.index') }}';
-                            if (data?.print_url && printWindow) {
+                            if (shouldPrint && data?.print_url) {
                                 sessionStorage.setItem('skip_print_ticket', '1');
-                                printWindow.location = data.print_url;
-                                printWindow.focus();
-                            } else if (printWindow) {
-                                printWindow.close();
+                                openPrint(data.print_url);
                             }
                             window.location = redirectUrl;
                             return;
@@ -899,15 +893,11 @@
                     } catch (e) {
                         this.errors = ['Error de red'];
                     }
-                    if (printWindow) {
-                        printWindow.close();
-                    }
                     this.showErrors();
                 },
                 closeError() {
                     window.dispatchEvent(new CustomEvent('close-modal', { detail: 'error-modal' }));
-                }
-                ,
+                },
                 showErrors() {
                     const list = document.getElementById('error-list');
                     list.innerHTML = '';
