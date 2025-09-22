@@ -11,6 +11,7 @@ class PettyCashExpenseController extends Controller
     public function __construct()
     {
         $this->middleware(['auth', 'role:admin,cajero']);
+        $this->middleware('role:admin')->only('destroy');
     }
 
     public function index(Request $request)
@@ -122,6 +123,10 @@ class PettyCashExpenseController extends Controller
 
     public function destroy(PettyCashExpense $pettyCash)
     {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
         $pettyCash->delete();
         return redirect()->route('petty-cash.index')
             ->with('success', 'Gasto eliminado correctamente.');

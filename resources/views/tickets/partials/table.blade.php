@@ -144,25 +144,21 @@
                 <p><strong>Total:</strong> RD$ {{ number_format($ticket->total_amount, 2) }}</p>
             </div>
             @if($ticket->washes->count())
-                @php
-                    $canChangeWasher = true;
-                    if(!$ticket->pending){
-                        foreach($ticket->washes as $w){
-                            $tipPaid = \App\Models\WasherMovement::where('ticket_id',$ticket->id)
-                                ->where('washer_id',$w->washer_id)
-                                ->where('description','like','[P]%')
-                                ->where('paid',true)
-                                ->exists();
-                            if($w->washer_paid || $tipPaid){ $canChangeWasher = false; break; }
-                        }
-                    }
-                @endphp
                 <div class="space-y-2">
                     @foreach($ticket->washes as $wash)
                         <div class="border rounded p-2 space-y-1">
                             @php
                                 $serviceNames = $wash->details->where('type','service')->map(fn($d)=>$d->service->name ?? 'Servicio')->implode(', ');
                                 $priceLabel = optional($wash->vehicleType)->name;
+                                $tipPaid = false;
+                                if(!$ticket->pending && $wash->washer_id){
+                                    $tipPaid = \App\Models\WasherMovement::where('ticket_id',$ticket->id)
+                                        ->where('washer_id',$wash->washer_id)
+                                        ->where('description','like','[P]%')
+                                        ->where('paid',true)
+                                        ->exists();
+                                }
+                                $canChangeWasher = $ticket->pending || (!$wash->washer_paid && !$tipPaid);
                             @endphp
                             <p class="text-sm font-semibold">
                                 {{ $serviceNames ?: 'Servicio' }}
@@ -183,6 +179,8 @@
                                     @endforeach
                                 </select>
                             </div>
+                            @else
+                                <p class="text-sm text-gray-600">Estilista: {{ optional($wash->washer)->name ?? 'N/A' }}</p>
                             @endif
                         </div>
                     @endforeach
