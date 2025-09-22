@@ -12,7 +12,17 @@
                 <div>
                     <label class="block font-medium text-sm text-gray-700">Nombre del negocio</label>
                     <input type="text" name="business_name" value="{{ old('business_name', optional($settings)->business_name) }}" class="form-input mt-1 w-full" placeholder="Ej. Salon Soma">
-                    <p class="text-xs text-gray-500 mt-1">Este nombre se mostrará en el pie de página.</p>
+                    <p class="text-xs text-gray-500 mt-1">Este nombre se mostrará en el pie de página y en la factura.</p>
+                </div>
+                <div>
+                    <label class="block font-medium text-sm text-gray-700">Dirección</label>
+                    <textarea name="business_address" rows="3" class="form-textarea mt-1 w-full" placeholder="Ej. Calle Principal #123, Santo Domingo">{{ old('business_address', optional($settings)->business_address) }}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">Se imprimirá debajo del nombre del negocio en la factura.</p>
+                </div>
+                <div>
+                    <label class="block font-medium text-sm text-gray-700">Número de identificación fiscal</label>
+                    <input type="text" name="tax_id" value="{{ old('tax_id', optional($settings)->tax_id) }}" class="form-input mt-1 w-full" placeholder="Ej. RNC 1-11-11111-1">
+                    <p class="text-xs text-gray-500 mt-1">Aparecerá en la cabecera de la factura.</p>
                 </div>
                 <div>
                     <label class="block font-medium text-sm text-gray-700">Logo</label>

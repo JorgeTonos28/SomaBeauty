@@ -48,5 +48,17 @@
                 </footer>
             </div>
         </div>
+        @if (session('print_ticket_url'))
+            <script>
+                window.addEventListener('load', () => {
+                    const url = @json(session('print_ticket_url'));
+                    const features = 'width=420,height=720,noopener,noreferrer';
+                    const printWindow = window.open(url, '_blank', features);
+                    if (printWindow) {
+                        printWindow.focus();
+                    }
+                });
+            </script>
+        @endif
     </body>
 </html>
