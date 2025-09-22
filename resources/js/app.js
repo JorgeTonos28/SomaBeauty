@@ -4,6 +4,103 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
+if (!window.convertSelectToSearchable) {
+    window.convertSelectToSearchable = (select) => {
+        if (!select || select.dataset.searchableInitialized === 'true') {
+            return;
+        }
+
+        select.dataset.searchableInitialized = 'true';
+        select.classList.add('hidden');
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'relative';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-input w-full mt-1';
+
+        const placeholderText = select.dataset.placeholder || '-- Seleccionar --';
+        input.placeholder = placeholderText;
+
+        select._searchInput = input;
+        wrapper.appendChild(input);
+
+        const list = document.createElement('ul');
+        list.className = 'absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden';
+        wrapper.appendChild(list);
+
+        select.parentNode.insertBefore(wrapper, select);
+
+        const syncFromSelect = () => {
+            const selectedOption = select.options[select.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                input.value = selectedOption.text;
+            } else {
+                input.value = '';
+            }
+            input.placeholder = placeholderText;
+        };
+
+        select._syncSearchInput = syncFromSelect;
+        syncFromSelect();
+
+        const show = (filter = '') => {
+            list.innerHTML = '';
+            const f = filter.toLowerCase();
+            Array.from(select.options).forEach(option => {
+                if (!option.value) {
+                    return;
+                }
+                if (option.text.toLowerCase().includes(f)) {
+                    const li = document.createElement('li');
+                    li.textContent = option.text;
+                    li.dataset.val = option.value;
+                    li.className = 'px-2 py-1 cursor-pointer hover:bg-gray-200';
+                    list.appendChild(li);
+                }
+            });
+            list.classList.toggle('hidden', list.children.length === 0);
+        };
+
+        input.addEventListener('focus', () => {
+            if (!select.value) {
+                input.value = '';
+            }
+            show();
+        });
+
+        input.addEventListener('input', () => show(input.value));
+
+        list.addEventListener('mousedown', (event) => {
+            const li = event.target.closest('li');
+            if (!li) {
+                return;
+            }
+            event.preventDefault();
+            input.value = li.textContent;
+            select.value = li.dataset.val;
+            select.dispatchEvent(new Event('change'));
+            list.classList.add('hidden');
+        });
+
+        input.addEventListener('blur', () => {
+            setTimeout(() => list.classList.add('hidden'), 200);
+        });
+
+        select.addEventListener('change', syncFromSelect);
+    };
+}
+
+window.initSearchableSelects = (root = document) => {
+    if (typeof window.convertSelectToSearchable !== 'function') {
+        return;
+    }
+    root.querySelectorAll('select[data-searchable]').forEach(select => {
+        window.convertSelectToSearchable(select);
+    });
+};
+
 Alpine.data('filterTable', (url, extra = {}) => ({
     ...extra,
     tableHtml: '',

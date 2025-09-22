@@ -15,11 +15,15 @@
                     <td class="px-4 py-2">{{ $expense->description }}</td>
                     <td class="px-4 py-2">RD$ {{ number_format($expense->amount, 2) }}</td>
                     <td class="px-4 py-2">
-                        <form action="{{ route('petty-cash.destroy', $expense) }}" method="POST" onsubmit="return confirm('¿Eliminar este gasto?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:underline">Eliminar</button>
-                        </form>
+                        @if (auth()->user()->role === 'admin')
+                            <form action="{{ route('petty-cash.destroy', $expense) }}" method="POST" onsubmit="return confirm('¿Eliminar este gasto?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline">Eliminar</button>
+                            </form>
+                        @else
+                            <span class="text-sm text-gray-500">Solo administradores</span>
+                        @endif
                     </td>
                 </tr>
             @endforeach

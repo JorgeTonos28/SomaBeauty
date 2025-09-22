@@ -377,7 +377,11 @@ class TicketController extends Controller
 
     public function update(Request $request, Ticket $ticket)
     {
-        return $this->updateMultiple($request, $ticket);
+        if ($ticket->pending || $request->has('washes')) {
+            return $this->updateMultiple($request, $ticket);
+        }
+
+        return $this->updateWasherAssignments($request, $ticket);
     }
 
     public function destroy(Ticket $ticket)
@@ -544,6 +548,150 @@ class TicketController extends Controller
         });
 
         return redirect()->route('tickets.index')->with('success', 'Ticket cancelado');
+    }
+
+    private function updateWasherAssignments(Request $request, Ticket $ticket)
+    {
+        if ($ticket->pending) {
+            return $this->updateMultiple($request, $ticket);
+        }
+
+        if ($request->has('washers') && is_array($request->input('washers'))) {
+            $normalized = [];
+            foreach ($request->input('washers') as $key => $value) {
+                $normalized[$key] = $value === '' ? null : $value;
+            }
+            $request->merge(['washers' => $normalized]);
+        }
+
+        $request->validate([
+            'washers' => ['nullable', 'array'],
+            'washers.*' => ['nullable', 'exists:washers,id'],
+            'payment_method' => ['required', 'in:efectivo,tarjeta,transferencia,mixto'],
+            'bank_account_id' => ['required_if:payment_method,transferencia', 'nullable', 'exists:bank_accounts,id'],
+        ]);
+
+        $ticket->load(['washes.details.service', 'washes.vehicleType']);
+
+        $washersInput = $request->input('washers', []);
+        $changes = [];
+        $errors = [];
+
+        foreach ($ticket->washes as $wash) {
+            $newWasherId = $washersInput[$wash->id] ?? $wash->washer_id;
+            if ($newWasherId === '') {
+                $newWasherId = null;
+            }
+            $newWasherId = $newWasherId !== null ? (int) $newWasherId : null;
+
+            if ($wash->washer_id === $newWasherId) {
+                continue;
+            }
+
+            $serviceDetail = $wash->details->firstWhere('type', 'service');
+            $serviceModel = $serviceDetail ? $serviceDetail->service : null;
+            $serviceName = $serviceModel?->name ?? 'Servicio';
+            $priceLabel = optional($wash->vehicleType)->name;
+            $tipDescription = '[P] ' . $serviceName . ($priceLabel ? ' | ' . $priceLabel : '');
+
+            $tipMovement = null;
+            $tipPaid = false;
+
+            if ($wash->washer_id && $wash->tip > 0) {
+                $tipMovement = WasherMovement::where('ticket_id', $ticket->id)
+                    ->where('washer_id', $wash->washer_id)
+                    ->where('description', $tipDescription)
+                    ->first();
+                $tipPaid = $tipMovement?->paid ?? false;
+            }
+
+            if ($wash->washer_paid || $tipPaid) {
+                $errors[] = 'No se puede cambiar el estilista del servicio ' . $serviceName . ' porque ya se registró su pago.';
+                continue;
+            }
+
+            $changes[] = [
+                'wash' => $wash,
+                'newWasherId' => $newWasherId,
+                'tipMovement' => $tipMovement,
+                'tipDescription' => $tipDescription,
+            ];
+        }
+
+        if (!empty($errors)) {
+            return back()->withErrors(['washers' => implode(' ', $errors)])->withInput();
+        }
+
+        $ticketPendingAmount = $ticket->washer_pending_amount ?? 0;
+
+        DB::beginTransaction();
+        try {
+            foreach ($changes as $change) {
+                /** @var TicketWash $wash */
+                $wash = $change['wash'];
+                $oldWasherId = $wash->washer_id;
+                $newWasherId = $change['newWasherId'];
+                $commissionAmount = $wash->commission_amount ?? 0;
+                $tipAmount = $wash->tip ?? 0;
+                $totalAmount = $commissionAmount + $tipAmount;
+
+                if ($oldWasherId) {
+                    $oldWasher = Washer::find($oldWasherId);
+                    if ($oldWasher) {
+                        $oldWasher->pending_amount = max(0, $oldWasher->pending_amount - $totalAmount);
+                        $oldWasher->save();
+                    }
+                    if ($tipAmount > 0 && $change['tipMovement']) {
+                        $change['tipMovement']->delete();
+                    }
+                } else {
+                    $ticketPendingAmount = max(0, $ticketPendingAmount - $totalAmount);
+                }
+
+                if ($newWasherId) {
+                    $newWasher = Washer::find($newWasherId);
+                    if ($newWasher) {
+                        $newWasher->pending_amount += $totalAmount;
+                        $newWasher->save();
+                    }
+                    if ($tipAmount > 0) {
+                        WasherMovement::create([
+                            'washer_id' => $newWasherId,
+                            'ticket_id' => $ticket->id,
+                            'amount' => $tipAmount,
+                            'description' => $change['tipDescription'],
+                            'paid' => false,
+                            'created_at' => $ticket->created_at,
+                            'updated_at' => $ticket->created_at,
+                        ]);
+                    }
+                } else {
+                    $ticketPendingAmount += $totalAmount;
+                }
+
+                $wash->update([
+                    'washer_id' => $newWasherId,
+                    'washer_paid' => false,
+                ]);
+            }
+
+            $bankAccountId = $request->payment_method === 'transferencia'
+                ? $request->bank_account_id
+                : null;
+
+            $ticket->update([
+                'payment_method' => $request->payment_method,
+                'bank_account_id' => $bankAccountId,
+                'washer_pending_amount' => max(0, $ticketPendingAmount),
+            ]);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error al actualizar el ticket: ' . $e->getMessage());
+        }
+
+        return redirect()->route('tickets.index')->with('success', 'Ticket actualizado.');
     }
 
     private function updateMultiple(Request $request, Ticket $ticket)
