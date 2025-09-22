@@ -1,66 +1,76 @@
 @echo off
-REM ================================================
-REM  Script: alice.bat
-REM  Propósito: Actualizar y cambiar entre PRs Codex
-REM  Autor: ChatGPT (Alicia)
-REM ================================================
+title Alice — Helper PR Codex (Git + Laravel)
+setlocal ENABLEEXTENSIONS
 
-REM Preguntar al usuario el número de PR que quiere trabajar
-set /p PR_NUM=Introduce el número del Pull Request (solo número): 
+REM --- Detectar rama principal: main o master ---
+git rev-parse --verify main >nul 2>&1
+if %ERRORLEVEL%==0 (
+  set "MAIN=main"
+) else (
+  set "MAIN=master"
+)
 
-REM Obtener la rama actual
-for /f "delims=" %%i in ('git rev-parse --abbrev-ref HEAD') do set CURRENT_BRANCH=%%i
+REM --- Preguntar número de PR ---
+set PR=
+set /p PR=Introduce el NUMERO del PR (solo el numero): 
+if "%PR%"=="" (
+  echo [ERROR] Debes introducir un numero de PR.
+  pause
+  exit /b
+)
 
-echo Rama actual: %CURRENT_BRANCH%
-echo PR objetivo: codex-pr-%PR_NUM%
-echo.
-
-REM Construir nombre de la rama destino
-set TARGET_BRANCH=codex-pr-%PR_NUM%
-
-IF /I "%CURRENT_BRANCH%"=="%TARGET_BRANCH%" (
-    echo Ya estas en la rama %TARGET_BRANCH%. Actualizando...
-    REM Calcular PR anterior
-    set /a PREV_PR=%PR_NUM%-1
-    set PREV_BRANCH=codex-pr-%PREV_PR%
-    echo Cambiando temporalmente a %PREV_BRANCH%...
-    git checkout %PREV_BRANCH%
-    echo.
-    echo Trayendo cambios del PR %PR_NUM%...
-    git fetch origin pull/%PR_NUM%/head:%TARGET_BRANCH%
-    git checkout %TARGET_BRANCH%
-) ELSE (
-    echo Trayendo cambios del PR %PR_NUM%...
-    git fetch origin pull/%PR_NUM%/head:%TARGET_BRANCH%
-    git checkout %TARGET_BRANCH%
+REM --- Preguntar si desea reiniciar la BD ---
+choice /M "¿Reiniciar la BD con 'php artisan migrate:fresh --seed'?"
+if errorlevel 2 (
+  set "FRESH=0"
+) else (
+  set "FRESH=1"
 )
 
 echo.
+echo ===== INICIANDO: PR #%PR% =====
 
-REM Preguntar si desea correr migraciones
-set /p RUN_MIGRATE=¿Deseas ejecutar las migraciones (php artisan migrate)? [s/n]: 
-if /I "%RUN_MIGRATE%"=="s" (
-    echo Ejecutando migraciones...
-    php artisan migrate
+REM --- Cambiar a rama principal ---
+git checkout %MAIN%
+if errorlevel 1 goto :fail
+
+REM --- Fetch y checkout del PR ---
+git fetch origin pull/%PR%/head
+if errorlevel 1 goto :fail
+
+git checkout -B codex-pr-%PR% FETCH_HEAD
+if errorlevel 1 goto :fail
+
+REM --- npm install y build (si aplica) ---
+if exist package.json (
+  call npm install || goto :fail
+  call npm run build || goto :fail
 )
 
-REM Preguntar si desea correr seeders
-set /p RUN_SEED=¿Deseas ejecutar los seeders (php artisan db:seed)? [s/n]: 
-if /I "%RUN_SEED%"=="s" (
-    echo Ejecutando seeders...
-    php artisan db:seed
+REM --- Migraciones Laravel ---
+if "%FRESH%"=="1" (
+  php artisan migrate:fresh --seed || goto :fail
+) else (
+  php artisan migrate || goto :fail
+  php artisan db:seed || goto :fail
 )
 
-echo.
-echo ===== Refrescando cachés =====
+REM --- Cachés Laravel ---
+php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-echo.
-echo ===== Instalando dependencias FrontEnd =====
-npm install
-npm run build
+REM --- Levantar servidor Laravel ---
+start "Laravel Dev Server" php artisan serve
 
 echo.
-echo ===== Proceso completado. Ejecuta 'php artisan serve' si deseas levantar el servidor local. =====
+echo ✅ PR #%PR% aplicado y servidor iniciado.
+echo.
+pause
+exit /b
+
+:fail
+echo ❌ Ocurrió un error. Verifica los pasos anteriores.
+pause
+exit /b
