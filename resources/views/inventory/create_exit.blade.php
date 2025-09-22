@@ -19,7 +19,7 @@
             @csrf
             <div>
                 <label for="product_id" class="block font-medium text-sm text-gray-700">Producto</label>
-                <select name="product_id" class="form-input w-full">
+                <select name="product_id" class="form-input w-full" data-searchable data-placeholder="-- Seleccionar --">
                     @foreach ($products as $product)
                         <option value="{{ $product->id }}" @selected(request('product_id') == $product->id)>
                             {{ $product->name }}
@@ -41,4 +41,11 @@
             </div>
         </form>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.initSearchableSelects) {
+                window.initSearchableSelects();
+            }
+        });
+    </script>
 </x-app-layout>

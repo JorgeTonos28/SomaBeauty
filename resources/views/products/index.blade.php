@@ -22,6 +22,9 @@
                 <button x-show="selected" x-on:click="$dispatch('open-modal', 'entry-' + selected)" class="text-blue-600" title="Entrada">
                     <i class="fa-solid fa-plus fa-lg"></i>
                 </button>
+                <button x-show="selected" x-on:click="$dispatch('open-modal', 'exit-' + selected)" class="text-purple-600" title="Salida">
+                    <i class="fa-solid fa-minus fa-lg"></i>
+                </button>
             </div>
         @endif
 
@@ -69,6 +72,28 @@
                     <div>
                         <label class="block font-medium text-sm text-gray-700">Cantidad</label>
                         <input type="number" name="quantity" min="1" required class="form-input w-full">
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>
+                        <x-primary-button class="ms-3">Guardar</x-primary-button>
+                    </div>
+                </form>
+            </x-modal>
+
+            <x-modal name="exit-{{ $product->id }}" focusable>
+                <form method="POST" action="{{ route('inventory.storeExit') }}" class="p-6 space-y-6">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <div>
+                        <p class="text-sm text-gray-600">Stock actual: {{ $product->stock }}</p>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-sm text-gray-700">Cantidad</label>
+                        <input type="number" name="quantity" min="1" required class="form-input w-full">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-sm text-gray-700">Concepto</label>
+                        <input type="text" name="concept" required class="form-input w-full">
                     </div>
                     <div class="mt-6 flex justify-end">
                         <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>
