@@ -51,6 +51,11 @@
         @if (session('print_ticket_url'))
             <script>
                 window.addEventListener('load', () => {
+                    const skipPrint = sessionStorage.getItem('skip_print_ticket') === '1';
+                    if (skipPrint) {
+                        sessionStorage.removeItem('skip_print_ticket');
+                        return;
+                    }
                     const url = @json(session('print_ticket_url'));
                     const features = 'width=420,height=720,noopener,noreferrer';
                     const printWindow = window.open(url, '_blank', features);

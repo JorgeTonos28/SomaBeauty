@@ -834,6 +834,12 @@
                     const submitter = e?.submitter;
                     this.errors = [];
 
+                    const printFeatures = 'width=420,height=720,noopener,noreferrer';
+                    let printWindow = null;
+                    if (submitter?.value === 'pay') {
+                        printWindow = window.open('', '_blank', printFeatures);
+                    }
+
                     if (submitter?.value === 'pending') {
                         const paid = form.querySelector('[name=paid_amount]').value;
                         if (paid && parseFloat(paid) > 0) {
@@ -875,6 +881,13 @@
 
                         if (res.ok) {
                             const redirectUrl = data?.redirect ?? '{{ route('tickets.index') }}';
+                            if (data?.print_url && printWindow) {
+                                sessionStorage.setItem('skip_print_ticket', '1');
+                                printWindow.location = data.print_url;
+                                printWindow.focus();
+                            } else if (printWindow) {
+                                printWindow.close();
+                            }
                             window.location = redirectUrl;
                             return;
                         }
@@ -885,6 +898,9 @@
                         }
                     } catch (e) {
                         this.errors = ['Error de red'];
+                    }
+                    if (printWindow) {
+                        printWindow.close();
                     }
                     this.showErrors();
                 },

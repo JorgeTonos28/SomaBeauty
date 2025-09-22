@@ -411,9 +411,22 @@ class TicketController extends Controller
             'paid_at' => $ticket->created_at,
         ]);
 
+        $printUrl = route('tickets.print', $ticket);
+
+        if ($request->expectsJson()) {
+            session()->flash('success', 'Ticket pagado correctamente.');
+            session()->flash('print_ticket_url', $printUrl);
+
+            return response()->json([
+                'message' => 'Ticket pagado correctamente.',
+                'redirect' => route('tickets.index'),
+                'print_url' => $printUrl,
+            ]);
+        }
+
         return redirect()->route('tickets.index')
             ->with('success', 'Ticket pagado correctamente.')
-            ->with('print_ticket_url', route('tickets.print', $ticket));
+            ->with('print_ticket_url', $printUrl);
     }
 
     public function print(Ticket $ticket)
