@@ -75,7 +75,7 @@
     </x-modal>
     @if($ticket->pending)
     <x-modal name="pay-{{ $ticket->id }}" focusable>
-        <form method="POST" action="{{ route('tickets.pay', $ticket) }}" class="p-6 space-y-4" x-data="payForm({{ $ticket->total_amount }})">
+        <form method="POST" action="{{ route('tickets.pay', $ticket) }}" class="p-6 space-y-4" x-data="payForm({{ $ticket->total_amount }}, '{{ route('tickets.pay', $ticket) }}')" @submit.prevent="submitForm($event)">
             @csrf
             <div>
                 <label class="block text-sm font-medium text-gray-700">Monto Pagado</label>
@@ -105,7 +105,10 @@
             </div>
             <div class="mt-6 flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>
-                <x-primary-button class="ms-3">Confirmar</x-primary-button>
+                <x-primary-button class="ms-3" x-bind:disabled="isSubmitting">
+                    <span x-show="!isSubmitting">Confirmar</span>
+                    <span x-show="isSubmitting">Procesando...</span>
+                </x-primary-button>
             </div>
         </form>
     </x-modal>

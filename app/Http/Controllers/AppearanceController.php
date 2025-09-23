@@ -27,6 +27,8 @@ class AppearanceController extends Controller
             'login_logo' => 'nullable|image|max:1024',
             'favicon' => 'nullable|file|max:512',
             'business_name' => 'nullable|string|max:255',
+            'business_address' => 'nullable|string|max:500',
+            'tax_id' => 'nullable|string|max:100',
         ]);
 
         $settings = AppearanceSetting::first() ?? new AppearanceSetting();
@@ -59,6 +61,18 @@ class AppearanceController extends Controller
         if ($request->has('business_name')) {
             $settings->business_name = $request->filled('business_name')
                 ? $request->input('business_name')
+                : null;
+        }
+
+        if ($request->has('business_address')) {
+            $settings->business_address = $request->filled('business_address')
+                ? trim($request->input('business_address'))
+                : null;
+        }
+
+        if ($request->has('tax_id')) {
+            $settings->tax_id = $request->filled('tax_id')
+                ? trim($request->input('tax_id'))
                 : null;
         }
 

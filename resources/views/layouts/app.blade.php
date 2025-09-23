@@ -48,5 +48,19 @@
                 </footer>
             </div>
         </div>
+        @if (session('print_ticket_url'))
+            <script>
+                window.addEventListener('load', () => {
+                    const skipPrint = sessionStorage.getItem('skip_print_ticket') === '1';
+                    if (skipPrint) {
+                        sessionStorage.removeItem('skip_print_ticket');
+                        return;
+                    }
+                    const url = @json(session('print_ticket_url'));
+                    const openPrint = window.openTicketPrintTab ?? ((link) => window.open(link, '_blank'));
+                    openPrint(url);
+                });
+            </script>
+        @endif
     </body>
 </html>

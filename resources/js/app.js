@@ -4,6 +4,27 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
+<<<<<<< HEAD
+window.openTicketPrintTab = (url) => {
+    if (!url) {
+        return;
+    }
+
+    if (!document.body) {
+        window.open(url, '_blank');
+        return;
+    }
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    anchor.style.display = 'none';
+
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+=======
 if (!window.convertSelectToSearchable) {
     window.convertSelectToSearchable = (select) => {
         if (!select || select.dataset.searchableInitialized === 'true') {
@@ -99,6 +120,7 @@ window.initSearchableSelects = (root = document) => {
     root.querySelectorAll('select[data-searchable]').forEach(select => {
         window.convertSelectToSearchable(select);
     });
+>>>>>>> origin/main
 };
 
 Alpine.data('filterTable', (url, extra = {}) => ({
@@ -163,9 +185,11 @@ Alpine.data('filterTable', (url, extra = {}) => ({
     }
 }));
 
-Alpine.data('payForm', (total) => ({
+Alpine.data('payForm', (total, action) => ({
     paid: total,
     method: 'efectivo',
+    action,
+    isSubmitting: false,
     get change() {
         return (this.paid || 0) - total;
     },
@@ -174,6 +198,53 @@ Alpine.data('payForm', (total) => ({
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+    },
+    async submitForm(event) {
+        event.preventDefault();
+        if (this.isSubmitting) {
+            return;
+        }
+
+        this.isSubmitting = true;
+        const openPrint = window.openTicketPrintTab ?? ((url) => window.open(url, '_blank'));
+
+        try {
+            const form = event.target;
+            const res = await fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: new FormData(form)
+            });
+
+            let data = null;
+            try {
+                data = await res.clone().json();
+            } catch (error) {
+                data = null;
+            }
+
+            if (res.ok) {
+                if (data?.print_url) {
+                    sessionStorage.setItem('skip_print_ticket', '1');
+                    openPrint(data.print_url);
+                }
+                const redirectUrl = data?.redirect ?? window.location.href;
+                window.location = redirectUrl;
+                return;
+            }
+
+            const message = data?.errors
+                ? Object.values(data.errors).flat().join('\n')
+                : (data?.message || 'Error inesperado');
+            alert(message);
+        } catch (error) {
+            alert('Error de red');
+        } finally {
+            this.isSubmitting = false;
+        }
     }
 }));
 

@@ -761,6 +761,9 @@
                     const submitter = e?.submitter;
                     this.errors = [];
 
+                    const shouldPrint = submitter?.value === 'pay';
+                    const openPrint = window.openTicketPrintTab ?? ((url) => window.open(url, '_blank'));
+
                     if (submitter?.value === 'pending') {
                         const paid = form.querySelector('[name=paid_amount]').value;
                         if (paid && parseFloat(paid) > 0) {
@@ -793,16 +796,26 @@
                             },
                             body: new FormData(form, submitter)
                         });
+                        let data = null;
+                        try {
+                            data = await res.clone().json();
+                        } catch (error) {
+                            data = null;
+                        }
+
                         if (res.ok) {
-                            window.location = '{{ route('tickets.index') }}';
+                            const redirectUrl = data?.redirect ?? '{{ route('tickets.index') }}';
+                            if (shouldPrint && data?.print_url) {
+                                sessionStorage.setItem('skip_print_ticket', '1');
+                                openPrint(data.print_url);
+                            }
+                            window.location = redirectUrl;
                             return;
                         }
-                        if (res.status === 422) {
-                            const data = await res.json();
+                        if (res.status === 422 && data?.errors) {
                             this.errors = Object.values(data.errors).flat();
                         } else {
-                            const data = await res.json().catch(() => ({ message: 'Error inesperado' }));
-                            this.errors = [data.message || 'Error inesperado'];
+                            this.errors = [data?.message || 'Error inesperado'];
                         }
                     } catch (e) {
                         this.errors = ['Error de red'];
@@ -811,8 +824,7 @@
                 },
                 closeError() {
                     window.dispatchEvent(new CustomEvent('close-modal', { detail: 'error-modal' }));
-                }
-                ,
+                },
                 showErrors() {
                     const list = document.getElementById('error-list');
                     list.innerHTML = '';

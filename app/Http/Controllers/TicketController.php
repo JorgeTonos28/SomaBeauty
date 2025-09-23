@@ -415,7 +415,117 @@ class TicketController extends Controller
             'paid_at' => $ticket->created_at,
         ]);
 
-        return redirect()->route('tickets.index')->with('success', 'Ticket pagado correctamente.');
+        $printUrl = route('tickets.print', $ticket);
+
+        if ($request->expectsJson()) {
+            session()->flash('success', 'Ticket pagado correctamente.');
+            session()->flash('print_ticket_url', $printUrl);
+
+            return response()->json([
+                'message' => 'Ticket pagado correctamente.',
+                'redirect' => route('tickets.index'),
+                'print_url' => $printUrl,
+            ]);
+        }
+
+        return redirect()->route('tickets.index')
+            ->with('success', 'Ticket pagado correctamente.')
+            ->with('print_ticket_url', $printUrl);
+    }
+
+    public function print(Ticket $ticket)
+    {
+        if ($ticket->pending || $ticket->canceled) {
+            abort(404);
+        }
+
+        $ticket->load([
+            'user',
+            'details.service',
+            'details.product',
+            'details.drink',
+            'details.wash.vehicleType',
+            'washes.details.service',
+            'washes.washer',
+            'washes.vehicleType',
+            'bankAccount',
+        ]);
+
+        $items = [];
+
+        foreach ($ticket->details as $detail) {
+            $amount = $detail->subtotal;
+            $quantity = $detail->quantity ?? 1;
+
+            switch ($detail->type) {
+                case 'service':
+                    $serviceName = optional($detail->service)->name ?? 'Servicio';
+                    $priceLabel = optional(optional($detail->wash)->vehicleType)->name;
+                    $description = $priceLabel
+                        ? sprintf('%s (%s)', $serviceName, $priceLabel)
+                        : $serviceName;
+                    $items[] = [
+                        'qty' => $quantity,
+                        'description' => $description,
+                        'amount' => $amount,
+                    ];
+                    break;
+                case 'product':
+                    $items[] = [
+                        'qty' => $quantity,
+                        'description' => optional($detail->product)->name ?? 'Producto',
+                        'amount' => $amount,
+                    ];
+                    break;
+                case 'drink':
+                    $items[] = [
+                        'qty' => $quantity,
+                        'description' => optional($detail->drink)->name ?? 'Bebida',
+                        'amount' => $amount,
+                    ];
+                    break;
+                case 'extra':
+                    $items[] = [
+                        'qty' => $quantity,
+                        'description' => $detail->description ?: 'Cargo adicional',
+                        'amount' => $amount,
+                    ];
+                    break;
+            }
+        }
+
+        foreach ($ticket->washes as $wash) {
+            if ($wash->tip > 0) {
+                $serviceNames = $wash->details
+                    ->where('type', 'service')
+                    ->map(fn($d) => optional($d->service)->name ?? 'Servicio')
+                    ->implode(', ');
+                $washerName = optional($wash->washer)->name;
+
+                $parts = array_filter([
+                    'Propina',
+                    $serviceNames ?: null,
+                    $washerName ? 'para ' . $washerName : null,
+                ]);
+
+                $items[] = [
+                    'qty' => 1,
+                    'description' => implode(' ', $parts),
+                    'amount' => $wash->tip,
+                ];
+            }
+        }
+
+        $subtotalBeforeDiscount = $ticket->total_amount + $ticket->discount_total;
+        $paidAt = $ticket->paid_at ?? $ticket->created_at;
+
+        return view('tickets.print', [
+            'ticket' => $ticket,
+            'items' => $items,
+            'subtotalBeforeDiscount' => $subtotalBeforeDiscount,
+            'paidAt' => $paidAt,
+            'totalDiscount' => $ticket->discount_total,
+        ]);
     }
 
     public function cancel(Request $request, Ticket $ticket)
@@ -1013,7 +1123,29 @@ class TicketController extends Controller
                 InventoryMovement::create($mov);
             }
             DB::commit();
-            return redirect()->route('tickets.index')->with('success','Ticket actualizado.');
+
+            $message = 'Ticket actualizado.';
+            $printUrl = $pending ? null : route('tickets.print', $ticket);
+
+            if ($request->expectsJson()) {
+                session()->flash('success', $message);
+                if ($printUrl) {
+                    session()->flash('print_ticket_url', $printUrl);
+                }
+
+                return response()->json([
+                    'message' => $message,
+                    'redirect' => route('tickets.index'),
+                    'print_url' => $printUrl,
+                ]);
+            }
+
+            $redirect = redirect()->route('tickets.index')->with('success', $message);
+            if ($printUrl) {
+                $redirect = $redirect->with('print_ticket_url', $printUrl);
+            }
+
+            return $redirect;
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error','Error actualizando ticket: '.$e->getMessage());
@@ -1388,7 +1520,28 @@ class TicketController extends Controller
 
             DB::commit();
 
-            return redirect()->route('tickets.index')->with('success', 'Ticket generado correctamente.');
+            $message = 'Ticket generado correctamente.';
+            $printUrl = $pending ? null : route('tickets.print', $ticket);
+
+            if ($request->expectsJson()) {
+                session()->flash('success', $message);
+                if ($printUrl) {
+                    session()->flash('print_ticket_url', $printUrl);
+                }
+
+                return response()->json([
+                    'message' => $message,
+                    'redirect' => route('tickets.index'),
+                    'print_url' => $printUrl,
+                ]);
+            }
+
+            $redirect = redirect()->route('tickets.index')->with('success', $message);
+            if ($printUrl) {
+                $redirect = $redirect->with('print_ticket_url', $printUrl);
+            }
+
+            return $redirect;
 
         } catch (\Exception $e) {
             DB::rollBack();
