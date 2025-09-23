@@ -1,14 +1,11 @@
 import './bootstrap';
-
 import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
-<<<<<<< HEAD
+/** abrir ticket en nueva pestaña de forma segura */
 window.openTicketPrintTab = (url) => {
-    if (!url) {
-        return;
-    }
+    if (!url) return;
 
     if (!document.body) {
         window.open(url, '_blank');
@@ -24,12 +21,12 @@ window.openTicketPrintTab = (url) => {
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
-=======
+};
+
+/** convertir <select> en buscable */
 if (!window.convertSelectToSearchable) {
     window.convertSelectToSearchable = (select) => {
-        if (!select || select.dataset.searchableInitialized === 'true') {
-            return;
-        }
+        if (!select || select.dataset.searchableInitialized === 'true') return;
 
         select.dataset.searchableInitialized = 'true';
         select.classList.add('hidden');
@@ -48,7 +45,8 @@ if (!window.convertSelectToSearchable) {
         wrapper.appendChild(input);
 
         const list = document.createElement('ul');
-        list.className = 'absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden';
+        list.className =
+            'absolute z-10 bg-white border border-gray-300 w-full mt-1 max-h-40 overflow-auto hidden';
         wrapper.appendChild(list);
 
         select.parentNode.insertBefore(wrapper, select);
@@ -69,10 +67,8 @@ if (!window.convertSelectToSearchable) {
         const show = (filter = '') => {
             list.innerHTML = '';
             const f = filter.toLowerCase();
-            Array.from(select.options).forEach(option => {
-                if (!option.value) {
-                    return;
-                }
+            Array.from(select.options).forEach((option) => {
+                if (!option.value) return;
                 if (option.text.toLowerCase().includes(f)) {
                     const li = document.createElement('li');
                     li.textContent = option.text;
@@ -85,9 +81,7 @@ if (!window.convertSelectToSearchable) {
         };
 
         input.addEventListener('focus', () => {
-            if (!select.value) {
-                input.value = '';
-            }
+            if (!select.value) input.value = '';
             show();
         });
 
@@ -95,9 +89,7 @@ if (!window.convertSelectToSearchable) {
 
         list.addEventListener('mousedown', (event) => {
             const li = event.target.closest('li');
-            if (!li) {
-                return;
-            }
+            if (!li) return;
             event.preventDefault();
             input.value = li.textContent;
             select.value = li.dataset.val;
@@ -114,13 +106,10 @@ if (!window.convertSelectToSearchable) {
 }
 
 window.initSearchableSelects = (root = document) => {
-    if (typeof window.convertSelectToSearchable !== 'function') {
-        return;
-    }
-    root.querySelectorAll('select[data-searchable]').forEach(select => {
+    if (typeof window.convertSelectToSearchable !== 'function') return;
+    root.querySelectorAll('select[data-searchable]').forEach((select) => {
         window.convertSelectToSearchable(select);
     });
->>>>>>> origin/main
 };
 
 Alpine.data('filterTable', (url, extra = {}) => ({
@@ -142,21 +131,15 @@ Alpine.data('filterTable', (url, extra = {}) => ({
         params.set('pending', this.pending);
         params.append('ajax', '1');
         fetch(`${url}?${params.toString()}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
-            .then(r => r.text())
-            .then(html => {
+            .then((r) => r.text())
+            .then((html) => {
                 this.tableHtml = html;
-                if (this.onUpdate) {
-                    this.onUpdate(html);
-                }
+                if (this.onUpdate) this.onUpdate(html);
             });
     },
-    init() {
-        this.fetchTable();
-    },
+    init() { this.fetchTable(); },
     openCancelModal() {
         if (!this.selectedCreated) return;
         const created = new Date(this.selectedCreated);
@@ -173,9 +156,7 @@ Alpine.data('filterTable', (url, extra = {}) => ({
         const diffHours = (Date.now() - created.getTime()) / 3600000;
         if (diffHours > 6) {
             if (this.role === 'admin') {
-                if (!confirm('Este ticket tiene más de 6 horas de creado. ¿Seguro que desea editarlo?')) {
-                    return;
-                }
+                if (!confirm('Este ticket tiene más de 6 horas de creado. ¿Seguro que desea editarlo?')) return;
             } else {
                 alert('No se puede editar un ticket con más de 6 horas de creado.');
                 return;
@@ -190,20 +171,13 @@ Alpine.data('payForm', (total, action) => ({
     method: 'efectivo',
     action,
     isSubmitting: false,
-    get change() {
-        return (this.paid || 0) - total;
-    },
+    get change() { return (this.paid || 0) - total; },
     formatCurrency(v) {
-        return (v).toLocaleString('es-DO', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
+        return (v).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     },
     async submitForm(event) {
         event.preventDefault();
-        if (this.isSubmitting) {
-            return;
-        }
+        if (this.isSubmitting) return;
 
         this.isSubmitting = true;
         const openPrint = window.openTicketPrintTab ?? ((url) => window.open(url, '_blank'));
@@ -220,11 +194,7 @@ Alpine.data('payForm', (total, action) => ({
             });
 
             let data = null;
-            try {
-                data = await res.clone().json();
-            } catch (error) {
-                data = null;
-            }
+            try { data = await res.clone().json(); } catch { data = null; }
 
             if (res.ok) {
                 if (data?.print_url) {
@@ -240,7 +210,7 @@ Alpine.data('payForm', (total, action) => ({
                 ? Object.values(data.errors).flat().join('\n')
                 : (data?.message || 'Error inesperado');
             alert(message);
-        } catch (error) {
+        } catch {
             alert('Error de red');
         } finally {
             this.isSubmitting = false;
