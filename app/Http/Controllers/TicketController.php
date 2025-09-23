@@ -815,7 +815,7 @@ class TicketController extends Controller
             'customer_name' => ['required', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/', 'max:255'],
             'customer_phone' => ['nullable','regex:/^[0-9+()\s-]+$/','max:20'],
             'ticket_date' => 'required|date|before_or_equal:today',
-            'washes' => ['required','array','min:1'],
+            'washes' => ['nullable','array'],
             'washes.*.service_id' => ['required','exists:services,id'],
             'washes.*.service_price_id' => ['required','exists:service_prices,id'],
             'washes.*.washer_id' => 'nullable|exists:washers,id',
@@ -886,7 +886,9 @@ class TicketController extends Controller
             $ticket->details()->delete();
             $ticket->washes()->delete();
 
-            foreach ($request->washes as $wash) {
+            $washes = $request->input('washes', []);
+
+            foreach ($washes as $wash) {
                 $service = Service::where('active', true)
                     ->with('prices.vehicleType')
                     ->find($wash['service_id']);
@@ -1159,7 +1161,7 @@ class TicketController extends Controller
             'customer_name' => ['required', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/', 'max:255'],
             'customer_phone' => ['nullable','regex:/^[0-9+()\s-]+$/','max:20'],
             'ticket_date' => 'required|date|before_or_equal:today',
-            'washes' => ['required','array','min:1'],
+            'washes' => ['nullable','array'],
             'washes.*.service_id' => ['required','exists:services,id'],
             'washes.*.service_price_id' => ['required','exists:service_prices,id'],
             'washes.*.washer_id' => 'nullable|exists:washers,id',
@@ -1193,7 +1195,6 @@ class TicketController extends Controller
             'ticket_date.required' => 'La fecha del ticket es obligatoria.',
             'ticket_date.date' => 'La fecha del ticket no es válida.',
             'ticket_date.before_or_equal' => 'La fecha del ticket no puede ser futura.',
-            'washes.required' => 'Debe agregar al menos un servicio.',
             'washes.*.service_id.required' => 'Debe seleccionar un servicio.',
             'washes.*.service_id.exists' => 'El servicio seleccionado no es válido.',
             'washes.*.service_price_id.required' => 'Debe seleccionar una opción de precio.',
@@ -1222,8 +1223,9 @@ class TicketController extends Controller
             $total = 0; $discountTotal = 0; $details = []; $productMovements = [];
             $washerPendingAmount = 0; $washInfo = [];
             $defaultCommission = CommissionSetting::currentPercentage();
+            $washes = $request->input('washes', []);
 
-            foreach ($request->washes as $wash) {
+            foreach ($washes as $wash) {
                 $service = Service::where('active', true)
                     ->with('prices.vehicleType')
                     ->find($wash['service_id']);
@@ -1437,7 +1439,7 @@ class TicketController extends Controller
 
             if (($serviceCount + count($details)) === 0) {
                 DB::rollBack();
-                $message = ['washes' => ['Debe agregar al menos un servicio, producto o trago']];
+                $message = ['washes' => ['Debe agregar al menos un servicio, producto, trago o cargo adicional']];
                 if ($request->expectsJson()) {
                     return response()->json(['errors' => $message], 422);
                 }

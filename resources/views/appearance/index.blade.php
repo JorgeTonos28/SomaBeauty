@@ -39,6 +39,16 @@
                     <input type="file" name="favicon" class="form-input mt-1">
                     <p class="text-xs text-gray-500 mt-1">Tamaño recomendado: 32x32 px.</p>
                 </div>
+                <div>
+                    <label class="block font-medium text-sm text-gray-700">QR en factura</label>
+                    <input type="file" name="qr_image" class="form-input mt-1">
+                    <p class="text-xs text-gray-500 mt-1">Tamaño recomendado: 300x300 px.</p>
+                </div>
+                <div>
+                    <label class="block font-medium text-sm text-gray-700">Descripción QR</label>
+                    <input type="text" name="qr_description" value="{{ old('qr_description', optional($settings)->qr_description) }}" class="form-input mt-1 w-full" placeholder="Ej. Síguenos en Instagram">
+                    <p class="text-xs text-gray-500 mt-1">Se mostrará debajo del código QR en la factura.</p>
+                </div>
                 <div class="flex justify-end">
                     <button type="submit" class="btn-primary">Guardar</button>
                 </div>
