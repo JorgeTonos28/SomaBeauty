@@ -41,7 +41,7 @@
                 </div>
                 <div class="flex items-end">
                     <button type="button" class="px-3 py-2 bg-gray-200 rounded" @click="
-                        const today = new Date().toISOString().slice(0,10);
+                        const today = window.getLocalDateInputValue ? window.getLocalDateInputValue() : new Date().toISOString().slice(0,10);
                         $refs.form.start.value = today;
                         $refs.form.end.value = today;
                         fetchTable();

@@ -17,7 +17,7 @@
                     <input type="date" name="end" value="{{ $filters['end'] ?? '' }}" class="form-input" @change="fetchTable()">
                 </div>
             </form>
-            <button type="button" class="px-4 py-2 bg-gray-300 rounded" @click="document.querySelector('[name=\'start\']').value = new Date().toISOString().substr(0,10); document.querySelector('[name=\'end\']').value = new Date().toISOString().substr(0,10); fetchTable();">Ahora</button>
+            <button type="button" class="px-4 py-2 bg-gray-300 rounded" @click="const today = window.getLocalDateInputValue ? window.getLocalDateInputValue() : new Date().toISOString().slice(0,10); document.querySelector('[name=\'start\']').value = today; document.querySelector('[name=\'end\']').value = today; fetchTable();">Ahora</button>
             <a href="{{ route('tickets.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Nuevo Ticket</a>
             <a href="{{ route('petty-cash.create') }}" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Nuevo Gasto</a>
             <a href="{{ route('dashboard.download', request()->all()) }}" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Descargar</a>
