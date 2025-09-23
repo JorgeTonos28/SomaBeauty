@@ -18,11 +18,12 @@
             @foreach ($tickets as $ticket)
                 @php $needsWasher = $ticket->washer_pending_amount > 0; @endphp
                 <tr class="border-t cursor-pointer {{ $ticket->pending ? 'bg-red-100' : ($needsWasher ? 'bg-orange-100' : '') }}"
+                    data-print-url="{{ $ticket->pending ? '' : route('tickets.print', $ticket) }}"
                     x-on:click="
                         if (selected === {{ $ticket->id }}) {
-                            selected = null; selectedPending = false; selectedNoWasher = false; selectedCreated = null;
+                            selected = null; selectedPending = false; selectedNoWasher = false; selectedCreated = null; selectedPrint = null;
                         } else {
-                            selected = {{ $ticket->id }}; selectedPending = {{ $ticket->pending ? 'true' : 'false' }}; selectedNoWasher = {{ $needsWasher ? 'true' : 'false' }}; selectedCreated = '{{ $ticket->created_at }}';
+                            selected = {{ $ticket->id }}; selectedPending = {{ $ticket->pending ? 'true' : 'false' }}; selectedNoWasher = {{ $needsWasher ? 'true' : 'false' }}; selectedCreated = '{{ $ticket->created_at }}'; selectedPrint = $el.dataset.printUrl || null;
                         }
                     "
                     :class="selected === {{ $ticket->id }} ? (selectedPending ? 'bg-red-300' : (selectedNoWasher ? 'bg-orange-300' : 'bg-blue-100')) : ''">
