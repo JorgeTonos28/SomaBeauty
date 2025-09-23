@@ -29,6 +29,8 @@ class AppearanceController extends Controller
             'business_name' => 'nullable|string|max:255',
             'business_address' => 'nullable|string|max:500',
             'tax_id' => 'nullable|string|max:100',
+            'qr_image' => 'nullable|image|max:1024',
+            'qr_description' => 'nullable|string|max:255',
         ]);
 
         $settings = AppearanceSetting::first() ?? new AppearanceSetting();
@@ -73,6 +75,22 @@ class AppearanceController extends Controller
         if ($request->has('tax_id')) {
             $settings->tax_id = $request->filled('tax_id')
                 ? trim($request->input('tax_id'))
+                : null;
+        }
+
+        if ($request->hasFile('qr_image')) {
+            $dir = public_path('images');
+            if (! file_exists($dir)) {
+                mkdir($dir, 0755, true);
+            }
+
+            $request->file('qr_image')->move($dir, 'invoice-qr.png');
+            $settings->qr_updated_at = now();
+        }
+
+        if ($request->has('qr_description')) {
+            $settings->qr_description = $request->filled('qr_description')
+                ? trim($request->input('qr_description'))
                 : null;
         }
 

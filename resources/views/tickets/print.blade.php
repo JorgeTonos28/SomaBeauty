@@ -39,7 +39,7 @@
   .scallop.bottom{ transform: rotate(180deg); border-top:1px solid var(--ink); }
 
   .ticket{
-    padding: 10px 10px 6px;
+    padding: 10px 10px 14px;
   }
 
   .center{ text-align:center; }
@@ -102,17 +102,20 @@
     letter-spacing:.5px;
   }
 
-  .barcode{
-    height: 36px;
-    margin: 6px 6px 10px;
-    background:
-      repeating-linear-gradient(
-        to right,
-        #000 0, #000 2px,
-        transparent 2px, transparent 4px,
-        #000 4px, #000 6px,
-        transparent 6px, transparent 9px
-      );
+  .qr-block{
+    margin: 10px auto 0;
+    text-align: center;
+  }
+  .qr-block img{
+    display: block;
+    margin: 0 auto 6px;
+    max-width: 140px;
+    width: 100%;
+  }
+  .qr-caption{
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .3px;
   }
 
   .payment-info{
@@ -143,6 +146,17 @@
     $customerName = $ticket->customer_name ?: 'Consumidor final';
     $customerPhone = $ticket->customer_phone;
     $attendedBy = optional($ticket->user)->name ?? 'N/D';
+    $qrDescription = trim(optional($appearanceSettings)->qr_description ?? '');
+    $qrDescription = $qrDescription === '' ? 'Escanéame' : $qrDescription;
+    $qrImagePath = public_path('images/invoice-qr.png');
+    $qrImageUrl = null;
+    if (file_exists($qrImagePath)) {
+        $qrImageUrl = asset('images/invoice-qr.png');
+        $qrCacheBuster = optional($appearanceSettings)->qr_updated_at?->timestamp;
+        if ($qrCacheBuster) {
+            $qrImageUrl .= '?v=' . $qrCacheBuster;
+        }
+    }
 @endphp
   <div class="wrap">
     <div class="scallop top"></div>
@@ -219,7 +233,12 @@
 
       <div class="thanks">*** ¡GRACIAS POR PREFERIRNOS! ***</div>
 
-      <div class="barcode" aria-hidden="true"></div>
+      @if($qrImageUrl)
+        <div class="qr-block">
+          <img src="{{ $qrImageUrl }}" alt="Código QR">
+          <div class="qr-caption">{{ $qrDescription }}</div>
+        </div>
+      @endif
     </div>
 
     <div class="scallop bottom"></div>

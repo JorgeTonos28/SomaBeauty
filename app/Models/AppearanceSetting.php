@@ -25,5 +25,6 @@ class AppearanceSetting extends Model
         'logo_updated_at' => 'datetime',
         'login_logo_updated_at' => 'datetime',
         'favicon_updated_at' => 'datetime',
+        'qr_updated_at' => 'datetime',
     ];
 }

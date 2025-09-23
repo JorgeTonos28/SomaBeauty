@@ -3,6 +3,14 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
+window.getLocalDateInputValue = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 /** abrir ticket en nueva pestaña de forma segura */
 window.openTicketPrintTab = (url) => {
     if (!url) return;
