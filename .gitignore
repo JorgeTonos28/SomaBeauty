@@ -19,4 +19,9 @@ yarn-error.log
 /.vscode
 
 .env.testing
+<<<<<<< HEAD
 alice.bat
+=======
+# Ignorar script local de soporte
+alice.bat
+>>>>>>> 31cb1d40a1c323880f9ae8432727800cdc0546bd
