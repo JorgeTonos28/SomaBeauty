@@ -9,7 +9,24 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'price', 'stock'];
+    protected $fillable = ['name', 'price', 'stock', 'low_stock_threshold'];
+
+    protected $casts = [
+        'stock' => 'integer',
+        'low_stock_threshold' => 'integer',
+    ];
+
+    public function scopeLowStock($query)
+    {
+        return $query->whereNotNull('low_stock_threshold')
+            ->where('low_stock_threshold', '>', 0)
+            ->whereColumn('stock', '<=', 'low_stock_threshold');
+    }
+
+    public static function lowStockItems()
+    {
+        return static::lowStock()->orderBy('name')->get();
+    }
 
     public function inventoryMovements()
     {

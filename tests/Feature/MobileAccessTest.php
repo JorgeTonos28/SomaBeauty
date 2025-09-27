@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AppSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -23,6 +24,18 @@ class MobileAccessTest extends TestCase
     {
         $response = $this->withHeaders([
             'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+        ])->get('/login');
+
+        $response->assertStatus(200);
+        $response->assertDontSee('Acceso temporalmente restringido');
+    }
+
+    public function test_mobile_device_can_access_when_restriction_disabled(): void
+    {
+        AppSetting::updateBlockMobileDevices(false);
+
+        $response = $this->withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_6 like Mac OS X)'
         ])->get('/login');
 
         $response->assertStatus(200);

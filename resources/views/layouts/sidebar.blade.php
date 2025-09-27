@@ -102,6 +102,24 @@
                         </svg>
                         Usuarios
                     </a>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <form method="POST" action="{{ route('settings.mobile-access.update') }}" x-data="{ enabled: {{ json_encode(optional($appSettings)->block_mobile_devices ?? true) }} }" class="space-y-1">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="block_mobile_devices" :value="enabled ? 1 : 0">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Bloquear acceso móvil</p>
+                                    <p class="text-xs text-gray-500">Controla si la plataforma restringe dispositivos móviles.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" x-model="enabled" @change="$nextTick(() => $event.target.form.submit())">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:bg-blue-600 transition-all relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5 peer-checked:after:border-white"></div>
+                                    <span class="ml-2 text-xs text-gray-600" x-text="enabled ? 'Activo' : 'Inactivo'"></span>
+                                </label>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
             @endif

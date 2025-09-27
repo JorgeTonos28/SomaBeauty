@@ -39,6 +39,7 @@
                 'pettyCashTotal' => $pettyCashTotal,
                 'accountsReceivable' => $accountsReceivable,
                 'pendingTickets' => $pendingTickets,
+                'lowStockCount' => $lowStockCount,
             ])
         </div>
     </div>

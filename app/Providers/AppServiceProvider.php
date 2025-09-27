@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\AppearanceSetting;
+use App\Models\AppSetting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -33,6 +34,16 @@ class AppServiceProvider extends ServiceProvider
             });
 
             $view->with('appearanceSettings', $settings);
+
+            $appSettings = Cache::remember('app_settings', 300, function () {
+                if (! Schema::hasTable('app_settings')) {
+                    return null;
+                }
+
+                return AppSetting::first();
+            });
+
+            $view->with('appSettings', $appSettings);
         });
     }
 }

@@ -7,6 +7,10 @@
 
     <div x-data="filterTable('{{ route('inventory.index') }}')" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
+        @isset($lowStockProducts)
+            @include('partials.low-stock-panel', ['products' => $lowStockProducts])
+        @endisset
+
         <div class="mb-4 flex flex-wrap items-end gap-4">
             <form method="GET" x-ref="form" class="flex items-end gap-2">
                 <div>

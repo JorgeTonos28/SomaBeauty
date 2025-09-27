@@ -10,6 +10,7 @@ use App\Http\Controllers\PettyCashExpenseController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\AppearanceController;
+use App\Http\Controllers\AppSettingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -47,6 +48,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('bank-accounts', \App\Http\Controllers\BankAccountController::class);
     Route::get('appearance', [AppearanceController::class, 'index'])->name('appearance.index');
     Route::post('appearance', [AppearanceController::class, 'store'])->name('appearance.store');
+    Route::put('settings/mobile-access', [AppSettingController::class, 'updateMobileAccess'])
+        ->name('settings.mobile-access.update');
     Route::post('petty-cash/fund', [PettyCashExpenseController::class, 'updateFund'])->name('petty-cash.update-fund');
 });
 Route::middleware(['auth', 'role:admin,cajero'])->group(function () {
