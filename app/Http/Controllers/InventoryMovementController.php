@@ -47,6 +47,7 @@ class InventoryMovementController extends Controller
         return view('inventory.index', [
             'movements' => $movements,
             'filters' => $request->only(['start', 'end', 'product']),
+            'lowStockProducts' => Product::lowStockItems(),
         ]);
     }
 

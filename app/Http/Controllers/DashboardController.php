@@ -11,6 +11,7 @@ use App\Models\WasherPayment;
 use App\Models\BankAccount;
 use App\Models\Washer;
 use App\Models\WasherMovement;
+use App\Models\Product;
 
 class DashboardController extends Controller
 {
@@ -216,6 +217,8 @@ class DashboardController extends Controller
         $grossProfit = $totalFacturado - $pettyCashAmount - $washerPayTotal;
         $grossProfit -= $washerDebtAmount + $assignedPendingCommission;
 
+        $lowStockCount = Product::lowStock()->count();
+
         if ($request->ajax()) {
             return view('dashboard.partials.summary', compact(
                 'totalFacturado',
@@ -234,7 +237,8 @@ class DashboardController extends Controller
                 'accountsReceivable',
                 'pendingTickets',
                 'washerDebts',
-                'pettyCashAmount'
+                'pettyCashAmount',
+                'lowStockCount'
             ));
         }
 
@@ -257,6 +261,7 @@ class DashboardController extends Controller
             'pendingTickets' => $pendingTickets,
             'washerDebts' => $washerDebts,
             'pettyCashAmount' => $pettyCashAmount,
+            'lowStockCount' => $lowStockCount,
         ]);
     }
 

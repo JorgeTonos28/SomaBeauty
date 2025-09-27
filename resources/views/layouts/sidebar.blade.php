@@ -70,14 +70,21 @@
                 </div>
             </div>
             @if(auth()->user()->role === 'admin')
-            <div x-data="{ open: {{ request()->routeIs('discounts.*','users.*','bank-accounts.*') ? 'true' : 'false' }} }">
-                <button type="button" @click="open=!open" class="w-full text-left px-3 py-2 font-semibold rounded hover:bg-gray-100 {{ request()->routeIs('discounts.*','users.*','bank-accounts.*') ? 'bg-gray-200' : '' }}">
+            <div x-data="{ open: {{ request()->routeIs('settings.*','discounts.*','users.*','bank-accounts.*','appearance.*') ? 'true' : 'false' }} }">
+                <button type="button" @click="open=!open" class="w-full text-left px-3 py-2 font-semibold rounded hover:bg-gray-100 {{ request()->routeIs('settings.*','discounts.*','users.*','bank-accounts.*','appearance.*') ? 'bg-gray-200' : '' }}">
                     <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0 1 15 0 7.5 7.5 0 0 1-15 0z" />
                     </svg>
                     Configuración
                 </button>
                 <div x-show="open" x-cloak class="pl-6 space-y-1">
+                    <a href="{{ route('settings.edit') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('settings.*') ? 'border-b-2 border-gray-500' : '' }}">
+                        <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93l.893.36c.512.207.775.783.614 1.31l-.285.93a1.125 1.125 0 0 0 .284 1.115l.642.642c.39.39.44 1.002.118 1.45l-.6.825a1.125 1.125 0 0 1-1.28.45l-.893-.36a1.125 1.125 0 0 0-1.066.21l-.813.659c-.428.347-1.04.347-1.468 0l-.813-.659a1.125 1.125 0 0 0-1.066-.21l-.893.36a1.125 1.125 0 0 1-1.28-.45l-.6-.825a1.125 1.125 0 0 1 .118-1.45l.642-.642a1.125 1.125 0 0 0 .284-1.115l-.285-.93c-.161-.527.102-1.103.614-1.31l.893-.36a1.125 1.125 0 0 0 .78-.93l.149-.894z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                        </svg>
+                        Ajustes
+                    </a>
                     <a href="{{ route('discounts.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 {{ request()->routeIs('discounts.*') ? 'border-b-2 border-gray-500' : '' }}">
                         <svg class="inline-block w-4 h-4 mr-1 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75v10.5M6.75 6.75v10.5m-1.5-9h14.5m-14.5 4.5h14.5" />

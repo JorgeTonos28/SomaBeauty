@@ -1,4 +1,13 @@
 <div class="space-y-4">
+    @if($lowStockCount > 0)
+        <div class="p-4 border border-yellow-300 bg-yellow-50 text-yellow-800 rounded flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <p class="font-semibold">Inventario con stock bajo</p>
+                <p class="text-sm">Hay {{ $lowStockCount }} {{ \Illuminate\Support\Str::plural('producto', $lowStockCount) }} en o por debajo del mínimo configurado.</p>
+            </div>
+            <a href="{{ route('inventory.index') }}" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">Revisar inventario</a>
+        </div>
+    @endif
     <div class="bg-white p-4 shadow sm:rounded-lg flex justify-around items-center">
         <div class="text-center">
             <p class="text-lg">Total en caja</p>

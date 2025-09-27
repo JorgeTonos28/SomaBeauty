@@ -25,6 +25,15 @@
                 <input type="number" value="{{ $product->stock }}" disabled class="form-input w-full bg-gray-100">
             </div>
 
+            <div>
+                <label for="low_stock_threshold" class="block font-medium text-sm text-gray-700">Aviso de escasez</label>
+                <input type="number" name="low_stock_threshold" min="0" value="{{ old('low_stock_threshold', $product->low_stock_threshold) }}" class="form-input w-full" placeholder="Opcional">
+                <p class="mt-1 text-xs text-gray-500">
+                    Establece el stock mínimo antes de mostrar alertas.
+                    Si lo dejas vacío usaremos el valor general de {{ $defaultMinimumStock }} unidades.
+                </p>
+            </div>
+
             <div class="flex items-center gap-4">
                 <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                     Actualizar

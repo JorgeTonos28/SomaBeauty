@@ -5,8 +5,15 @@
         </h2>
     </x-slot>
 
+    @php
+        $defaultMinimumStock = optional($appSettings)->default_minimum_stock ?? \App\Models\AppSetting::DEFAULT_MINIMUM_STOCK;
+    @endphp
     <div x-data="filterTable('{{ route('products.index') }}', {selected: null})" x-on:click.away="selected = null" class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
+
+        @isset($lowStockProducts)
+            @include('partials.low-stock-panel', ['products' => $lowStockProducts])
+        @endisset
 
         @if (auth()->user()->role === 'admin')
             <div class="mb-4 flex items-center gap-4">
@@ -45,6 +52,11 @@
                     <div>
                         <label class="block font-medium text-sm text-gray-700">Precio (RD$)</label>
                         <input type="number" step="0.01" name="price" value="{{ $product->price }}" required class="form-input w-full">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-sm text-gray-700">Aviso de escasez</label>
+                        <input type="number" name="low_stock_threshold" min="0" value="{{ $product->low_stock_threshold }}" class="form-input w-full" placeholder="Opcional">
+                        <p class="mt-1 text-xs text-gray-500">Si lo dejas vacío usaremos el valor general de {{ $defaultMinimumStock }} unidades.</p>
                     </div>
                     <div class="mt-6 flex justify-end">
                         <x-secondary-button x-on:click="$dispatch('close')">Cancelar</x-secondary-button>

@@ -9,6 +9,10 @@ class BlockMobileDevices
 {
     public function handle(Request $request, Closure $next)
     {
+        if (! \App\Models\AppSetting::blockMobileDevicesEnabled()) {
+            return $next($request);
+        }
+
         if ($this->isMobile($request)) {
             return response()->view('mobile-warning');
         }
