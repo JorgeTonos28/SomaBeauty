@@ -11,7 +11,17 @@
             <div class="flex items-center justify-between bg-white border border-yellow-200 rounded p-3">
                 <div>
                     <p class="font-semibold text-gray-800">{{ $product->name }}</p>
-                    <p class="text-xs text-gray-600">Stock actual: {{ $product->stock }} | Mínimo: {{ $product->low_stock_threshold }}</p>
+                    <p class="text-xs text-gray-600">
+                        Stock actual: {{ $product->stock }} |
+                        Mínimo:
+                        @if($product->low_stock_threshold)
+                            {{ $product->low_stock_threshold }}
+                        @elseif($product->effective_low_stock_threshold)
+                            Predeterminado ({{ $product->effective_low_stock_threshold }})
+                        @else
+                            —
+                        @endif
+                    </p>
                 </div>
                 <a href="{{ route('inventory.create', ['product_id' => $product->id]) }}" class="px-3 py-2 text-sm bg-yellow-600 text-white rounded hover:bg-yellow-700">Registrar entrada</a>
             </div>

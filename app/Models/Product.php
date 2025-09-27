@@ -18,14 +18,40 @@ class Product extends Model
 
     public function scopeLowStock($query)
     {
-        return $query->whereNotNull('low_stock_threshold')
-            ->where('low_stock_threshold', '>', 0)
-            ->whereColumn('stock', '<=', 'low_stock_threshold');
+        $defaultThreshold = AppSetting::defaultMinimumStock();
+
+        return $query->where(function ($query) use ($defaultThreshold) {
+            $query->where(function ($query) {
+                $query->whereNotNull('low_stock_threshold')
+                    ->where('low_stock_threshold', '>', 0)
+                    ->whereColumn('stock', '<=', 'low_stock_threshold');
+            });
+
+            if ($defaultThreshold > 0) {
+                $query->orWhere(function ($query) use ($defaultThreshold) {
+                    $query->whereNull('low_stock_threshold')
+                        ->where('stock', '<=', $defaultThreshold);
+                });
+            }
+        });
     }
 
     public static function lowStockItems()
     {
         return static::lowStock()->orderBy('name')->get();
+    }
+
+    public function getEffectiveLowStockThresholdAttribute(): ?int
+    {
+        if ($this->low_stock_threshold !== null) {
+            return $this->low_stock_threshold > 0
+                ? $this->low_stock_threshold
+                : null;
+        }
+
+        $default = AppSetting::defaultMinimumStock();
+
+        return $default > 0 ? $default : null;
     }
 
     public function inventoryMovements()

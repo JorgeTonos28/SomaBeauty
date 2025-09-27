@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\AppSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\View\View;
 
 class AppSettingController extends Controller
 {
@@ -13,19 +15,33 @@ class AppSettingController extends Controller
         $this->middleware(['auth', 'role:admin']);
     }
 
-    public function updateMobileAccess(Request $request): RedirectResponse
+    public function edit(): View
+    {
+        $settings = Schema::hasTable('app_settings')
+            ? AppSetting::query()->first()
+            : null;
+
+        return view('settings.index', [
+            'settings' => $settings,
+            'blockMobile' => optional($settings)->block_mobile_devices ?? true,
+            'defaultMinimumStock' => optional($settings)->default_minimum_stock
+                ?? AppSetting::defaultMinimumStock(),
+        ]);
+    }
+
+    public function update(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'block_mobile_devices' => ['required', 'in:0,1'],
+            'block_mobile_devices' => ['required', 'boolean'],
+            'default_minimum_stock' => ['required', 'integer', 'min:0', 'max:1000000'],
         ]);
 
-        AppSetting::updateBlockMobileDevices((bool) (int) $data['block_mobile_devices']);
+        AppSetting::updateSettings([
+            'block_mobile_devices' => (bool) $data['block_mobile_devices'],
+            'default_minimum_stock' => (int) $data['default_minimum_stock'],
+        ]);
 
-        return back()->with(
-            'success',
-            $data['block_mobile_devices'] === '1'
-                ? 'El acceso desde dispositivos móviles ha sido restringido.'
-                : 'El acceso desde dispositivos móviles ha sido habilitado.'
-        );
+        return redirect()->route('settings.edit')
+            ->with('success', 'Las configuraciones generales se actualizaron correctamente.');
     }
 }

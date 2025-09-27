@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppSetting;
 use App\Models\Product;
 use App\Models\InventoryMovement;
 use Illuminate\Http\Request;
@@ -39,7 +40,9 @@ class ProductController extends Controller
 
     public function create()
     {
-        return view('products.create');
+        return view('products.create', [
+            'defaultMinimumStock' => AppSetting::defaultMinimumStock(),
+        ]);
     }
 
     public function store(Request $request)
@@ -76,7 +79,10 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        return view('products.edit', compact('product'));
+        return view('products.edit', [
+            'product' => $product,
+            'defaultMinimumStock' => AppSetting::defaultMinimumStock(),
+        ]);
     }
 
     public function update(Request $request, Product $product)
